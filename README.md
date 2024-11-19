@@ -42,7 +42,7 @@ The Entity-Relationship (ER) diagram models the structure of the database, ident
 
 ### Relational Model
 Below is the set of CREATE TABLE statements to implement the database:
-```
+```sql
 CREATE TABLE Client (
     client_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(100) NOT NULL,
