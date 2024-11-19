@@ -1,24 +1,24 @@
 # Driveway Sealing Managament System
 
-##Table of Contents
+## Table of Contents
 - [Project Overview](#project-overview)
 - [System Requirements](#system-requirement)
 - [Database Design](#database-design)
-- [ER Design](#er-design)
-- [Relational Model](#relational-model)
+      - [ER Design](#er-design)
+      - [Relational Model](#relational-model)
 - [Functionalities](#functionalities)
-- [Dashboard for David Smith](#deshboard-for-david-smith)
-- [Dashboard for Clients](#deshboard-for-client)
-- [Additional Functionalities](#additional-functionalities)
+      - [Dashboard for David Smith](#deshboard-for-david-smith)
+      - [Dashboard for Clients](#deshboard-for-client)
+      - [Additional Functionalities](#additional-functionalities)
 - [Queries](#queries)
-- [Big Clients](#big-clients)
-- [Difficult Clients](#difficult-clients)
-- [This Month's Quotes](#this-month's-quotes)
-- [Prospective Clients](prospective-clients)
-- [Largest Driveway](#largest-driveway)
-- [Overdue Bills](#overdue-bills)
-- [Bad Clients](#bad-clients)
-- [Good Clients](good-clients)
+      - [Big Clients](#big-clients)
+      - [Difficult Clients](#difficult-clients)
+      - [This Month's Quotes](#this-month's-quotes)
+      - [Prospective Clients](prospective-clients)
+      - [Largest Driveway](#largest-driveway)
+      - [Overdue Bills](#overdue-bills)
+      - [Bad Clients](#bad-clients)
+      - [Good Clients](good-clients)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Screenshots](#screenshots)
@@ -31,9 +31,9 @@ This project is a web-based driveway-sealing management system for a contractor,
 
 ## System Requirements
 
-Web-based interface (HTML/CSS/JavaScript)
-Backend Server (Node.js, Express)
-Database (MySQL)
+* Web-based interface (HTML/CSS/JavaScript)
+* Backend Server (Node.js, Express)
+* Database (MySQL)
 
 ## Database Design
 
@@ -42,7 +42,7 @@ The Entity-Relationship (ER) diagram models the structure of the database, ident
 
 ### Relational Model
 Below is the set of CREATE TABLE statements to implement the database:
-
+```
 CREATE TABLE Client (
     client_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(100) NOT NULL,
@@ -111,25 +111,25 @@ CREATE TABLE BillResponse (
     response_date DATE DEFAULT CURRENT_DATE,
     FOREIGN KEY (bill_id) REFERENCES Bill(bill_id)
 );
-
+```
 ## Functionalities
 
 ### Dashboard for David Smith
-View Requests: Access all incoming quote requests, including details like property address, square footage, proposed price, and images.
-Quote Responses: Respond to quote requests with price adjustments, scheduling, or rejection notes.
-Order Management: Track orders of work, view status, and finalize orders.
-Billing Management: Generate, send, and respond to bills.
-Revenue Report: Generate reports for revenue over a specified period.
+1. View Requests: Access all incoming quote requests, including details like property address, square footage, proposed price, and images.
+2. Quote Responses: Respond to quote requests with price adjustments, scheduling, or rejection notes.
+3. Order Management: Track orders of work, view status, and finalize orders.
+4. Billing Management: Generate, send, and respond to bills.
+5. Revenue Report: Generate reports for revenue over a specified period.
 
 ### Dashboard for Clients
-View Quotes: Access quote details and response status.
-Request Modifications: Negotiate on received quotes with counter-offers.
-Order Tracking: View details of accepted orders.
-Bill Payment: Pay bills or dispute them with comments.
+1. View Quotes: Access quote details and response status.
+2. Request Modifications: Negotiate on received quotes with counter-offers.
+3. Order Tracking: View details of accepted orders.
+4. Bill Payment: Pay bills or dispute them with comments.
 
 ### Additional Functionalities
-Negotiation Tracking: All quote and bill negotiations are tracked, providing evidence in case of disputes.
-Notification System: Real-time notifications for responses and updates.
+* Negotiation Tracking: All quote and bill negotiations are tracked, providing evidence in case of disputes.
+* Notification System: Real-time notifications for responses and updates.
 
 ## Queries
 
@@ -159,25 +159,28 @@ Identify clients who paid their bills within 24 hours of bill generation.
 
 ## Installation
 
-### Clone the repository:
+1. Clone the repository:
+```
 git clone https://github.com/Saba-Begum2/driveway-sealing-management.git
-### Install dependencies:
+```
+2. Install dependencies:
+```
 npm install
-
-Set up the database using the provided CREATE TABLE statements.
-Configure the database connection in the .env file.
-### Run the server:
+```
+3. Set up the database using the provided CREATE TABLE statements.
+4. Configure the database connection in the .env file.
+5. Run the server:
+```
 npm start
-
+```
 ## Usage
-
-Open a web browser and go to http://localhost:5050.
-Log in as David Smith or as a client.
-Use the dashboard to manage quotes, orders, and billing.
-Screenshots
-
+1. Open a web browser and go to http://localhost:5050.
+2. Log in as David Smith or as a client.
+3. Use the dashboard to manage quotes, orders, and billing.
+   
+## Screenshots
 Include relevant screenshots of the interface here.
 
 ## Project Demonstration
-
+Work in Progress.
 
