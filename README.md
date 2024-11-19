@@ -161,7 +161,7 @@ Identify clients who paid their bills within 24 hours of bill generation.
 
 1. Clone the repository:
 ```
-git clone https://github.com/Saba-Begum2/driveway-sealing-management.git
+git clone https://github.com/SabaBegum2/driveway-sealing-management.git
 ```
 2. Install dependencies:
 ```
