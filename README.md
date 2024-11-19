@@ -164,13 +164,13 @@ Identify clients who paid their bills within 24 hours of bill generation.
 git clone https://github.com/SabaBegum2/driveway-sealing-management-system.git
 ```
 2. Install dependencies:
-```
+```bash
 npm install
 ```
 3. Set up the database using the provided CREATE TABLE statements.
 4. Configure the database connection in the .env file.
 5. Run the server:
-```
+```bash
 npm start
 ```
 ## Usage
