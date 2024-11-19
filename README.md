@@ -140,7 +140,7 @@ List clients with the highest number of completed orders.
 List clients who submitted three requests without following up.
 
 ### This Month's Quotes
-List all quotes agreed upon in the current month (e.g., December 2024).
+List all quotes agreed upon in the current month (e.g., November 2024).
 
 ### Prospective Clients
 List registered clients who never submitted any request for quotes.
