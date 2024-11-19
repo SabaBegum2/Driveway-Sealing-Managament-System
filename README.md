@@ -1,4 +1,4 @@
-# Driveway Sealing Managament System
+# Driveway Sealing Management System
 
 ## Table of Contents
 - [Project Overview](#project-overview)
