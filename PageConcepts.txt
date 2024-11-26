@@ -1,0 +1,72 @@
+
+IMPORTANT FOR TABLES: 
+    No notes can be be deleted for documentation and court purposes.
+    Need to track history of conversation, quoted prices, time, etc.
+    (Include datetime stamps on orders)
+
+
+------- Page concepts -------
+
+REGISTER PAGE:
+    Client Form (Table):
+        client_id (auto incremented)
+        fname
+        lname
+        client_address
+        credit_card_info
+        phone_number
+        client_email
+
+
+LOGIN PAGE:
+    Username
+    Password
+    Register button
+
+
+CLIENT DASHBOARD: 
+(review best way to design this)
+    1. Check Order info: quotes, orders and bills
+            Button: Create new work request for ONE driveway
+                (New page or maybe just pop-up?)
+                Include: client_id
+                Address of property
+            View order(s):
+                Check details (#2?)
+            View bill(s):
+                Pay bill with credit_card_info:
+                    Bill is completed
+                Reject:
+                    Include note (complaint/concerns)
+
+    2. Check response from David on quote:
+            Options:
+                Accept
+                    Create Contract Order
+                Resubmit:
+                    Include note
+                    counter for lower price
+                    change work dates
+                Quit (Cancel) Order
+
+
+DAVID SMITH DASHBOARD:
+    1. Check all incoming requests (content, responses, status)
+            Respond:
+                Reject request + note
+                Counter Proposal:
+                    Price
+                    Time window (begin-end)
+            Quit (cancel) order
+
+    2. Check work orders (content and status)
+            If status == completed
+                Generate Bill:
+                    State work done
+                    Cost
+                    Optional Discount
+                    Optional note
+
+    3. Check all bills (content and status)
+            Respond to most recent response of quote and bill
+
