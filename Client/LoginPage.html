@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="userstylesheet.css">
+    <title>User Login</title>
+</head>
+<!-- <body data-page= "LoginPage"> -->
+<body data-page="LoginPage">
+<main>
+    <div class="signInBox">
+        <h1>Login</h1>
+        <h2>Don't have a login? <a href="http://127.0.0.1:5500/Client/RegistrationPage.html">Sign up</a></h2>
+        
+        <!-- TODO: Find user THEN check password -->
+        <form id="loginForm">
+            <h3>Username:</h3>
+            <input class="fillInputWidth" style="margin-left: 8px" placeholder="Enter User ID" id="clientID-input" required>
+            <h3>Password:</h3>
+            <input class="fillInputWidth" type="password" style="margin-left: 8px" placeholder="Enter Password" id="password-input" required><br>
+            <label class="showHidden">
+                <input type="checkbox" class="inline-checkbox" style="width: 20px; height: 20px" onclick="hidePassword()">Show Password
+            </label>
+            <button id="search-clientID-btn" style="margin-left: 35%">Sign In</button>
+        </form>
+    </div>
+</main>
+<script src="userindex.js"></script>
+</body>
+<footer>
+    <p>Created by: Saba Begum and Violet Yousif</p>
+</footer>
+</html>
+
+
+<!-- Password function to hide password on HTML page using javascript -->
+<script>
+    function hidePassword() {
+        var x = document.getElementById("password-input");
+        if (x.type === "password") {
+            x.type = "text";
+        } else {
+            x.type = "password";
+        }
+    }
+</script>
