@@ -1,0 +1,100 @@
+// Create Tables
+
+CREATE TABLE ClientDB (
+    client_id VARCHAR(20) PRIMARY KEY,
+    email VARCHAR(30) NOT NULL UNIQUE,
+    password VARCHAR(20) NOT NULL,
+    firstName VARCHAR(20) NOT NULL,
+    lastName VARCHAR(20) NOT NULL,
+    phoneNumber VARCHAR(10),
+    creditCardNum VARCHAR(16),
+    creditCardCVV VARCHAR(3),
+    creditCardExp VARCHAR(5),
+    homeAddress VARCHAR(60) NOT NULL,
+    registerDate DATETIME,
+    loginTime DATETIME,
+    activeStatus ENUM("online","offline") DEFAULT "offline"
+);
+
+CREATE TABLE QuoteRequest (
+    quote_id INT PRIMARY KEY AUTO_INCREMENT,
+    client_id VARCHAR(20),
+    propertyAddress TEXT NOT NULL,
+    drivewaySqft INT,
+    proposedPrice DECIMAL(10, 2),
+    addNote VARCHAR(300),
+    status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending',
+    FOREIGN KEY (client_id) REFERENCES Client(client_id)
+);
+
+CREATE TABLE QuoteRequestImage (
+    image_id INT PRIMARY KEY AUTO_INCREMENT,
+    quote_id INT,
+    image_path VARCHAR(255) NOT NULL,
+    FOREIGN KEY (quote_id) REFERENCES QuoteRequest(quote_id)
+);
+
+CREATE TABLE QuoteHistory (
+    response_id INT PRIMARY KEY AUTO_INCREMENT,
+    request_id INT NOT NULL,
+    response_price DECIMAL(10, 2),
+    start_date DATE,
+    end_date DATE,
+    response_note TEXT,
+    response_date DATE DEFAULT CURRENT_DATE,
+    status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending'
+    FOREIGN KEY (request_id) REFERENCES QuoteRequest(request_id)
+);
+
+// ALTER TABLE response_id = request_id + response_id
+
+CREATE TABLE OrderOfWork (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    client_id VARCHAR(20),
+    quote_response_id INT NOT NULL,
+    order_date DATE DEFAULT CURRENT_DATE,
+    status VARCHAR(50) DEFAULT 'Ongoing',
+    FOREIGN KEY (client_id) REFERENCES Client(client_id),
+    FOREIGN KEY (quote_response_id) REFERENCES QuoteResponse(response_id)
+);
+
+CREATE TABLE Bill (
+    bill_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT,
+    client_id VARCHAR(20),
+    bill_amount DECIMAL(10, 2),
+    status VARCHAR(50) DEFAULT 'Pending',
+    date_generated DATETIME,
+    date_completed DATETIME,
+    FOREIGN KEY (order_id) REFERENCES OrderOfWork(order_id),
+    FOREIGN KEY (client_id) REFERENCES Client(client_id)
+);
+
+CREATE TABLE BillResponse (
+    response_id INT PRIMARY KEY AUTO_INCREMENT,
+    bill_id INT NOT NULL,
+    response_note TEXT,
+    response_date DATE DEFAULT CURRENT_DATE,
+    FOREIGN KEY (bill_id) REFERENCES Bill(bill_id)
+);
+
+
+
+
+
+// For Demonstration: Insert Value Tuples
+
+INSERT INTO Client (client_id, email, password, first_name, last_name, phone_number, credit_card_num, credit_card_exp, address, register_day, login_time) VALUES 
+	("john.doe", "john.doe@example.com", "password123", "John", "Doe", "1234567890", "1234567812345678", "2025-12-31", "123 Main St, Anytown, USA", "2024-11-25 10:30:00", "2024-11-26 08:45:00"),
+    ("jane.smith", "jane.smith@example.com", "securePass1", "Jane", "Smith", "2987654321", "9876543298765432", "2026-05-15", "456 Elm St, Othertown, USA", "2024-11-20 14:00:00", "2024-11-25 17:30:00"),
+    ("bob.brown", "bob.brown@example.com", "Bobby@2024", "Bob", "Brown", "5678901234", "5432167854321678", "2024-09-22", "789 Pine St, Smallville, USA", "2024-10-01 09:00:00", "2024-11-26 11:20:00"),
+    ("alice.jones", "alice.jones@example.com", "AliceRocks!", "Alice", "Jones", "3456789012", "3210987654321098", "2027-07-20", "101 Oak St, Bigcity, USA", "2024-11-15 16:45:00", "2024-11-25 19:15:00"),
+    ("emma.wilson", "emma.wilson@example.com", "EmmaPass456", "Emma", "Wilson", "8901234567", "2109876543210987", "2028-01-01", "202 Birch St, Middletown, USA", "2024-11-10 13:30:00", "2024-11-26 07:50:00");
+
+INSERT INTO QuoteRequest (client_id, property_address, driveway_sqft, proposed_price, add_note, status) VALUES
+    ("john.doe", "123 Main St, Anytown, USA", 1200, 250.00, "Please prioritize this job as soon as possible.", "Pending"),
+    ("bob.brown", "456 Elm St, Othertown, USA", 800, 180.50, "Driveway has some cracks; please inspect closely.", "Pending"),
+    ("alice.jones", "789 Pine St, Smallville, USA", 1500, 350.00, "Would like a quote for sealing as well.", "Pending"),
+    ("emma.wilson", "101 Oak St, Bigcity, USA", 1000, 220.00, "Need it completed before the end of next week.", "Pending"),
+    ("jane.smith", "202 Birch St, Middletown, USA", 900, 200.00, "Contact me before proceeding with any additional services.", "Pending"),
+    ("bob.brown", "103 Oak St, Bigcity, USA", 1000, 250.00, "Need it completed before the end of next week.","Pending");
