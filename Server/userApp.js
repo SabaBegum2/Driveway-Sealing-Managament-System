@@ -32,16 +32,16 @@ app.get('/getAll', (request, response) => {
 app.post('/register', async(request, response) => {
     console.log("userApp: insert a row.");
     try {
-        const {client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress} = request.body;
+        const {clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress} = request.body;
 
         // Check for missing fields
-        if (!client_id || !email || !password || !firstName || !lastName || !phoneNumber || !homeAddress) {
+        if (!clientID || !email || !password || !firstName || !lastName || !phoneNumber || !homeAddress) {
             return response.status(400).json({ message: "All required fields must be filled." });
         }
 
         const db = userDbService.getUserDbServiceInstance();
 
-        const result = await db.registerNewUser(client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress);
+        const result = await db.registerNewUser(clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress);
 
         response.status(201).json({ message: "User registration successful!", data: result });
     }
@@ -56,16 +56,16 @@ app.post('/login', async (request, response) => {
 
     app.use(bodyParser.json());
 
-    const { client_id, password } = request.body;
+    const { clientID, password } = request.body;
 
-    console.log("receiving client_id:", client_id); // debugging
+    console.log("receiving clientID:", clientID); // debugging
     console.log("receiving password:", password); // debugging
 
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        // Search for a user with both the matching client_id and password
-        const result = await db.searchByClientIDAndPassword(client_id, password);
+        // Search for a user with both the matching clientID and password
+        const result = await db.searchByClientIDAndPassword(clientID, password);
 
         // If no matching user is found, return an error
         if (!result) {
@@ -144,21 +144,21 @@ app.get('/search/fullname/:firstName/:lastName', (request, response) => {
 });
 
 
-//search ClientDB by last name
-app.get('/searchClientID/:client_id', (request, response) => {
-    const { client_id } = request.params;
-    console.log(client_id);  // Debugging
+//search ClientDB by client id
+app.get('/searchClientID/:clientID', (request, response) => {
+    const { clientID } = request.params;
+    console.log(clientID);  // Debugging
 
     const db = userDbService.getUserDbServiceInstance();
 
     let result;
-    if (client_id === "all") {
+    if (clientID === "all") {
         // Return empty array if last name is not provided
         //result = Promise.resolve([]);
         result = db.getAllData()
     } else {
         // Proceed with searching by last name
-        result = db.searchByClientID(client_id);
+        result = db.searchByClientID(clientID);
     }
     result
 
@@ -166,7 +166,7 @@ app.get('/searchClientID/:client_id', (request, response) => {
     .catch(err => console.log('Error: ', err));
 });
 
-
+/*
 app.get('/search/salary/:min/:max', (request, response) => {
     const { min, max } = request.params;
 
@@ -178,7 +178,9 @@ app.get('/search/salary/:min/:max', (request, response) => {
         .then(data => response.json({ data: data }))
         .catch(err => console.log(err));
 });
+*/
 
+/*
 // Search ClientDB by age range
 app.get('/search/age/:min/:max', (request, response) => {
     const { min, max } = request.params;
@@ -191,14 +193,15 @@ app.get('/search/age/:min/:max', (request, response) => {
         .then(data => response.json({ data: data }))
         .catch(err => console.log(err));
 });
+*/
 
 // Search ClientDB registered after specific user
-app.get('/search/regAfter/:client_id', (request, response) => {
-    const { client_id } = request.params;
+app.get('/search/regAfter/:clientID', (request, response) => {
+    const { clientID } = request.params;
 
     const db = userDbService.getUserDbServiceInstance();
 
-    const result = db.searchAfterRegDate(client_id);
+    const result = db.searchAfterRegDate(clientID);
 
     result
         .then(data => response.json({ data: data }))
@@ -206,12 +209,12 @@ app.get('/search/regAfter/:client_id', (request, response) => {
 });
 
 // Search ClientDB registered same day as specific user
-app.get('/search/regSameDay/:client_id', (request, response) => {
-    const { client_id } = request.params;
+app.get('/search/regSameDay/:clientID', (request, response) => {
+    const { clientID } = request.params;
 
     const db = userDbService.getUserDbServiceInstance();
 
-    const result = db.searchSameDayRegDate(client_id);
+    const result = db.searchSameDayRegDate(clientID);
 
     result
         .then(data => response.json({ data: data }))
@@ -231,7 +234,7 @@ app.get('/search/neverSignedIn', (request, response) => {
         .catch(err => console.log(err));
 });
 
-// Search ClientDB who never signed in
+// Search ClientDB who registered today
 app.get('/search/regToday', (request, response) => {
 
 

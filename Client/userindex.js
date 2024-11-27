@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Execute the correct setup function based on the page
     if(currentPage === 'LoginPage') {
-            const loginForm = document.getElementById("login-form");
+            const loginForm = document.getElementById("loginForm");
             loginForm.addEventListener("submit", submitLoginForm);
             submitLoginForm();  // Fetch data for the search page
     }
@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', function () {
 function submitLoginForm(event) {
     event.preventDefault(); // Prevent default form submission
 
-    const client_id = document.getElementById("ClientID-input").value;
+    const clientID = document.getElementById("clientID-input").value;
     const password = document.getElementById("password-input").value;
 
-    console.log("ClientID:", client_id); // debugging
+    console.log("clientID:", clientID); // debugging
     console.log("password:", password); // debugging
 
     // Send the login data to the server
@@ -40,7 +40,7 @@ function submitLoginForm(event) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ client_id, password }),
+        body: JSON.stringify({ clientID, password }),
     })
     .then(response => response.json())
     .then(data => {
@@ -66,7 +66,7 @@ function submitRegistrationForm(event) {
         event.preventDefault();
 
         // Get the registration form inputs
-        const client_id = document.getElementById("#clientID-input").value;
+        const clientID = document.querySelector("#clientID-input").value;
         const email = document.querySelector('#email-input').value.trim();
         const password = document.querySelector('#password-input').value.trim();
         const firstName = document.querySelector('#firstName-input').value.trim();
@@ -76,13 +76,16 @@ function submitRegistrationForm(event) {
         const creditCardCVV = document.querySelector('#creditCardCVV-input').value.trim();
         const creditCardExp = document.querySelector('#creditCardExp-input').value.trim();
         // Get values from individual address fields
-        const streetAddress = document.getElementById("#streetAddress-input").value.trim();
-        const city = document.getElementById("#city-input").value.trim();
-        const state = document.getElementById("#state-input").value.trim();
-        const zipCode = document.getElementById("#zipCode-input").value.trim();
+        const streetAddress = document.querySelector("#streetAddress-input").value.trim();
+        const city = document.querySelector("#city-input").value.trim();
+        const state = document.querySelector("#state-input").value.trim();
+        const zipCode = document.querySelector("#zipCode-input").value.trim();
 
         // Concatenate address components
-        const homeAddress = `${streetAddress}, ${city}, ${state}, ${zipCode}`;
+        //const homeAddress = `${streetAddress}, ${city}, ${state}, ${zipCode}`;
+        const homeAddress = streetAddress + ", " + city + ", " + state + ", " + zipCode;
+        // Print value of homeAddress
+        console.log("homeAddress: ", homeAddress);
 
         // Assign concatenated address to the hidden input field
         //const homeAddress = document.querySelector('#homeAddress-input').value.trim();
@@ -104,18 +107,18 @@ function submitRegistrationForm(event) {
             return;
         }
 
-        // Check if client_id has whitespace
-        if (client_id.includes(" ")) { // Check if client_id contains whitespace
+        // Check if clientID has whitespace
+        if (clientID.includes(" ")) { // Check if clientID contains whitespace
             alert("User ID cannot contain whitespace"); // Throw error to user
             return; // Exit function
         }
-        // Check if client_id is less than 4 characters
-        if (client_id.length < 4) { // Check if client_id is less than 2 characters
+        // Check if clientID is less than 4 characters
+        if (clientID.length < 4) { // Check if clientID is less than 2 characters
             alert("User ID must be at least 2 characters"); // Throw error to user
             return; // Exit function
         }
-        // Check if Client_ID contains special characters
-        if (invalidClientIDChars.test(client_id)) {
+        // Check if clientID contains special characters
+        if (invalidClientIDChars.test(clientID)) {
             alert("User ID cannot contain special characters"); // Throw error to user
             return;
         }
@@ -158,7 +161,7 @@ function submitRegistrationForm(event) {
                 'Content-type': 'application/json'
             },
             method: 'POST',
-            body: JSON.stringify({client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress})
+            body: JSON.stringify({clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress})
         })
         .then(response => response.json())
         .then(data => {
@@ -221,11 +224,11 @@ searchFullNameBtn.onclick = function (){
 }
 
 
-// When client_id search button is clicked
-const searchClientIDBtn =  document.querySelector('#search-ClientID-btn');
+// When clientID search button is clicked
+const searchClientIDBtn =  document.querySelector('#search-clientID-btn');
 searchClientIDBtn.onclick = function (){
-    console.log("Search button clicked for client_id");
-    const searchInput = document.querySelector('#search-ClientID-input');
+    console.log("Search button clicked for clientID");
+    const searchInput = document.querySelector('#search-clientID-input');
     console.log("Search input: ", searchInput);
     const searchValue = searchInput.value;
     console.log("Search value: ", searchValue);
@@ -276,10 +279,10 @@ searchAgeBtn.onclick = function (){
 const searchRegAfterUserBtn = document.querySelector('#search-reg-after-btn');
 searchRegAfterUserBtn.onclick = function () {
     const ClientIDInput = document.querySelector('#after-reg-input');
-    const client_id = ClientIDInput.value;
+    const clientID = ClientIDInput.value;
     ClientIDInput.value = "";
 
-    fetch(`http://localhost:5050/search/regAfter/${client_id}`)
+    fetch(`http://localhost:5050/search/regAfter/${clientID}`)
     .then(response => response.json())
     .then(data => loadHTMLTable(data['data']));
 }
@@ -289,10 +292,10 @@ searchRegAfterUserBtn.onclick = function () {
 const searchRegSameDayAsUserBtn = document.querySelector('#search-same-day-reg-btn');
 searchRegSameDayAsUserBtn.onclick = function () {
     const ClientIDInput = document.querySelector('#same-day-reg-input');
-    const client_id = ClientIDInput.value;
+    const clientID = ClientIDInput.value;
     ClientIDInput.value = "";
 
-    fetch(`http://localhost:5050/search/regSameDay/${client_id}`)
+    fetch(`http://localhost:5050/search/regSameDay/${clientID}`)
     .then(response => response.json())
     .then(data => loadHTMLTable(data['data']));
 }
@@ -347,10 +350,10 @@ function insertRowIntoTable(data){
    
    for(var key in data){                // iterating over the each property key of an object data
       if(data.hasOwnProperty(key)){     // key is a direct property for data
-            if(key === 'registerday'){  // the property is 'registerday'
+            if(key === 'registerDate'){  // the property is 'registerDate'
                 data[key] = new Date(data[key]).toISOString().split('T')[0];
             }
-            else if (key === 'signintime'){
+            else if (key === 'loginTime'){
                 data[key] = new Date(data[key]).toLocaleString(); // format to javascript string
             }
             tableHtml += `<td>${data[key]}</td>`;
@@ -383,9 +386,9 @@ function loadHTMLTable(data){
     }
 
     let tableHtml = "";
-    data.forEach(function ({client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress}){
+    data.forEach(function ({clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress}){
         tableHtml += "<tr>";
-        tableHtml +=`<td>${client_id}</td>`;
+        tableHtml +=`<td>${clientID}</td>`;
         tableHtml +=`<td>${email}</td>`;
         tableHtml +=`<td>${password}</td>`;
         tableHtml +=`<td>${firstName}</td>`;

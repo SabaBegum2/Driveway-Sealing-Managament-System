@@ -68,24 +68,25 @@ class userDbService{
    }
 
    // FOR REGISTRATION
-   async registerNewUser(client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress){
+   async registerNewUser(clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress){
       const active = "online"
          try {
-            const registerDate = new Date().toISOString().split('T')[0];
+            //const registerDate = new Date().toISOString().split('T')[0];
+            const registerDate = new Date();
             console.log("registerDate: ", registerDate);
             let timeLoggedIn = new Date('0000-00-00 00:00:00.00');
 
             const insertProfile = await new Promise((resolve, reject) => 
             {
-               const query = "INSERT INTO ClientDB (client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
-               connection.query(query, [ client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, timeLoggedIn], (err, results) => {
+               const query = "INSERT INTO ClientDB (clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+               connection.query(query, [ clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, timeLoggedIn], (err, results) => {
                    if(err) reject(new Error(err.message));
                    else resolve(results.insertProfile);
                });
             });
             console.log(insertProfile);  // for debugging to see the result of select
             return{
-               client_id: client_id,
+               clientID: clientID,
                email: email,
                password: password,
                firstName: firstName,
@@ -106,23 +107,23 @@ class userDbService{
 
 
    // FOR LOGIN
-   async searchByClientIDAndPassword(client_id, password){
+   async searchByClientIDAndPassword(clientID, password){
       const newLoginTime = new Date();
 
       try {
          const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE client_id = ? AND password = ?;";
-            console.log("executing query:", query, [client_id, password]); // debugging
-            connection.query(query, [client_id, password], (err, results) => {
+            const query = "SELECT * FROM ClientDB WHERE clientID = ? AND password = ?;";
+            console.log("executing query:", query, [clientID, password]); // debugging
+            connection.query(query, [clientID, password], (err, results) => {
                   if (err) {
                      reject(new Error(err.message));
                   } else {
                      resolve(results);
                   }
             });
-            const datequery = "UPDATE ClientDB SET loginTime = ? WHERE client_id = ? AND password = ?;";
-               console.log("executing sign in date query:", datequery, [newLoginTime, client_id, password]); // debugging
-               connection.query(datequery, [newLoginTime, client_id, password], (err, results) => {
+            const datequery = "UPDATE ClientDB SET loginTime = ? WHERE clientID = ? AND password = ?;";
+               console.log("executing sign in date query:", datequery, [newLoginTime, clientID, password]); // debugging
+               connection.query(datequery, [newLoginTime, clientID, password], (err, results) => {
                   if (err) {
                      reject(new Error(err.message));
                   } else {
@@ -131,7 +132,7 @@ class userDbService{
             });
          });
          
-         // If the response has results, return the first result (assuming client_ids are unique)
+         // If the response has results, return the first result (assuming clientIDs are unique)
          if (response.length > 0) {
             return response[0]; // Return the user object
          } else {
@@ -145,12 +146,12 @@ class userDbService{
    }
 
 
-   async searchByClientID(client_id){
+   async searchByClientID(clientID){
       try{
          // use await to call an asynchronous function
          const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE client_id = ?;";
-            connection.query(query, [client_id], (err, results) => {
+            const query = "SELECT * FROM ClientDB WHERE clientID = ?;";
+            connection.query(query, [clientID], (err, results) => {
                if(err) reject(new Error(err.message));
                else resolve(results);
             });
@@ -213,12 +214,12 @@ class userDbService{
       }
   }
 
-   // Search ClientDB by client_id
-   async searchByClientID(client_id) {
+   // Search ClientDB by clientID
+   async searchByClientID(clientID) {
       try {
          const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE client_id LIKE ?;";
-            connection.query(query, [client_id], (err, results) => {
+            const query = "SELECT * FROM ClientDB WHERE clientID LIKE ?;";
+            connection.query(query, [clientID], (err, results) => {
                if (err) reject(new Error(err.message));
                else resolve(results);
             });
@@ -263,11 +264,11 @@ async searchByAge(minAge, maxAge) {
 }
 
 // Search ClientDB registered after specific user
-async searchAfterRegDate(client_id) {
+async searchAfterRegDate(clientID) {
    try {
        const response = await new Promise((resolve, reject) => {
-         const query = "SELECT * FROM ClientDB WHERE registerDate > (SELECT registerDate FROM ClientDB WHERE client_id = ?);";
-            connection.query(query, [client_id], (err, results) => {
+         const query = "SELECT * FROM ClientDB WHERE registerDate > (SELECT registerDate FROM ClientDB WHERE clientID = ?);";
+            connection.query(query, [clientID], (err, results) => {
                if (err) reject(new Error(err.message));
                else resolve(results);
             });
@@ -281,11 +282,11 @@ async searchAfterRegDate(client_id) {
 }
 
 // Search ClientDB registered on same day as user
-async searchSameDayRegDate(client_id) {
+async searchSameDayRegDate(clientID) {
    try {
        const response = await new Promise((resolve, reject) => {
-         const query = "SELECT * FROM ClientDB WHERE registerDate = (SELECT registerDate FROM ClientDB WHERE client_id = ?);";
-            connection.query(query, [client_id], (err, results) => {
+         const query = "SELECT * FROM ClientDB WHERE registerDate = (SELECT registerDate FROM ClientDB WHERE clientID = ?);";
+            connection.query(query, [clientID], (err, results) => {
                if (err) reject(new Error(err.message));
                else resolve(results);
             });
