@@ -1,7 +1,7 @@
 // Create Tables
 
 CREATE TABLE ClientDB (
-    client_id VARCHAR(20) PRIMARY KEY,
+    clientID VARCHAR(20) PRIMARY KEY,
     email VARCHAR(30) NOT NULL UNIQUE,
     password VARCHAR(20) NOT NULL,
     firstName VARCHAR(20) NOT NULL,

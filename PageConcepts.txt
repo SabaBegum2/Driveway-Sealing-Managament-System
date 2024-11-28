@@ -9,7 +9,7 @@ IMPORTANT FOR TABLES:
 
 REGISTER PAGE:
     Client Form (Table):
-        client_id (auto incremented)
+        clientID
         fname
         lname
         client_address
