@@ -1,0 +1,6 @@
+SQL Query notes:
+
+
+-- Check if username or email already exists
+SELECT * FROM ClientDB WHERE clientID = ? OR email = ? LIMIT 1;
+
