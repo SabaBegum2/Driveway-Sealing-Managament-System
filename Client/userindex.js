@@ -1,32 +1,52 @@
 
+
+
 // This is the frontEnd calls that interact with the HTML pages directly
 document.addEventListener('DOMContentLoaded', function () {
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
     console.log(`Current page: ${currentPage}`);
 
-
     // Execute the correct setup function based on the page
     if(currentPage === 'LoginPage') {
-            const loginForm = document.getElementById("loginForm");
-            loginForm.addEventListener("submit", submitLoginForm);
-            submitLoginForm();  // Fetch data for the search page
+        const loginForm = document.getElementById("loginForm");
+        loginForm.addEventListener("submit", submitLoginForm);
+        //submitLoginForm(e);  // Fetch data for the search page
     }
     else if (currentPage === 'RegistrationPage') {
-            const registrationForm = document.getElementById('registrationForm');
-            registrationForm.addEventListener("submit", submitRegistrationForm);
-            submitRegistrationForm();  // Setup registration form event
+        const registrationForm = document.getElementById('registrationForm');
+        registrationForm.addEventListener("submit", submitRegistrationForm);
+        //submitRegistrationForm(e);  // Setup registration form event
     }
     else {
-    fetch('http://localhost:5050/getall')     
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
+        fetch('http://localhost:5050/getClientData')
+        .then(response => response.json())
+        .then(data => loadHTMLTable(data['data']));    
     }
+
+    // else if (currentPage === 'ClientPage') {
+    //     // const clientForm = document.getElementById('clientForm');
+    //     // clientForm.addEventListener("click", setupClientPage);
+    //     // toggleOptions(clickedTab);
+    //     setupClientPage() 
+
+    // }
+    //else {
+    //// keep "getall" as a debugging tool when we need to validate data is working
+    // fetch('http://localhost:5050/getall')     
+    // .then(response => response.json())
+    // .then(data => loadHTMLTable(data['data']));
+    //}
 });
 
 
-//// PURPOSE: LOGIN FORM
-function submitLoginForm(event) {
-    event.preventDefault(); // Prevent default form submission
+
+
+/* ----------------------------------------------- */
+/* ------------- LOGIN PAGE FUNCTIONS ------------ */
+/* ----------------------------------------------- */
+
+function submitLoginForm(e) {
+    e.preventDefault(); // Prevent default form submission
 
     const clientID = document.getElementById("clientID-input").value;
     const password = document.getElementById("password-input").value;
@@ -46,8 +66,11 @@ function submitLoginForm(event) {
     .then(data => {
         if (data.success) {
             alert('Login successful');
+            globalThis.activeClient = clientID; // Set the active user globally
+            console.log("Active user: ", activeUser);
+
             const newUrl = new URL(window.location.href);
-            newUrl.pathname = '/Client/SearchDirectory.html';
+            newUrl.pathname = '/Client/ClientDashboard.html';
             newUrl.protocol = 'http:';
             window.location.href = newUrl.toString(); // Redirect after successful login
             } else {
@@ -61,12 +84,14 @@ function submitLoginForm(event) {
 }
 
 
+/* ----------------------------------------------- */
+/* --------- REGISTRATION PAGE FUNCTIONS --------- */
+/* ----------------------------------------------- */
 
-//// PURPOSE: REGISTRATION FORM
-function submitRegistrationForm(event) {
+function submitRegistrationForm(e) {
 
         // prevent the default reload action of the page
-        event.preventDefault();
+        e.preventDefault();
 
         // Get the registration form inputs
         const clientID = document.querySelector("#clientID-input").value;
@@ -78,6 +103,7 @@ function submitRegistrationForm(event) {
         const creditCardNum = document.querySelector('#creditCardNum-input').value.trim();
         const creditCardCVV = document.querySelector('#creditCardCVV-input').value.trim();
         const creditCardExp = document.querySelector('#creditCardExp-input').value.trim();
+
         // Get values from individual address fields
         const streetAddress = document.querySelector("#streetAddress-input").value.trim();
         const city = document.querySelector("#city-input").value.trim();
@@ -168,27 +194,32 @@ function submitRegistrationForm(event) {
         })
         .then(response => response.json())
         .then(data => {
-            // alert("New registration successful!");
-            // console.log(data);  // debugging
-            // window.location.href = 'http://127.0.0.1:5500/Client/LoginPage.html'; // Redirect after successful login
-            if (data.success) {
-                alert("New registration successful!");
-                console.log(data);  // debugging
-                const newUrl = new URL(window.location.href);
-                newUrl.pathname = '/Client/LoginPage.html';
-                newUrl.protocol = 'http:';
-                window.location.href = newUrl.toString(); // Redirect after successful login
-                } else {
-                alert(data.error); // Show error message from the server
-            }
+            alert("New registration successful!");
+            console.log(data);  // debugging
+            window.location.href = 'http://127.0.0.1:5500/Client/LoginPage.html'; // Redirect after successful login
+            // if (data.success) {
+            //     alert("New registration successful!");
+            //     console.log(data);  // debugging
+            //     const newUrl = new URL(window.location.href);
+            //     newUrl.pathname = '/Client/LoginPage.html';
+            //     newUrl.protocol = 'http:';
+            //     window.location.href = newUrl.toString(); // Redirect after successful login
+            //     } else {
+            //     alert(data.error); // Show error message from the server
+            // }
         })
         .catch(error => console.error("Error: ", error));
     //}
 }
 
-// PURPOSE: SEARCH DATABASE FOR VALUES
+
+
+/* ----------------------------------------------- */
+/* ---------- SEARCH DATABASE FUNCTIONS ---------- */
+/* ----------------------------------------------- */
+
 // when the searchBtn is clicked
-const searchBtn =  document.querySelector('#search-btn');
+const searchBtn = document.querySelector('#search-btn');
 searchBtn.onclick = function (){
     console.log("Search button clicked for first name");
     const searchInput = document.querySelector('#search-input');
@@ -332,6 +363,9 @@ searchRegToday.onclick = function () {
 }
 
 
+/* ----------------------------------------------- */
+/* ------------ ADDITIONAL FUNCTIONS ------------- */
+/* ----------------------------------------------- */
 
 // this function is used for debugging only, and should be deleted afterwards
 function debug(data)
@@ -388,13 +422,15 @@ function insertRowIntoTable(data){
     }
 }
 
+
+// For each function that loads the table and formats the data
 function loadHTMLTable(data){
     debug("userindex.js: loadHTMLTable called.");
 
     const table = document.querySelector('table tbody'); 
     
     if(data.length === 0){
-        table.innerHTML = "<tr><td class='no-data' colspan='8'>No Data</td></tr>";
+        table.innerHTML = "<tr><td class='no-data' colspan='10'>No Data</td></tr>";
         return;
     }
 
