@@ -1,7 +1,7 @@
 // Server: application services, accessible by URIs
 
 const express = require('express')
-const cors = require ('cors')
+const cors = require('cors')
 const dotenv = require('dotenv')
 dotenv.config()
 const bodyParser = require('body-parser'); // Import body-parser
@@ -14,18 +14,29 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}));
 
 
-
-// Read all data
-app.get('/getAll', (request, response) => {
+// Read all client data
+app.get('/getClientData', (request, response) => {
     
     const db = userDbService.getUserDbServiceInstance();
     
-    const result =  db.getAllData(); // call a DB function
+    const result =  db.getAllClientData(); // call a DB function
 
     result
     .then(data => response.json({ data: data }))
     .catch(err => console.log(err));
 });
+
+// Read all data
+// app.get('/getAll', (request, response) => {
+    
+//     const db = userDbService.getUserDbServiceInstance();
+    
+//     const result =  db.getAllData(); // call a DB function
+
+//     result
+//     .then(data => response.json({ data: data }))
+//     .catch(err => console.log(err));
+// });
 
 
 // Create new Client
@@ -74,6 +85,8 @@ app.post('/login', async (request, response) => {
 
         // Successful login
         response.json({ success: true });
+        activeUser = clientID;
+        console.log("Active user: ", activeUser);
     } catch (err) {
         console.error(err);
         response.status(500).json({ error: "An error occurred while logging in." });

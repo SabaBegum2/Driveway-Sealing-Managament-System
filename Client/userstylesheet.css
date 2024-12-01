@@ -9,7 +9,7 @@ div{
     box-sizing: content-box;
 }
 
-div.signInBox {
+.signInContainer {
     padding: 30px 70px 50px 70px;
     display: block;
     border: 2px solid #888888a0;
@@ -23,7 +23,7 @@ div.signInBox {
     text-align:left;
 }
 
-div.registerBox {
+.registerContainer {
     display: block;
     border-radius: 10px;
     border-style: groove;
@@ -38,18 +38,18 @@ div.registerBox {
     text-align: left;
 }
 
-div.searchBox {
+.clientContainer {
     display: block;
     border-radius: 10px;
     border-style: groove;
     border: 2px solid #888888a0;
-    padding: 30px 70px 50px 70px;
+    padding: 3%;
     background: white;
-    width: 80%;
+    width: 70%;
     margin-top: 10%;
     margin-left: auto;
     margin-right: auto;
-    text-align: center;
+    text-align: left;
 }
 
 section {
@@ -105,6 +105,7 @@ input {
     width: 39%
 }
 
+/* Makes input longer in main div box */
 input.fillInputWidth {
     border-radius: 5px;
     font-size: 14px;
@@ -112,12 +113,14 @@ input.fillInputWidth {
     width: 85%
 }
 
+/* Checkbox styling */
 input.inline-checkbox {
     display: inline-box;
     font-size: 14px;
     align-content: left;
 }
 
+/* Submit button styling */
 button {
     display: block;
     padding: 8px 15px;
@@ -128,16 +131,18 @@ button {
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    align-content: center;
 }
 
+/* Change the background color of the submit button on hover */
 button:hover {
     background-color: #000e0e;
 }
 
-button.search {
+/* button.search {
     margin-top: 0px;
     margin-bottom: 30px;
-}
+} */
 
 footer {
     text-align: center;
@@ -145,44 +150,6 @@ footer {
     font-size: 12px;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     color: #777777a0;
-}
-
-a {
-    color: #003131d7;
-    text-decoration:none;
-    cursor: pointer;
-}
-
-a:hover {
-    color: #005555; /* Change to a darker shade of the original color */
-    text-decoration: underline; /* Add underline on hover */
-}
-
-select {
-    padding: 5px 10px;
-    margin: 2% 1%;
-    border-radius: 5px;
-    border: 1px solid #888888a0;
-    font-size: 12px;
-    height: 25px;
-    width: 22%
-}
-
-/* input is used for the search bar */
-input.searchEngine[type=text] {
-    width: 20%;
-    -webkit-transition: width 0.4s ease-in-out;
-    transition: width 0.4s ease-in-out;
-}
-  
-/* When the input field gets focus, change its width to 100% */
-input.searchEngine[type=text]:focus {
-    width: 40%;
-}
-
-input.twoBoxes[type=text]:focus {
-    width: 30%;
-    margin: 0 5px;
 }
 
 table {
@@ -201,3 +168,42 @@ th {
     background-color: #f2f2f2;
 }
 
+/* -----CLIENT DASHBBOARD------ */
+
+/* Style the tab */
+.toggleTabs {
+    overflow: hidden;
+}
+  
+  /* Style the buttons that are used to open the tab content */
+  .toggleTabs a {
+    background-color: inherit;
+    border-bottom: #000e0e;
+    float: left;
+    align-content: center;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 15px;
+    transition: 0.3s;
+    color: black;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+  }
+  
+  /* Change background color of buttons on hover */
+  .toggleTabs a:hover {
+    background-color: #6a6a6a;
+    color: white;
+  }
+  
+  /* Create an active/current tablink class */
+  .toggleTabs a.active {
+    background-color: #ccc;
+  }
+  
+  /* Style the tab content */
+  /* .clientContent {
+    display: none;
+    padding: 6px 12px;
+  } */
