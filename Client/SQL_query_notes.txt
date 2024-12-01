@@ -1,5 +1,11 @@
 SQL Query notes:
 
+RESEARCH "event bubbles" & stopPropagation():
+    https://www.javascripttutorial.net/javascript-dom/javascript-events/
+
+
+Possibly use 'unload' when a user logs out to clear their data.
+
 
 -- Check if username or email already exists
 SELECT * FROM ClientDB WHERE clientID = ? OR email = ? LIMIT 1;

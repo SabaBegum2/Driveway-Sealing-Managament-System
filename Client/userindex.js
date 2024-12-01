@@ -2,6 +2,7 @@
 
 
 // This is the frontEnd calls that interact with the HTML pages directly
+// BEGINNING OF EVENT CAPTURING FOR JS EVENT FLOW
 document.addEventListener('DOMContentLoaded', function () {
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
     console.log(`Current page: ${currentPage}`);
@@ -423,7 +424,7 @@ function insertRowIntoTable(data){
 }
 
 
-// For each function that loads the table and formats the data
+// For each function that loads the client data into a table
 function loadHTMLTable(data){
     debug("userindex.js: loadHTMLTable called.");
 

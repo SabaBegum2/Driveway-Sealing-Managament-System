@@ -1,3 +1,6 @@
+SUPER USEFUL WEBSITE (explains events, adding, removing, node.js, etc):
+https://www.javascripttutorial.net/javascript-dom/javascript-events/
+
 
 IMPORTANT FOR TABLES: 
     No notes can be be deleted for documentation and court purposes.

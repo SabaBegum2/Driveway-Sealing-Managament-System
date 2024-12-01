@@ -1,7 +1,7 @@
-// Create Tables
+-- Create Tables
 
 CREATE TABLE ClientDB (
-    clientID VARCHAR(20) PRIMARY KEY UNIQUE,
+    clientID VARCHAR(20) PRIMARY KEY,
     email VARCHAR(30) NOT NULL UNIQUE,
     password VARCHAR(20) NOT NULL,
     firstName VARCHAR(20) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE QuoteRequest (
     proposedPrice DECIMAL(10, 2) NOT NULL,
     addNote VARCHAR(500),
     PRIMARY KEY (quoteID),
-    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID),
+    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
 
 CREATE TABLE QuoteRequestImage (
@@ -38,21 +38,21 @@ CREATE TABLE QuoteRequestImage (
 );
 
 
-// clientID is already stored in the QuoteRequest table and 
-// can be retrieved through quoteID using a JOIN method to 
-// reduce the amount of data one table needs to hold.
+-- clientID is already stored in the QuoteRequest table and 
+-- can be retrieved through quoteID using a JOIN method to 
+-- reduce the amount of data one table needs to hold.
 
 CREATE TABLE QuoteHistory (
+    responseID INT AUTO_INCREMENT,
     clientID VARCHAR(20),
     quoteID INT,
-    responseID INT AUTO_INCREMENT,
     proposedPrice DECIMAL(10, 2),
     startDate DATE,
     endDate DATE,
     addNote VARCHAR(300),
     responseDATE DATE DEFAULT CURRENT_DATE,
     status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending',
-    CONSTRAINT (historyID) PRIMARY KEY (quoteID, responseID),
+    PRIMARY KEY (responseID),
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
     FOREIGN KEY (clientID) REFERENCES QuoteRequest(clientID)
 );
@@ -63,11 +63,15 @@ CREATE TABLE WorkOrder (
     clientID VARCHAR(20),
     quoteID INT,
     responseID INT,
-    dateRange VARCHAR(20),
+    dateRange VARCHAR(30),
     status ENUM('Scheduled', 'Completed', 'Cancelled') DEFAULT 'Scheduled',
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID),
-    FOREIGN KEY (quoteID, responseID) REFERENCES QuoteResponse(quoteID, responseID)
+    FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
+    FOREIGN KEY (responseID) REFERENCES QuoteHistory(responseID)
 );
+
+
+DELIMITER //
 
 CREATE TRIGGER createWorkOrder
 AFTER UPDATE ON QuoteHistory
@@ -75,22 +79,25 @@ FOR EACH ROW
 BEGIN
     IF NEW.status = 'Accepted' THEN
         INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
-        SELECT qr.clientID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
+        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
         FROM QuoteRequest qr
         WHERE qr.quoteID = NEW.quoteID;
     END IF;
 END;
+//
+
+DELIMITER ;
 
 
 CREATE TABLE Invoice (
     invoiceID INT PRIMARY KEY AUTO_INCREMENT,
-    wordOrderID INT,
+    workOrderID INT,
     clientID VARCHAR(20),
     amountDue DECIMAL(10, 2),
     dateCreated DATETIME,
     datePaid DATETIME DEFAULT NULL,
-    FOREIGN KEY (wordOrderID) REFERENCES OrderOfWork(wordOrderID),
-    FOREIGN KEY (clientID) REFERENCES Client(clientID)
+    FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
+    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
 
 CREATE TABLE InvoiceResponses (
@@ -104,21 +111,56 @@ CREATE TABLE InvoiceResponses (
 
 
 
+-- For Demonstration: Insert Value Tuples
 
-// For Demonstration: Insert Value Tuples
+INSERT INTO ClientDB (clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime, activeStatus) VALUES
+    ("C001", "john.doe@example.com", "password123", "John", "Doe", "1234567890", "4111111111111111", "123", "12/25", "123 Main St, Anytown, USA", "2024-11-27 08:00:00", "2024-11-27 08:30:00", "online"),
+    ("C002", "jane.smith@example.com", "securePass1", "Jane", "Smith", "0987654321", "5500000000000004", "456", "07/26", "456 Elm St, Othertown, USA", "2024-11-26 09:00:00", "2024-11-27 10:00:00", "offline");
 
-INSERT INTO ClientDB (client_id, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime) VALUES
-    ("johnDoe123", "johndoe@example.com", "pass12345", "John", "Doe", "1234567890", "4111111111111111", "123", "12/25", "123 Main St, Anytown, USA", "2024-11-26 10:30:00", "2024-11-26 11:00:00"),
-    ("janeSmith456", "janesmith@example.com", "securePass!", "Jane", "Smith", "0987654321", "5500000000000004", "456", "07/26", "456 Elm St, Othertown, USA", "2024-11-25 14:00:00", "2024-11-26 10:15:00"),
-    ("bobBrown789", "bobbrown@example.com", "bobby2024", "Bob", "Brown", "5678901234", "340000000000009", "789", "03/27", "789 Pine St, Smallville, USA", "2024-11-24 09:45:00", NULL),
-    ("aliceJones101", "alicejones@example.com", "aliceRocks1", "Alice", "Jones", "3456789012", "30000000000004", "321", "09/28", "101 Oak St, Bigcity, USA", "2024-11-20 16:00:00", "2024-11-26 08:30:00"),
-    ("emmaWilson202", "emmawilson@example.com", "emmaPass456", "Emma", "Wilson", "8901234567", "6011000000000004", "654", "01/29", "202 Birch St, Middletown, USA", "2024-11-18 13:20:00", NULL);
+INSERT INTO QuoteRequest (clientID, propertyAddress, drivewaySqft, proposedPrice, addNote) VALUES
+    ("C001", "123 Main St, Anytown, USA", 1200, 250.00, "Please prioritize this job as soon as possible."),
+    ("C002", "456 Elm St, Othertown, USA", 800, 200.00, "Driveway has some cracks; please inspect closely.");
+
+INSERT INTO QuoteRequestImage (quoteID, image1, image2, image3, image4, image5) VALUES
+    (1, "images/driveway1.jpg", "images/driveway2.jpg", "images/driveway3.jpg", "images/driveway4.jpg", "images/driveway5.jpg"),
+    (2, "images/drivewayA.jpg", "images/drivewayB.jpg", "images/drivewayC.jpg", "images/drivewayD.jpg", "images/drivewayE.jpg");
+
+INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status) VALUES
+    ("C001", 1, 275.00, "2024-12-01", "2024-12-03", "Initial counter proposal from David Smith.", "Pending"),
+    ("C002", 2, 220.00, "2024-12-05", "2024-12-06", "Proposed time and price by David Smith.", "Pending");
+
+INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange, status) VALUES
+    ("C001", 1, 1, "2024-12-01 to 2024-12-03", "Scheduled"),
+    ("C002", 2, 2, "2024-12-05 to 2024-12-06", "Scheduled");
+
+INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated, datePaid) VALUES
+    (1, "C001", 275.00, "2024-12-04 12:00:00", NULL),
+    (2, "C002", 220.00, "2024-12-07 10:00:00", NULL);
+
+INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
+    (1, "The amount seems higher than expected. Can you clarify?", "2024-12-05"),
+    (2, "I need an explanation for the additional charges.", "2024-12-08");
 
 
-INSERT INTO QuoteRequest (client_id, property_address, driveway_sqft, proposed_price, add_note, status) VALUES
-    ("john.doe", "123 Main St, Anytown, USA", 1200, 250.00, "Please prioritize this job as soon as possible.", "Pending"),
-    ("bob.brown", "456 Elm St, Othertown, USA", 800, 180.50, "Driveway has some cracks; please inspect closely.", "Pending"),
-    ("alice.jones", "789 Pine St, Smallville, USA", 1500, 350.00, "Would like a quote for sealing as well.", "Pending"),
-    ("emma.wilson", "101 Oak St, Bigcity, USA", 1000, 220.00, "Need it completed before the end of next week.", "Pending"),
-    ("jane.smith", "202 Birch St, Middletown, USA", 900, 200.00, "Contact me before proceeding with any additional services.", "Pending"),
-    ("bob.brown", "103 Oak St, Bigcity, USA", 1000, 250.00, "Need it completed before the end of next week.","Pending");
+-- Use JOIN for ClientDB and QuoteRequest:
+SELECT c.clientID, c.firstName, c.lastName, qr.propertyAddress, qr.proposedPrice
+FROM ClientDB c
+JOIN QuoteRequest qr ON c.clientID = qr.clientID;
+
+
+-- List all QuoteHistory records for a specified client (C001 used here for example):
+SELECT qh.responseID, qh.proposedPrice, qh.startDate, qh.endDate, qh.status
+FROM QuoteHistory qh
+WHERE qh.clientID = "C001";
+
+
+-- Show unpaid invoices:
+SELECT i.invoiceID, i.clientID, i.amountDue, i.dateCreated
+FROM Invoice i
+WHERE i.datePaid IS NULL;
+
+
+-- List all invoice responses for a specific invoice:
+SELECT ir.responseID, ir.responseNote, ir.responseDate
+FROM InvoiceResponses ir
+WHERE ir.invoiceID = 1;
