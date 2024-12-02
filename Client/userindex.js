@@ -1,6 +1,5 @@
 
 
-
 // This is the frontEnd calls that interact with the HTML pages directly
 // BEGINNING OF EVENT CAPTURING FOR JS EVENT FLOW
 document.addEventListener('DOMContentLoaded', function () {
@@ -11,17 +10,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if(currentPage === 'LoginPage') {
         const loginForm = document.getElementById("loginForm");
         loginForm.addEventListener("submit", submitLoginForm);
-        //submitLoginForm(e);  // Fetch data for the search page
+        //submitLoginForm();  // Fetch data for the search page
     }
     else if (currentPage === 'RegistrationPage') {
         const registrationForm = document.getElementById('registrationForm');
         registrationForm.addEventListener("submit", submitRegistrationForm);
-        //submitRegistrationForm(e);  // Setup registration form event
+        //submitRegistrationForm();  // Setup registration form event
     }
+    // else {
+    //     fetch('http://localhost:5050/getClientData')
+    //     .then(response => response.json())
+    //     .then(data => loadHTMLTable(data['data']));    
+    // }
     else {
-        fetch('http://localhost:5050/getClientData')
-        .then(response => response.json())
-        .then(data => loadHTMLTable(data['data']));    
+        const script = document.createElement('script');
+        script.src = 'clientindex.js';
+        document.head.appendChild(script);
     }
 
     // else if (currentPage === 'ClientPage') {
@@ -31,12 +35,12 @@ document.addEventListener('DOMContentLoaded', function () {
     //     setupClientPage() 
 
     // }
-    //else {
-    //// keep "getall" as a debugging tool when we need to validate data is working
+    // else {
+    // // keep "getall" as a debugging tool when we need to validate data is working
     // fetch('http://localhost:5050/getall')     
     // .then(response => response.json())
     // .then(data => loadHTMLTable(data['data']));
-    //}
+    // }
 });
 
 
@@ -46,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
 /* ------------- LOGIN PAGE FUNCTIONS ------------ */
 /* ----------------------------------------------- */
 
-function submitLoginForm(e) {
-    e.preventDefault(); // Prevent default form submission
+function submitLoginForm(event) {
+    event.preventDefault(); // Prevent default form submission
 
     const clientID = document.getElementById("clientID-input").value;
     const password = document.getElementById("password-input").value;
@@ -67,8 +71,9 @@ function submitLoginForm(e) {
     .then(data => {
         if (data.success) {
             alert('Login successful');
-            //globalThis.activeClient = clientID; // Set the active user globally
-            //console.log("Active user: ", activeUser);
+            //// The following lines are to test out setting an active user globally after sign-in:
+            // globalThis.activeClient = clientID; // Set the active user globally
+            // console.log("Active user: ", activeUser);
 
             const newUrl = new URL(window.location.href);
             newUrl.pathname = '/Client/ClientDashboard.html';
@@ -130,10 +135,10 @@ function submitLoginForm(e) {
 /* --------- REGISTRATION PAGE FUNCTIONS --------- */
 /* ----------------------------------------------- */
 
-function submitRegistrationForm(e) {
+function submitRegistrationForm(event) {
 
         // prevent the default reload action of the page
-        e.preventDefault();
+        event.preventDefault();
 
         // Get the registration form inputs
         const clientID = document.querySelector("#clientID-input").value;

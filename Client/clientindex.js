@@ -1,4 +1,3 @@
-const e = require("express");
 
 document.addEventListener('DOMContentLoaded', function () {
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
