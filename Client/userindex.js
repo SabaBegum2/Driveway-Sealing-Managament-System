@@ -50,6 +50,45 @@ document.addEventListener('DOMContentLoaded', function () {
 /* ------------- LOGIN PAGE FUNCTIONS ------------ */
 /* ----------------------------------------------- */
 
+// function submitLoginForm(event) {
+//     event.preventDefault(); // Prevent default form submission
+
+//     const clientID = document.getElementById("clientID-input").value;
+//     const password = document.getElementById("password-input").value;
+
+//     console.log("clientID:", clientID); // debugging
+//     console.log("password:", password); // debugging
+
+//     // Send the login data to the server
+//     fetch('http://localhost:5050/login', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({ clientID, password }),
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         if (data.success) {
+//             alert('Login successful');
+//             //// The following lines are to test out setting an active user globally after sign-in:
+//             // globalThis.activeClient = clientID; // Set the active user globally
+//             // console.log("Active user: ", activeUser);
+
+//             const newUrl = new URL(window.location.href);
+//             newUrl.pathname = '/Client/ClientDashboard.html';
+//             newUrl.protocol = 'http:';
+//             window.location.href = newUrl.toString(); // Redirect after successful login
+//             } else {
+//             alert(data.error); // Show error message from the server
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//         alert('An error occurred during login. Please try again.');
+//     });
+// }
+
 function submitLoginForm(event) {
     event.preventDefault(); // Prevent default form submission
 
@@ -70,16 +109,17 @@ function submitLoginForm(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Login successful');
-            //// The following lines are to test out setting an active user globally after sign-in:
-            // globalThis.activeClient = clientID; // Set the active user globally
-            // console.log("Active user: ", activeUser);
-
-            const newUrl = new URL(window.location.href);
-            newUrl.pathname = '/Client/ClientDashboard.html';
-            newUrl.protocol = 'http:';
-            window.location.href = newUrl.toString(); // Redirect after successful login
+            if (clientID === 'David_Smith') {
+                // Redirect to David Smith's database page
+                window.location.href = '/DavidSmith/DavidDashboard.html';
             } else {
+                // Redirect to the general client dashboard
+                const newUrl = new URL(window.location.href);
+                newUrl.pathname = '/Client/ClientDashboard.html';
+                newUrl.protocol = 'http:';
+                window.location.href = newUrl.toString();
+            }
+        } else {
             alert(data.error); // Show error message from the server
         }
     })
@@ -88,6 +128,7 @@ function submitLoginForm(event) {
         alert('An error occurred during login. Please try again.');
     });
 }
+
 // function submitLoginForm(e) {
 //     e.preventDefault(); // Prevent default form submission
 
