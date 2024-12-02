@@ -164,3 +164,94 @@ WHERE i.datePaid IS NULL;
 SELECT ir.responseID, ir.responseNote, ir.responseDate
 FROM InvoiceResponses ir
 WHERE ir.invoiceID = 1;
+
+
+-- for david database 
+
+-- big clients 
+
+SELECT c.clientID, c.firstName, c.lastName, COUNT(wo.workOrderID) AS completed_orders
+FROM ClientDB c
+JOIN WorkOrder wo ON c.clientID = wo.clientID
+WHERE wo.status = 'Completed'
+GROUP BY c.clientID
+HAVING completed_orders = (
+    SELECT MAX(order_count)
+    FROM (
+        SELECT COUNT(wo2.workOrderID) AS order_count
+        FROM WorkOrder wo2
+        WHERE wo2.status = 'Completed'
+        GROUP BY wo2.clientID
+    ) AS subquery
+);
+
+
+-- difficult clients
+
+SELECT c.clientID, c.firstName, c.lastName
+FROM ClientDB c
+JOIN QuoteRequest qr ON c.clientID = qr.clientID
+LEFT JOIN QuoteHistory qh ON qr.quoteID = qh.quoteID
+WHERE qh.responseID IS NULL
+GROUP BY c.clientID
+HAVING COUNT(qr.quoteID) = 3;
+
+
+-- this months Quotes
+
+SELECT qh.responseID, qh.proposedPrice, qh.startDate, qh.endDate
+FROM QuoteHistory qh
+WHERE qh.status = 'Accepted'
+  AND MONTH(qh.responseDATE) = 12
+  AND YEAR(qh.responseDATE) = 2024;
+
+
+-- prospective clients
+
+SELECT c.clientID, c.firstName, c.lastName
+FROM ClientDB c
+LEFT JOIN QuoteRequest qr ON c.clientID = qr.clientID
+WHERE qr.quoteID IS NULL;
+
+
+-- largest driveway
+
+SELECT qr.propertyAddress, qr.drivewaySqft
+FROM QuoteRequest qr
+JOIN WorkOrder wo ON qr.quoteID = wo.quoteID
+WHERE wo.status = 'Completed'
+  AND qr.drivewaySqft = (
+    SELECT MAX(drivewaySqft)
+    FROM QuoteRequest qr2
+    JOIN WorkOrder wo2 ON qr2.quoteID = wo2.quoteID
+    WHERE wo2.status = 'Completed'
+  );
+
+
+-- overdue bills
+
+SELECT i.invoiceID, i.clientID, i.amountDue, i.dateCreated
+FROM Invoice i
+WHERE i.datePaid IS NULL
+  AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
+
+
+-- bad clients 
+
+SELECT DISTINCT c.clientID, c.firstName, c.lastName
+FROM ClientDB c
+JOIN Invoice i ON c.clientID = i.clientID
+WHERE i.datePaid IS NULL
+  AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
+
+
+-- good clients 
+
+SELECT DISTINCT c.clientID, c.firstName, c.lastName
+FROM ClientDB c
+JOIN Invoice i ON c.clientID = i.clientID
+WHERE i.datePaid IS NOT NULL
+  AND TIMESTAMPDIFF(HOUR, i.dateCreated, i.datePaid) <= 24;
+
+
+
