@@ -88,6 +88,47 @@ function submitLoginForm(event) {
         alert('An error occurred during login. Please try again.');
     });
 }
+// function submitLoginForm(e) {
+//     e.preventDefault(); // Prevent default form submission
+
+//     const clientID = document.getElementById("clientID-input").value;
+//     const password = document.getElementById("password-input").value;
+
+//     console.log("clientID:", clientID); // Debugging
+//     console.log("password:", password); // Debugging
+
+//     // Send the login data to the server
+//     fetch('http://localhost:5050/login', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({ clientID, password }),
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         if (data.success) {
+//             alert('Login successful');
+//             globalThis.activeClient = clientID; // Set the active user globally
+//             console.log("Active user: ", activeClient);
+
+//             // **New check for "David Smith"**
+//             if (clientID === "David_Smith") {
+//                 // Redirect to David Smith's Dashboard
+//                 window.location.href = '/Client/DavidSmithDashboard.html';  // Redirect to David Smith's dashboard
+//             } else {
+//                 // Redirect to the generic client dashboard
+//                 window.location.href = '/Client/ClientDashboard.html';  // Redirect to the client dashboard
+//             }
+//         } else {
+//             alert(data.error); // Show error message from the server
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//         alert('An error occurred during login. Please try again.');
+//     });
+// }
 
 
 /* ----------------------------------------------- */

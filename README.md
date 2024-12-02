@@ -41,6 +41,7 @@ This project is a web-based driveway-sealing management system for a contractor,
 The Entity-Relationship (ER) diagram models the structure of the database, identifying key entities such as Client, Quote Request, Order of Work, Bill, and Responses.
 
 ### Relational Model
+Create a database on PHPmyadmin called web_app.
 Below is the set of CREATE TABLE statements to implement the database:
 ```sql
 CREATE TABLE Client (
