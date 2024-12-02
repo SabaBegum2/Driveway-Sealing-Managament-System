@@ -85,8 +85,8 @@ app.post('/login', async (request, response) => {
 
         // Successful login
         response.json({ success: true });
-        activeUser = clientID;
-        console.log("Active user: ", activeUser);
+        // activeUser = clientID;
+        // console.log("Active user: ", activeUser);
     } catch (err) {
         console.error(err);
         response.status(500).json({ error: "An error occurred while logging in." });

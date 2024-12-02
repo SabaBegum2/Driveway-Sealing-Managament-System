@@ -241,19 +241,19 @@ function submitRegistrationForm(event) {
         })
         .then(response => response.json())
         .then(data => {
-            alert("New registration successful!");
-            console.log(data);  // debugging
-            window.location.href = 'http://127.0.0.1:5500/Client/LoginPage.html'; // Redirect after successful login
-            // if (data.success) {
-            //     alert("New registration successful!");
-            //     console.log(data);  // debugging
-            //     const newUrl = new URL(window.location.href);
-            //     newUrl.pathname = '/Client/LoginPage.html';
-            //     newUrl.protocol = 'http:';
-            //     window.location.href = newUrl.toString(); // Redirect after successful login
-            //     } else {
-            //     alert(data.error); // Show error message from the server
-            // }
+            // alert("New registration successful!");
+            // console.log(data);  // debugging
+            // window.location.href = 'http://127.0.0.1:5500/Client/LoginPage.html'; // Redirect after successful login
+            if (data.success) {
+                alert("New registration successful!");
+                console.log(data);  // debugging
+                const newUrl = new URL(window.location.href);
+                newUrl.pathname = '/Client/LoginPage.html';
+                newUrl.protocol = 'http:';
+                window.location.href = newUrl.toString(); // Redirect after successful login
+                } else {
+                alert(data.error); // Show error message from the server
+            }
         })
         .catch(error => console.error("Error: ", error));
     //}
