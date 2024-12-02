@@ -14,7 +14,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}));
 
 
-// Read all client data
+// // Read all client data
 app.get('/getClientData', (request, response) => {
     
     const db = userDbService.getUserDbServiceInstance();
@@ -26,17 +26,17 @@ app.get('/getClientData', (request, response) => {
     .catch(err => console.log(err));
 });
 
-// Read all data
-// app.get('/getAll', (request, response) => {
+//Read all data
+app.get('/getAll', (request, response) => {
     
-//     const db = userDbService.getUserDbServiceInstance();
+    const db = userDbService.getUserDbServiceInstance();
     
-//     const result =  db.getAllData(); // call a DB function
+    const result =  db.getAllData(); // call a DB function
 
-//     result
-//     .then(data => response.json({ data: data }))
-//     .catch(err => console.log(err));
-// });
+    result
+    .then(data => response.json({ data: data }))
+    .catch(err => console.log(err));
+});
 
 
 // Create new Client
