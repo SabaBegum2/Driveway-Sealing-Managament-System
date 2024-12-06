@@ -3,10 +3,12 @@
 const mysql = require('mysql');
 const dotenv = require('dotenv');
 dotenv.config(); // read from .env file
+//const {promisify} = require('util');
 
 let instance = null; 
 
 // if you use .env to configure
+//dotenv.config({ path: './Server/.env'}); //
 
 console.log("HOST: " + process.env.HOST);
 console.log("DB USER: " + process.env.DB_USER);
@@ -37,6 +39,14 @@ connection.connect((err) => {
    console.log('db ' + connection.state); // to see if the DB is connected or not
 });
 
+// Test a query
+connection.query('SELECT 1 + 1 AS solution', (error, results) => {
+   if (error) {
+      console.error('Query failed:', error.message);
+   } else {
+      console.log('Test query result:', results[0].solution);
+   }
+});
 // the following are database functions,
 
 class userDbService {
@@ -347,3 +357,4 @@ class userDbService {
 }
 
 module.exports = userDbService;
+module.exports = connection;

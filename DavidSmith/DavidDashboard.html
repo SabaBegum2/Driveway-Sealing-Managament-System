@@ -17,6 +17,7 @@
                 <a class="tabLinks" href="#Quotes" data-tab="Quotes">Quotes</a>
                 <a class="tabLinks" href="#WorkOrders" data-tab="WorkOrders">Work Orders</a>
                 <a class="tabLinks" href="#Bills" data-tab="Bills">Bills</a>
+                <a class="tabLinks" href="#ViewQuotes" data-tab="ViewQuotes">View Quotes</a> <!-- New tab for viewing quotes -->
             </div>
         
             <!-- Home Tab -->
@@ -38,7 +39,21 @@
                     <input class="fillInputWidth" type="date" style="margin-left: 25px; width:90%" id="time-end" required>
                     <h3>Quote Price:</h3>
                     <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="quote-price" required>
-                    <!--<button id="submit-quote" style="margin-left: 35%">Submit Quote</button-->
+                    <h3>Driveway Address:</h3> <!-- New input for the address -->
+                    <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter Driveway Address" id="driveway-address" required>
+                    <h3>Driveway Square Feet:</h3> <!-- New input for the square feet -->
+                    <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="square-feet" required>
+                    <h3>Proposed Price for Work:</h3> <!-- New input for the proposed price -->
+                    <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="proposed-price" required>
+                    <h3>Upload Pictures (5 angles):</h3> <!-- New input for pictures -->
+                    <input type="file" id="picture-1" accept="image/*" required>
+                    <input type="file" id="picture-2" accept="image/*" required>
+                    <input type="file" id="picture-3" accept="image/*" required>
+                    <input type="file" id="picture-4" accept="image/*" required>
+                    <input type="file" id="picture-5" accept="image/*" required>
+                    <h3>Client Notes (Optional):</h3> <!-- New input for the note -->
+                    <textarea id="client-notes" placeholder="Enter any additional information"></textarea>
+
                     <button class="submitQuote">Submit Quote</button>
                 </form>
             </div>
@@ -99,6 +114,28 @@
                             <p><strong>Bill ID:</strong> #102</p>
                             <p><strong>Status:</strong> Paid</p>
                         </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- View Quotes Tab (New) -->
+            <div id="ViewQuotes" class="DavidContent">
+                <h1>All Submitted Quotes</h1>
+                <p>Here are all the quotes submitted to you:</p>
+                <div class="quote-list">
+                    <h3>Quotes</h3>
+                    <ul id="quote-list">
+                        <!-- Example of a quote item -->
+                        <li>
+                            <p><strong>Client Name:</strong> John Doe</p>
+                            <p><strong>Requested Service:</strong> Driveway Sealing</p>
+                            <p><strong>Address:</strong> 123 Elm St</p>
+                            <p><strong>Square Feet:</strong> 500</p>
+                            <p><strong>Proposed Price:</strong> $1200</p>
+                            <p><strong>Client Notes:</strong> Please call before arrival.</p>
+                            <p><strong>Status:</strong> Pending</p>
+                        </li>
+                        <!-- Additional quote items will be dynamically generated here -->
                     </ul>
                 </div>
             </div>

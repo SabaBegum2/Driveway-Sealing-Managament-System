@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Davidstylesheet.css">
+    <title>David Smith Dashboard</title>
+</head>
+<body data-page="DavidPage">
+
+    <div class="DavidContainer">
+        <h1 style="text-align: center;">David Dashboard</h1>
+
+        <main>
+            <div class="toggleTabs">
+                <a class="tabLinks" href="#Home" data-tab="Home">Home</a>
+                <a class="tabLinks" href="#Quotes" data-tab="Quotes">Quotes</a>
+                <a class="tabLinks" href="#WorkOrders" data-tab="WorkOrders">Work Orders</a>
+                <a class="tabLinks" href="#Bills" data-tab="Bills">Bills</a>
+                <a class="tabLinks" href="#ViewQuotes" data-tab="ViewQuotes">View Quotes</a> <!-- New tab for viewing quotes -->
+            </div>
+        
+            <!-- Home Tab -->
+            <div id="Home" class="DavidContent">
+                <h1>Home</h1>
+                <p>Welcome to the David Smith Dashboard!</p>
+            </div>
+        
+            <!-- Quotes Tab -->
+            <!-- Quotes Tab -->
+            <div id="Quotes" class="DavidContent">
+                <h1>Manage Quotes</h1>
+                <div class="quote-list">
+                    <h3>Quotes</h3>
+                    <ul id="quote-list">
+                        <!-- Quotes will be dynamically inserted here -->
+                    </ul>
+                </div>
+            </div>
+
+        
+            <!-- Work Orders Tab -->
+            <div id="WorkOrders" class="DavidContent">
+                <h1>Manage Work Orders</h1>
+                <p>Check your work orders and their status.</p>
+                <div class="order-list">
+                    <h3>Work Orders</h3>
+                    <ul id="work-orders">
+                        <li>
+                            <p><strong>Order ID:</strong> #001</p>
+                            <p><strong>Status:</strong> Completed</p>
+                            <button class="generate-bill-btn">Generate Bill</button>
+                        </li>
+                        <li>
+                            <p><strong>Order ID:</strong> #002</p>
+                            <p><strong>Status:</strong> In Progress</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        
+            <!-- Bill Generation Form -->
+            <div id="GenerateBill" class="DavidContent">
+                <h1>Generate Bill</h1>
+                <form id="generate-bill-form">
+                    <h3>State of Work Done:</h3>
+                    <textarea id="work-done" rows="4" required placeholder="Describe the work completed"></textarea>
+
+                    <h3>Cost:</h3>
+                    <input type="number" id="cost" placeholder="Enter the cost" required>
+
+                    <h3>Optional Discount:</h3>
+                    <input type="number" id="discount" placeholder="Enter discount if any">
+
+                    <h3>Optional Note:</h3>
+                    <textarea id="bill-note" rows="4" placeholder="Enter any additional notes"></textarea>
+
+                    <button id="submit-bill">Submit Bill</button>
+                </form>
+            </div>
+        
+            <!-- Bills Tab -->
+            <div id="Bills" class="DavidContent">
+                <h1>Manage Bills</h1>
+                <p>Check and respond to your bills.</p>
+                <div class="bill-list">
+                    <h3>All Bills</h3>
+                    <ul id="bill-list">
+                        <li>
+                            <p><strong>Bill ID:</strong> #101</p>
+                            <p><strong>Status:</strong> Pending Payment</p>
+                            <button class="respond-bill-btn">Respond</button>
+                        </li>
+                        <li>
+                            <p><strong>Bill ID:</strong> #102</p>
+                            <p><strong>Status:</strong> Paid</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- View Quotes Tab (New) -->
+            <div id="ViewQuotes" class="DavidContent">
+                <h1>All Submitted Quotes</h1>
+                <p>Here are all the quotes submitted to you:</p>
+                <div class="quote-list">
+                    <h3>Quotes</h3>
+                    <ul id="quote-list">
+                        <!-- Additional quote items will be dynamically generated here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bill Response Form -->
+            <div id="RespondToBill" class="DavidContent">
+                <h1>Respond to Bill</h1>
+                <form id="respond-bill-form">
+                    <h3>Response to Client:</h3>
+                    <textarea id="bill-response" rows="4" required placeholder="Enter your response to the bill"></textarea>
+
+                    <h3>Optional Adjustments:</h3>
+                    <label for="apply-discount">Apply Discount: </label>
+                    <input type="checkbox" id="apply-discount"> Apply Discount
+                    <input type="number" id="discount-amount" placeholder="Enter discount amount" style="display:none;">
+
+                    <button id="submit-response">Submit Response</button>
+                </form>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="Davidindex.js"></script>
+    <footer>
+        <p>Created by: Saba Begum and Violet Yousif</p>
+    </footer>
+
+</body>
+</html>
+
+

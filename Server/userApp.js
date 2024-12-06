@@ -1,6 +1,7 @@
 // Server: application services, accessible by URIs
 
 const express = require('express')
+//const router = express.Router();
 const cors = require('cors')
 const dotenv = require('dotenv')
 dotenv.config()
@@ -8,10 +9,40 @@ const bodyParser = require('body-parser'); // Import body-parser
 
 const app = express();
 const userDbService = require('./userDbService');
+//david
+//const clientRoutes  = require('./Client/clientindex');
+// const clientIndex = require('./Client/clientindex');
+// const quotesRoutes = require('./DavidSmith/Quotes');
+// const workOrdersRoutes = require('../DavidSmith/Orders');
+// const invoicesRoutes = require('./DavidSmith/invoices');
+
+// const clientIndex = require('../Client/clientindex'); // Relative path to Client folder
+// const quotesRoutes = require('../DavidSmith/Quotes'); // Relative path to DavidSmith folder
+// const workOrdersRoutes = require('../DavidSmith/Orders'); // Ensure the path is correct
+// const invoicesRoutes = require('../DavidSmith/invoices'); // Ensure the path is correct
 
 app.use(cors());
-app.use(express.json())
+app.use(express.json())//middleware
 app.use(express.urlencoded({extended: false}));
+
+//david routes
+// app.use('/clientIndex', clientIndex);
+// app.use('/quotes', quotesRoutes);
+// app.use('/Orders', workOrdersRoutes);
+// app.use('/invoices', invoicesRoutes);
+
+// Correct paths to modules
+//const clientIndex = require('../Client/clientindex'); // ../ to access Client folder
+const quotesRouter = require('./Quotes'); // ../ to access DavidSmith folder
+const workOrdersRoutes = require('../DavidSmith/Orders'); // Corrected relative path
+const invoicesRoutes = require('../DavidSmith/invoices'); // Corrected relative path
+
+// Use routes
+//app.use('/clientIndex', clientIndex);
+app.use('/quotes', quotesRouter);
+app.use('/Orders', workOrdersRoutes);
+app.use('/invoices', invoicesRoutes);
+
 
 
 // // Read all client data
@@ -275,7 +306,70 @@ app.get('/search/RegisteredToday', async (request, response) => {
     }
 });
 
+// Route to fetch all quotes for david 
+app.get('/quotes', (req, res) => {
+    db.query('SELECT * FROM quotes', (err, results) => {
+        if (err) {
+            console.error('Error fetching quotes:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        } else {
+            res.json(results); // Send the quotes back to the client
+        }
+    });
+});
+//submit a new quote
+// app.post('/quotes', async (req, res) => {
+//     const { client_id, property_address, driveway_square_feet, proposed_price, client_note } = req.body;
 
+//     if (!client_id || !property_address || !driveway_square_feet || !proposed_price) {
+//         return res.status(400).json({ error: 'Required fields are missing.' });
+//     }
+
+//     try {
+//         const [result] = await pool.query(
+//             `INSERT INTO Quotes 
+//             (client_id, property_address, driveway_square_feet, proposed_price, client_note, status, created_at) 
+//             VALUES (?, ?, ?, ?, ?, "Pending", NOW())`,
+//             [client_id, property_address, driveway_square_feet, proposed_price, client_note]
+//         );
+//         res.status(201).json({ quote_id: result.insertId });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Failed to submit quote.' });
+//     }
+// });
+
+// Respond to a quote
+// app.put('/quotes/:id/respond', async (req, res) => {
+//     const { id } = req.params;
+//     const { david_proposed_price, time_window_start, time_window_end, david_response_note, status } = req.body;
+
+//     if (!david_proposed_price || !time_window_start || !time_window_end || !status) {
+//         return res.status(400).json({ error: 'Required fields are missing.' });
+//     }
+
+//     try {
+//         await pool.query(
+//             `UPDATE Quotes 
+//             SET david_proposed_price = ?, time_window_start = ?, time_window_end = ?, david_response_note = ?, status = ?, updated_at = NOW() 
+//             WHERE quote_id = ?`,
+//             [david_proposed_price, time_window_start, time_window_end, david_response_note, status, id]
+//         );
+//         res.sendStatus(200);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Failed to respond to quote.' });
+//     }
+// });
+
+// Routes fir david
+// const quotesRoutes = require('./routes/quotes');
+// const workOrdersRoutes = require('./routes/workOrders');
+// const billsRoutes = require('./routes/bills');
+
+// app.use('/quotes', quotesRoutes);
+// app.use('/workOrders', workOrdersRoutes);
+// app.use('/bills', billsRoutes);
 
 // debug function, will be deleted later
 app.post('/debug', (request, response) => {
