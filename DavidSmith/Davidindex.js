@@ -294,78 +294,307 @@
 
 
 //Function to load quotes from the server and display them
-function loadQuotes() {
-    fetch('http://localhost:5050/quotes')
-        .then(response => response.json())
-        .then(quotes => {
-            const quoteList = document.getElementById('quote-list');
-            quotes.forEach(quote => {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `
-                    <p><strong>Client Name:</strong> ${quote.clientID}</p>
-                    <p><strong>Address:</strong> ${quote.propertyAddress}</p>
-                    <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
-                    <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
-                    <p><strong>Note:</strong> ${quote.addNote || 'No notes'}</p>
-                    <div>
-                        <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
-                    </div>
-                    <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
-                    <input type="date" id="start-date-${quote.quoteID}" placeholder="Start Date">
-                    <input type="date" id="end-date-${quote.quoteID}" placeholder="End Date">
-                    <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
-                    <button onclick="respondWithCounter(${quote.quoteID})">Submit Counter Proposal</button>
-                    <button onclick="rejectRequest(${quote.quoteID})">Reject Request</button>
-                `;
-                quoteList.appendChild(listItem);
-            });
+
+//these workss*********************************************************
+// function loadQuotes() {
+//     fetch('http://localhost:5050/quotes')
+//         .then(response => response.json())
+//         .then(quotes => {
+//             const quoteList = document.getElementById('quote-list');
+//             quotes.forEach(quote => {
+//                 const listItem = document.createElement('li');
+//                 listItem.innerHTML = `
+//                     <p><strong>Client Name:</strong> ${quote.clientID}</p>
+//                     <p><strong>Address:</strong> ${quote.propertyAddress}</p>
+//                     <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
+//                     <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
+//                     <p><strong>Note:</strong> ${quote.addNote || 'No notes'}</p>
+//                     <div>
+//                         <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
+//                     </div>
+//                     <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
+//                     <input type="date" id="start-date-${quote.quoteID}" placeholder="Start Date">
+//                     <input type="date" id="end-date-${quote.quoteID}" placeholder="End Date">
+//                     <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
+//                     <button onclick="respondWithCounter(${quote.quoteID})">Submit Counter Proposal</button>
+//                     <button onclick="rejectRequest(${quote.quoteID})">Reject Request</button>
+//                 `;
+//                 quoteList.appendChild(listItem);
+//             });
+//         })
+//         .catch(error => console.error('Error:', error));
+// }
+
+// // Function to respond with a counter proposal
+// function respondWithCounter(quoteID) {
+//     const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
+//     const startDate = document.getElementById(`start-date-${quoteID}`).value;
+//     const endDate = document.getElementById(`end-date-${quoteID}`).value;
+
+//     if (!counterPrice || !startDate || !endDate) {
+//         alert('Please provide all details for the counter proposal.');
+//         return;
+//     }
+
+//     fetch(`/quotes/counter/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ counterPrice, startDate, endDate }),
+//     })
+//         .then(response => response.json())
+//         .then(data => alert(data.message))
+//         .catch(error => console.error('Error:', error));
+// }
+
+// // Function to reject the request with a note
+// function rejectRequest(quoteID) {
+//     const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
+
+//     if (!rejectionNote) {
+//         alert('Please provide a rejection note.');
+//         return;
+//     }
+
+//     fetch(`/quotes/reject/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ rejectionNote }),
+//     })
+//         .then(response => response.json())
+//         .then(data => alert(data.message))
+//         .catch(error => console.error('Error:', error));
+// }
+
+// // Load quotes on page load
+// document.addEventListener('DOMContentLoaded', loadQuotes);
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Load quotes when the DOM is fully loaded
+    function loadQuotes() {
+        fetch('http://localhost:5050/quotes')
+            .then(response => response.json())
+            .then(quotes => {
+                const quoteList = document.getElementById('quote-list');
+                if (!quoteList) {
+                    console.error('Element with id "quote-list" not found.');
+                    return;
+                }
+                quotes.forEach(quote => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <p><strong>Client Name:</strong> ${quote.clientID}</p>
+                        <p><strong>Address:</strong> ${quote.propertyAddress}</p>
+                        <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
+                        <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
+                        <p><strong>Note:</strong> ${quote.addNote || 'No notes'}</p>
+                        <div>
+                            <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
+                            <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
+                            <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
+                            <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
+                            <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
+                        </div>
+                        <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
+                        <input type="date" id="start-date-${quote.quoteID}" placeholder="Start Date">
+                        <input type="date" id="end-date-${quote.quoteID}" placeholder="End Date">
+                        <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
+                        <button onclick="respondWithCounter(${quote.quoteID})">Submit Counter Proposal</button>
+                        <button onclick="rejectRequest(${quote.quoteID})">Reject Request</button>
+                    `;
+                    quoteList.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error('Error fetching quotes:', error));
+    }
+
+    // Function to respond with a counter proposal
+    function respondWithCounter(quoteID) {
+        const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
+        const startDate = document.getElementById(`start-date-${quoteID}`).value;
+        const endDate = document.getElementById(`end-date-${quoteID}`).value;
+
+        if (!counterPrice || !startDate || !endDate) {
+            alert('Please provide all details for the counter proposal.');
+            return;
+        }
+
+        fetch(`/quotes/counter/${quoteID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ counterPrice, startDate, endDate }),
         })
-        .catch(error => console.error('Error:', error));
-}
-
-// Function to respond with a counter proposal
-function respondWithCounter(quoteID) {
-    const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
-    const startDate = document.getElementById(`start-date-${quoteID}`).value;
-    const endDate = document.getElementById(`end-date-${quoteID}`).value;
-
-    if (!counterPrice || !startDate || !endDate) {
-        alert('Please provide all details for the counter proposal.');
-        return;
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error('Error:', error));
     }
 
-    fetch(`/quotes/counter/${quoteID}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ counterPrice, startDate, endDate }),
-    })
-        .then(response => response.json())
-        .then(data => alert(data.message))
-        .catch(error => console.error('Error:', error));
-}
+    // Function to reject the request with a note
+    function rejectRequest(quoteID) {
+        const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
 
-// Function to reject the request with a note
-function rejectRequest(quoteID) {
-    const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
+        if (!rejectionNote) {
+            alert('Please provide a rejection note.');
+            return;
+        }
 
-    if (!rejectionNote) {
-        alert('Please provide a rejection note.');
-        return;
+        fetch(`/quotes/reject/${quoteID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rejectionNote }),
+        })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error('Error:', error));
     }
 
-    fetch(`/quotes/reject/${quoteID}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rejectionNote }),
-    })
-        .then(response => response.json())
-        .then(data => alert(data.message))
-        .catch(error => console.error('Error:', error));
-}
+    // Load quotes when the DOM is ready
+    loadQuotes();
 
-// Load quotes on page load
-document.addEventListener('DOMContentLoaded', loadQuotes);
+    // Handle bill generation form submission
+    // const generateBillForm = document.getElementById('generate-bill-form');
+
+    // if (generateBillForm) {
+    //     generateBillForm.addEventListener('submit', (event) => {
+    //         event.preventDefault(); // Prevent form from reloading the page
+
+    //         // Collect data from form fields
+    //         // const workOrderID = document.getElementById('workOrderID').value;
+    //         // const clientID = document.getElementById('clientID').value;
+    //         // const amountDue = document.getElementById('amountDue').value;
+
+    //         // Send data to backend
+    //         // fetch('http://localhost:5050/invoices', {
+    //         //     method: 'POST',
+    //         //     headers: { 'Content-Type': 'application/json' },
+    //         //     body: JSON.stringify({ workOrderID, clientID, amountDue }),
+    //         // })
+    //         //     .then(response => response.json())
+    //         //     .then(data => {
+    //         //         const messageDiv = document.getElementById('response-message');
+    //         //         if (data.success) {
+    //         //             messageDiv.style.color = 'green';
+    //         //             messageDiv.innerText = 'Invoice created successfully!';
+    //         //         } else {
+    //         //             messageDiv.style.color = 'red';
+    //         //             messageDiv.innerText = `Error: ${data.error || 'Failed to create invoice.'}`;
+    //         //         }
+    //         //     })
+    //         //     .catch(error => {
+    //         //         console.error('Error:', error);
+    //         //         const messageDiv = document.getElementById('response-message');
+    //         //         messageDiv.style.color = 'red';
+    //         //         messageDiv.innerText = 'Failed to create invoice due to a server error.';
+    //         //     });
+    // const workOrderID = document.getElementById('workOrderID').value;
+    // const clientID = document.getElementById('clientID').value;
+    // const amountDue = document.getElementById('amountDue').value;
+
+    // console.log('Form data:', { workOrderID, clientID, amountDue }); // Debug log
+
+    // // Send POST request to the server
+    // fetch('http://localhost:5050/invoices', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ workOrderID, clientID, amountDue }),
+    // })
+    //     .then(response => {
+    //         console.log('Server response:', response); // Log server response
+    //         if (!response.ok) {
+    //             throw new Error(`HTTP error! status: ${response.status}`);
+    //         }
+    //         return response.json();
+    //     })
+    //     .then(data => {
+    //         console.log('Server response data:', data); // Log response data
+    //         const messageDiv = document.getElementById('response-message');
+    //         if (data.success) {
+    //             messageDiv.style.color = 'green';
+    //             messageDiv.innerText = 'Invoice created successfully!';
+    //         } else {
+    //             messageDiv.style.color = 'red';
+    //             messageDiv.innerText = `Error: ${data.error || 'Failed to create invoice.'}`;
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error:', error); // Log any errors
+    //         const messageDiv = document.getElementById('response-message');
+    //         messageDiv.style.color = 'red';
+    //         messageDiv.innerText = 'Failed to create invoice due to a server error.';
+    //     });
+    // });
+    // }
+
+    
+    document.getElementById('invoice-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const workOrderID = document.getElementById('workOrderID').value;
+        const clientID = document.getElementById('clientID').value;
+        const amountDue = document.getElementById('amountDue').value;
+
+        console.log('Collected data:', { workOrderID, clientID, amountDue }); // Debug log
+
+        //works perfectly ******
+        // fetch('http://localhost:5050/invoices', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({ workOrderID, clientID, amountDue }),
+        // })
+        //     .then(response => {
+        //         console.log('Response received:', response); // Debug response
+        //         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        //         return response.json();
+        //     })
+        //     .then(data => {
+        //         console.log('Response data:', data); // Debug response data
+        //         const messageDiv = document.getElementById('response-message');
+        //         if (data.success) {
+        //             messageDiv.style.color = 'green';
+        //             messageDiv.innerText = 'Invoice created successfully!';
+        //         } else {
+        //             messageDiv.style.color = 'red';
+        //             messageDiv.innerText = `Error: ${data.error || 'Failed to create invoice.'}`;
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error('Error:', error); // Log any errors
+        //         const messageDiv = document.getElementById('response-message');
+        //         messageDiv.style.color = 'red';
+        //         messageDiv.innerText = 'Failed to create invoice due to a server error.';
+        //     });
+        fetch('http://localhost:5050/invoices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ workOrderID, clientID, amountDue }),
+        })
+            .then(response => {
+                console.log('Response received:', response); // Log raw response
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data); // Log parsed response
+                const messageDiv = document.getElementById('response-message');
+                if (data.success) {
+                    messageDiv.style.color = 'green';
+                    messageDiv.innerText = 'Invoice created successfully!';
+                } else {
+                    messageDiv.style.color = 'red';
+                    messageDiv.innerText = `Error: ${data.error || 'Failed to create invoice.'}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error caught in frontend:', error); // Log error for debugging
+                const messageDiv = document.getElementById('response-message');
+                messageDiv.style.color = 'red';
+                messageDiv.innerText = 'Failed to create invoice due to a server error.';
+            });
+        
+    });
+});

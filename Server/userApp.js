@@ -456,6 +456,161 @@ app.post('/quotes/counter/:quoteID', (req, res) => {
     });
 });
 
+//bills
+// app.post('/invoices', (req, res) => {
+//     const { workOrderID, clientID, amountDue } = req.body;
+
+//     // Validate input
+//     if (!workOrderID || !clientID || !amountDue) {
+//         res.status(400).json({ success: false, error: 'Missing required fields.' });
+//         return;
+//     }
+
+//     // Insert new invoice into the Invoice table
+//     const sql = `
+//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+//         VALUES (?, ?, ?, NOW())
+//     `;
+
+//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
+//         if (err) {
+//             console.error('Error inserting invoice:', err);
+//             res.status(500).json({ success: false, error: 'Database error.' });
+//             return;
+//         }
+
+//         res.json({
+//             success: true,
+//             message: 'Invoice created successfully.',
+//             invoiceID: result.insertId,
+//         });
+//     });
+// });
+
+//works 
+// app.post('/invoices', (req, res) => {
+//     const { workOrderID, clientID, amountDue } = req.body;
+
+//     // Validate input
+//     if (!workOrderID || !clientID || !amountDue) {
+//         res.status(400).json({ success: false, error: 'Missing required fields.' });
+//         return;
+//     }
+
+//     const sql = `
+//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+//         VALUES (?, ?, ?, NOW())
+//     `;
+
+//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
+//         if (err) {
+//             console.error('Error inserting invoice:', err);
+//             res.status(500).json({ success: false, error: 'Database error.' });
+//             return;
+//         }
+
+//         res.json({
+//             success: true,
+//             message: 'Invoice created successfully.',
+//             invoiceID: result.insertId,
+//         });
+//     });
+// });
+
+// app.post('/invoices', (req, res) => {
+//     console.log('Request body:', req.body); // Debug log
+//     const { workOrderID, clientID, amountDue } = req.body;
+
+//     if (!workOrderID || !clientID || !amountDue) {
+//         res.status(400).json({ success: false, error: 'Missing required fields.' });
+//         return;
+//     }
+
+//     const sql = `
+//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+//         VALUES (?, ?, ?, NOW())
+//     `;
+
+//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
+//         if (err) {
+//             console.error('Database error:', err);
+//             res.status(500).json({ success: false, error: 'Database error.' });
+//             return;
+//         }
+
+//         console.log('Invoice created with ID:', result.insertId); // Debug log
+//         res.json({
+//             success: true,
+//             message: 'Invoice created successfully.',
+//             invoiceID: result.insertId,
+//         });
+//     });
+// });
+
+//*****works perfectly******
+// app.post('/invoices', (req, res) => {
+//     console.log('Request received:', req.body); // Log the request data
+
+//     const { workOrderID, clientID, amountDue } = req.body;
+
+//     if (!workOrderID || !clientID || !amountDue) {
+//         console.error('Missing fields:', { workOrderID, clientID, amountDue });
+//         res.status(400).json({ success: false, error: 'Missing required fields.' });
+//         return;
+//     }
+
+//     const sql = `
+//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+//         VALUES (?, ?, ?, NOW())
+//     `;
+
+//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
+//         if (err) {
+//             console.error('Database error:', err);
+//             res.status(500).json({ success: false, error: 'Database error.' });
+//             return;
+//         }
+
+//         console.log('Invoice created:', result.insertId); // Log success
+//         res.json({ success: true, message: 'Invoice created successfully.', invoiceID: result.insertId });
+//     });
+// });
+app.post('/invoices', (req, res) => {
+    console.log('Request body:', req.body); // Log incoming request data
+
+    const { workOrderID, clientID, amountDue } = req.body;
+
+    if (!workOrderID || !clientID || !amountDue) {
+        console.error('Missing required fields:', { workOrderID, clientID, amountDue });
+        res.status(400).json({ success: false, error: 'Missing required fields.' });
+        return;
+    }
+
+    const sql = `
+        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+        VALUES (?, ?, ?, NOW())
+    `;
+
+    db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
+        if (err) {
+            console.error('Database error:', err);
+            res.status(500).json({ success: false, error: 'Database error.' });
+            return;
+        }
+
+        console.log('Invoice created successfully:', result.insertId); // Log successful creation
+        res.json({
+            success: true,
+            message: 'Invoice created successfully.',
+            invoiceID: result.insertId,
+        });
+    });
+});
+
+
+
+
+
 
 
 // debug function, will be deleted later
