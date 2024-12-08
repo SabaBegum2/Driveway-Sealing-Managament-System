@@ -10,3 +10,67 @@ Possibly use 'unload' when a user logs out to clear their data.
 -- Check if username or email already exists
 SELECT * FROM ClientDB WHERE clientID = ? OR email = ? LIMIT 1;
 
+
+
+FOR SAVING USER SESSIONS:
+
+1. INSTALL AND SETUP
+    Installation in terminal:
+        npm install express-session
+    - It might prompt to fix vulnerabilites, just type "npm audit fix" and enter.
+
+
+    Javascript code to save sessions:
+        const session = require('express-session');
+
+        app.use(session({
+            secret: 'your_secret_key', // Replace with a strong secret
+            resave: false,
+            saveUninitialized: true,
+            cookie: { secure: false } // Set to `true` if using HTTPS
+        }));
+
+
+2. Set active user during login:
+
+    app.post('/login', async (req, res) => {
+        const { username, password } = req.body;
+
+        // Query your ClientDB to check login credentials
+        const query = 'SELECT * FROM ClientDB WHERE username = ? AND password = ?';
+        const [user] = await db.query(query, [username, password]);
+
+        if (user) {
+            req.session.userId = user.id; // Or another unique identifier
+            res.redirect('/dashboard');
+        } else {
+            res.status(401).send('Invalid credentials');
+        }
+    });
+
+
+3. Retrieve User-Specific Data for the Dashboard:
+
+    app.get('/dashboard', async (req, res) => {
+        if (!req.session.userId) {
+            return res.redirect('/login');   // Redirect if the user is not logged in
+        }
+
+        const query = 'SELECT * FROM user_data WHERE user_id = ?';
+        const [userData] = await db.query(query, [req.session.userId]);
+
+        // Pass user-specific details to the dashboard
+        res.render('dashboard', { userData });
+    });
+
+
+4. Logout Option: Clear the session to log out the user.
+
+    app.get('/logout', (req, res) => {
+        req.session.destroy(err => {
+            if (err) {
+                return res.status(500).send('Logout failed');
+            }
+            res.redirect('/login');
+        });
+    });

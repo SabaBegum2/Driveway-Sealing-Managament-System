@@ -87,13 +87,13 @@ class userDbService {
       const active = "online"
       try {
          // const registerDate = new Date().toISOString().split('T')[0];
-         const registerDate = new Date();
-         console.log("registerDate: ", registerDate);
+         const register = new Date();
+         console.log("registerDate: ", register);
          let timeLoggedIn = new Date('0000-00-00 00:00:00.00');
 
          const insertProfile = await new Promise((resolve, reject) => {
             const query = "INSERT INTO ClientDB (clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-            connection.query(query, [clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, timeLoggedIn], (err, results) => {
+            connection.query(query, [clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, register, timeLoggedIn], (err, results) => {
                if (err) reject(new Error(err.message));
                else resolve(results.insertProfile);
             });
@@ -110,11 +110,12 @@ class userDbService {
             creditCardCVV: creditCardCVV,
             creditCardExp: creditCardExp,
             homeAddress: homeAddress,
-            registerDate: registerDate,
+            registerDate: register,
             loginTime: timeLoggedIn,
          }
       } catch (error) {
          console.log(error);
+         console.error("Error in registerNewUser: ", error);
          throw error;
       }
    }
