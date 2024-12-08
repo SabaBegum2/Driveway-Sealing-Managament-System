@@ -1,5 +1,6 @@
 // Server: application services, accessible by URIs
 
+const mysql = require('mysql');
 const express = require('express')
 //const router = express.Router();
 const cors = require('cors')
@@ -370,6 +371,92 @@ app.get('/quotes', (req, res) => {
 // app.use('/quotes', quotesRoutes);
 // app.use('/workOrders', workOrdersRoutes);
 // app.use('/bills', billsRoutes);
+// New routes
+
+
+// function acceptQuote(quoteID) {
+//     const newPrice = document.getElementById(`new-price-${quoteID}`).value;
+
+//     fetch(`/quotes/accept/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ newPrice }),
+//     })
+//         .then(response => response.json())
+//         .then(data => {
+//             alert(data.message);
+//             loadQuotes(); // Reload quotes
+//         })
+//         .catch(error => console.error('Error:', error));
+// }
+
+// function rejectQuote(quoteID) {
+//     const rejectionNote = document.getElementById(`note-${quoteID}`).value;
+
+//     fetch(`/quotes/reject/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ rejectionNote }),
+//     })
+//         .then(response => response.json())
+//         .then(data => {
+//             alert(data.message);
+//             loadQuotes(); // Reload quotes
+//         })
+//         .catch(error => console.error('Error:', error));
+// }
+
+app.post('/quotes/reject/:quoteID', (req, res) => {
+    const { quoteID } = req.params;
+    const { rejectionNote, clientID } = req.body;
+
+    if (!rejectionNote) {
+        res.status(400).json({ error: 'Rejection note is required.' });
+        return;
+    }
+
+    const sql = `
+        INSERT INTO QuoteHistory (quoteID, clientID, addNote, status)
+        VALUES (?, ?, ?, 'Rejected')
+    `;
+
+    db.query(sql, [quoteID, clientID, rejectionNote], (err, result) => {
+        if (err) {
+            console.error('Error rejecting quote:', err);
+            res.status(500).json({ error: 'Failed to reject the quote.' });
+            return;
+        }
+
+        res.json({ message: `Quote ${quoteID} has been rejected.` });
+    });
+});
+
+app.post('/quotes/counter/:quoteID', (req, res) => {
+    const { quoteID } = req.params;
+    const { counterPrice, startDate, endDate, addNote, clientID } = req.body;
+
+    if (!counterPrice || !startDate || !endDate) {
+        res.status(400).json({ error: 'Counter price, start date, and end date are required.' });
+        return;
+    }
+
+    const sql = `
+        INSERT INTO QuoteHistory (quoteID, clientID, proposedPrice, startDate, endDate, addNote, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+    `;
+
+    db.query(sql, [quoteID, clientID, counterPrice, startDate, endDate, addNote], (err, result) => {
+        if (err) {
+            console.error('Error submitting counter proposal:', err);
+            res.status(500).json({ error: 'Failed to submit counter proposal.' });
+            return;
+        }
+
+        res.json({ message: `Counter proposal for Quote ${quoteID} has been submitted.` });
+    });
+});
+
+
 
 // debug function, will be deleted later
 app.post('/debug', (request, response) => {

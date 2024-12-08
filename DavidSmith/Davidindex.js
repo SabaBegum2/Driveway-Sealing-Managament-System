@@ -228,8 +228,74 @@
 //     }
 // });
 
+//*******this is a working code, the quotes load *****
+
+// function loadQuotes() {
+//     fetch('http://localhost:5050/quotes')
+//         .then(response => response.json())
+//         .then(quotes => {
+//             const quoteList = document.getElementById('quote-list');
+//             quotes.forEach(quote => {
+//                 const listItem = document.createElement('li');
+//                 listItem.innerHTML = `
+//                     <p><strong>Client Name:</strong> ${quote.clientID}</p>
+//                     <p><strong>Address:</strong> ${quote.propertyAddress}</p>
+//                     <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
+//                     <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
+//                     <p><strong>Note:</strong> ${quote.addNote || 'No notes'}</p>
+//                     <div>
+//                         <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
+//                         <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
+//                     </div>
+//                     <input type="number" id="new-price-${quote.quoteID}" placeholder="Enter New Price">
+//                     <textarea id="note-${quote.quoteID}" placeholder="Add Note"></textarea>
+//                     <button onclick="acceptQuote(${quote.quoteID})">Accept</button>
+//                     <button onclick="rejectQuote(${quote.quoteID})">Reject</button>
+//                 `;
+//                 quoteList.appendChild(listItem);
+//             });
+//         })
+//         .catch(error => console.error('Error:', error));
+// }
+
+// function acceptQuote(quoteID) {
+//     const newPrice = document.getElementById(`new-price-${quoteID}`).value;
+//     const startDate = '2024-01-01'; // Example dates
+//     const endDate = '2024-01-07';
+
+//     fetch(`/quotes/accept/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ newPrice, startDate, endDate }),
+//     })
+//         .then(response => response.json())
+//         .then(data => alert(data.message))
+//         .catch(error => console.error('Error:', error));
+// }
+
+// function rejectQuote(quoteID) {
+//     const rejectionNote = document.getElementById(`note-${quoteID}`).value;
+
+//     fetch(`/quotes/reject/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ rejectionNote }),
+//     })
+//         .then(response => response.json())
+//         .then(data => alert(data.message))
+//         .catch(error => console.error('Error:', error));
+// }
+
+// document.addEventListener('DOMContentLoaded', loadQuotes);
+
+
+
+//Function to load quotes from the server and display them
 function loadQuotes() {
-    fetch('/quotes')
+    fetch('http://localhost:5050/quotes')
         .then(response => response.json())
         .then(quotes => {
             const quoteList = document.getElementById('quote-list');
@@ -242,16 +308,18 @@ function loadQuotes() {
                     <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
                     <p><strong>Note:</strong> ${quote.addNote || 'No notes'}</p>
                     <div>
-                        <img src="${quote.image1}" alt="Driveway Image 1">
-                        <img src="${quote.image2}" alt="Driveway Image 2">
-                        <img src="${quote.image3}" alt="Driveway Image 3">
-                        <img src="${quote.image4}" alt="Driveway Image 4">
-                        <img src="${quote.image5}" alt="Driveway Image 5">
+                        <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
                     </div>
-                    <input type="number" id="new-price-${quote.quoteID}" placeholder="Enter New Price">
-                    <textarea id="note-${quote.quoteID}" placeholder="Add Note"></textarea>
-                    <button onclick="acceptQuote(${quote.quoteID})">Accept</button>
-                    <button onclick="rejectQuote(${quote.quoteID})">Reject</button>
+                    <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
+                    <input type="date" id="start-date-${quote.quoteID}" placeholder="Start Date">
+                    <input type="date" id="end-date-${quote.quoteID}" placeholder="End Date">
+                    <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
+                    <button onclick="respondWithCounter(${quote.quoteID})">Submit Counter Proposal</button>
+                    <button onclick="rejectRequest(${quote.quoteID})">Reject Request</button>
                 `;
                 quoteList.appendChild(listItem);
             });
@@ -259,23 +327,35 @@ function loadQuotes() {
         .catch(error => console.error('Error:', error));
 }
 
-function acceptQuote(quoteID) {
-    const newPrice = document.getElementById(`new-price-${quoteID}`).value;
-    const startDate = '2024-01-01'; // Example dates
-    const endDate = '2024-01-07';
+// Function to respond with a counter proposal
+function respondWithCounter(quoteID) {
+    const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
+    const startDate = document.getElementById(`start-date-${quoteID}`).value;
+    const endDate = document.getElementById(`end-date-${quoteID}`).value;
 
-    fetch(`/quotes/accept/${quoteID}`, {
+    if (!counterPrice || !startDate || !endDate) {
+        alert('Please provide all details for the counter proposal.');
+        return;
+    }
+
+    fetch(`/quotes/counter/${quoteID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPrice, startDate, endDate }),
+        body: JSON.stringify({ counterPrice, startDate, endDate }),
     })
         .then(response => response.json())
         .then(data => alert(data.message))
         .catch(error => console.error('Error:', error));
 }
 
-function rejectQuote(quoteID) {
-    const rejectionNote = document.getElementById(`note-${quoteID}`).value;
+// Function to reject the request with a note
+function rejectRequest(quoteID) {
+    const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
+
+    if (!rejectionNote) {
+        alert('Please provide a rejection note.');
+        return;
+    }
 
     fetch(`/quotes/reject/${quoteID}`, {
         method: 'POST',
@@ -287,4 +367,5 @@ function rejectQuote(quoteID) {
         .catch(error => console.error('Error:', error));
 }
 
+// Load quotes on page load
 document.addEventListener('DOMContentLoaded', loadQuotes);
