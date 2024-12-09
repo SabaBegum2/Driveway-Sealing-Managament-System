@@ -10,30 +10,12 @@ const bodyParser = require('body-parser'); // Import body-parser
 
 const app = express();
 const userDbService = require('./userDbService');
-//david
-//const clientRoutes  = require('./Client/clientindex');
-// const clientIndex = require('./Client/clientindex');
-// const quotesRoutes = require('./DavidSmith/Quotes');
-// const workOrdersRoutes = require('../DavidSmith/Orders');
-// const invoicesRoutes = require('./DavidSmith/invoices');
 
-// const clientIndex = require('../Client/clientindex'); // Relative path to Client folder
-// const quotesRoutes = require('../DavidSmith/Quotes'); // Relative path to DavidSmith folder
-// const workOrdersRoutes = require('../DavidSmith/Orders'); // Ensure the path is correct
-// const invoicesRoutes = require('../DavidSmith/invoices'); // Ensure the path is correct
 
 app.use(cors());
 app.use(express.json())//middleware
 app.use(express.urlencoded({extended: false}));
 
-//david routes
-// app.use('/clientIndex', clientIndex);
-// app.use('/quotes', quotesRoutes);
-// app.use('/Orders', workOrdersRoutes);
-// app.use('/invoices', invoicesRoutes);
-
-// Correct paths to modules
-//const clientIndex = require('../Client/clientindex'); // ../ to access Client folder
 const quotesRouter = require('./Quotes'); // ../ to access DavidSmith folder
 const workOrdersRoutes = require('../DavidSmith/Orders'); // Corrected relative path
 const invoicesRoutes = require('../DavidSmith/invoices'); // Corrected relative path
@@ -318,120 +300,8 @@ app.get('/quotes', (req, res) => {
         }
     });
 });
-//submit a new quote
-// app.post('/quotes', async (req, res) => {
-//     const { client_id, property_address, driveway_square_feet, proposed_price, client_note } = req.body;
 
-//     if (!client_id || !property_address || !driveway_square_feet || !proposed_price) {
-//         return res.status(400).json({ error: 'Required fields are missing.' });
-//     }
-
-//     try {
-//         const [result] = await pool.query(
-//             `INSERT INTO Quotes 
-//             (client_id, property_address, driveway_square_feet, proposed_price, client_note, status, created_at) 
-//             VALUES (?, ?, ?, ?, ?, "Pending", NOW())`,
-//             [client_id, property_address, driveway_square_feet, proposed_price, client_note]
-//         );
-//         res.status(201).json({ quote_id: result.insertId });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Failed to submit quote.' });
-//     }
-// });
-
-// Respond to a quote
-// app.put('/quotes/:id/respond', async (req, res) => {
-//     const { id } = req.params;
-//     const { david_proposed_price, time_window_start, time_window_end, david_response_note, status } = req.body;
-
-//     if (!david_proposed_price || !time_window_start || !time_window_end || !status) {
-//         return res.status(400).json({ error: 'Required fields are missing.' });
-//     }
-
-//     try {
-//         await pool.query(
-//             `UPDATE Quotes 
-//             SET david_proposed_price = ?, time_window_start = ?, time_window_end = ?, david_response_note = ?, status = ?, updated_at = NOW() 
-//             WHERE quote_id = ?`,
-//             [david_proposed_price, time_window_start, time_window_end, david_response_note, status, id]
-//         );
-//         res.sendStatus(200);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Failed to respond to quote.' });
-//     }
-// });
-
-// Routes fir david
-// const quotesRoutes = require('./routes/quotes');
-// const workOrdersRoutes = require('./routes/workOrders');
-// const billsRoutes = require('./routes/bills');
-
-// app.use('/quotes', quotesRoutes);
-// app.use('/workOrders', workOrdersRoutes);
-// app.use('/bills', billsRoutes);
-// New routes
-
-
-// function acceptQuote(quoteID) {
-//     const newPrice = document.getElementById(`new-price-${quoteID}`).value;
-
-//     fetch(`/quotes/accept/${quoteID}`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ newPrice }),
-//     })
-//         .then(response => response.json())
-//         .then(data => {
-//             alert(data.message);
-//             loadQuotes(); // Reload quotes
-//         })
-//         .catch(error => console.error('Error:', error));
-// }
-
-// function rejectQuote(quoteID) {
-//     const rejectionNote = document.getElementById(`note-${quoteID}`).value;
-
-//     fetch(`/quotes/reject/${quoteID}`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ rejectionNote }),
-//     })
-//         .then(response => response.json())
-//         .then(data => {
-//             alert(data.message);
-//             loadQuotes(); // Reload quotes
-//         })
-//         .catch(error => console.error('Error:', error));
-// }
-
-// app.post('/quotes/reject/:quoteID', (req, res) => {
-//     const { quoteID } = req.params;
-//     const { rejectionNote, clientID } = req.body;
-//     console.log('Received data:', { quoteID, counterPrice, startDate, endDate, addNote, clientID });
-
-//     if (!rejectionNote) {
-//         res.status(400).json({ error: 'Rejection note is required.' });
-//         return;
-//     }
-
-//     const sql = `
-//         INSERT INTO QuoteHistory (quoteID, clientID, addNote, status)
-//         VALUES (?, ?, ?, 'Rejected')
-//     `;
-
-//     db.query(sql, [quoteID, clientID, rejectionNote], (err, result) => {
-//         if (err) {
-//             console.error('Error rejecting quote:', err);
-//             res.status(500).json({ error: 'Failed to reject the quote.' });
-//             return;
-//         }
-
-//         res.json({ message: `Quote ${quoteID} has been rejected.` });
-//     });
-// });
-
+//counter proposal for david
 app.post('/quotes/counter/:quoteID', async (req, res) => {
     const { quoteID } = req.params;
     const { counterPrice, startDate, endDate, addNote, clientID } = req.body;
@@ -455,87 +325,7 @@ app.post('/quotes/counter/:quoteID', async (req, res) => {
     }
 });
 
-// app.post('/quotes/reject/:quoteID', async (req, res) => {
-//     const { quoteID } = req.params;
-//     const { addNote, clientID } = req.body;
-
-//     console.log('Rejecting quote:', { quoteID, addNote, clientID });
-
-//     // Validate input
-//     if (!addNote) {
-//         res.status(400).json({ error: 'Rejection note is required.' });
-//         return;
-//     }
-
-//     const sql = `
-//         INSERT INTO QuoteHistory (quoteID, clientID, addNote, status)
-//         VALUES (?, ?, ?, 'Rejected')
-//     `;
-
-//     try {
-//         const result = await userDbService.query(sql, [quoteID, clientID, addNote]);
-//         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
-//     } catch (err) {
-//         console.error('Error rejecting quote:', err);
-//         res.status(500).json({ error: 'Failed to reject the quote.' });
-//     }
-// });
-// app.post('/quotes/reject/:quoteID', async (req, res) => {
-//     const { quoteID } = req.params;
-//     const { rejectionNote } = req.body;
-
-//     console.log('Rejecting quote:', { quoteID, rejectionNote });
-
-//     // Validate input
-//     if (!rejectionNote || typeof rejectionNote !== 'string') {
-//         res.status(400).json({ error: 'Rejection note must be a non-empty string.' });
-//         return;
-//     }
-
-//     const sql = `
-//         INSERT INTO QuoteHistory (quoteID, addNote, status)
-//         VALUES (?, ?, 'Rejected')
-//     `;
-
-//     try {
-//         const result = await userDbService.query(sql, [quoteID, rejectionNote]);
-//         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
-//     } catch (err) {
-//         console.error('Error rejecting quote:', err);
-//         res.status(500).json({ error: 'Failed to reject the quote.' });
-//     }
-// });
-
-
-// app.post('/quotes/reject/:quoteID', async (req, res) => {
-//     const { quoteID } = req.params;
-//     const { rejectionNote } = req.body;
-
-//     console.log('Rejecting quote:', { quoteID, rejectionNote });
-
-//     // Validate the rejection note
-//     if (!rejectionNote || typeof rejectionNote !== 'string') {
-//         return res.status(400).json({ error: 'Rejection note must be a non-empty string.' });
-//     }
-
-//     if (rejectionNote.length > 255) {
-//         return res.status(400).json({ error: 'Rejection note is too long. Max length is 255 characters.' });
-//     }
-
-//     const sql = `
-//         INSERT INTO QuoteHistory (quoteID, addNote, status)
-//         VALUES (?, ?, 'Rejected')
-//     `;
-
-//     try {
-//         const result = await userDbService.query(sql, [quoteID, rejectionNote]);
-//         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
-//     } catch (err) {
-//         console.error('Error rejecting quote:', err);
-//         res.status(500).json({ error: 'Failed to reject the quote.' });
-//     }
-// });
-
+//rejecting the proposal request for david
 app.post('/quotes/reject/:quoteID', async (req, res) => {
     const { quoteID } = req.params;
     const { rejectionNote, clientID } = req.body;
@@ -560,128 +350,7 @@ app.post('/quotes/reject/:quoteID', async (req, res) => {
     }
 });
 
-
-
-
-//bills
-// app.post('/invoices', (req, res) => {
-//     const { workOrderID, clientID, amountDue } = req.body;
-
-//     // Validate input
-//     if (!workOrderID || !clientID || !amountDue) {
-//         res.status(400).json({ success: false, error: 'Missing required fields.' });
-//         return;
-//     }
-
-//     // Insert new invoice into the Invoice table
-//     const sql = `
-//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-//         VALUES (?, ?, ?, NOW())
-//     `;
-
-//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
-//         if (err) {
-//             console.error('Error inserting invoice:', err);
-//             res.status(500).json({ success: false, error: 'Database error.' });
-//             return;
-//         }
-
-//         res.json({
-//             success: true,
-//             message: 'Invoice created successfully.',
-//             invoiceID: result.insertId,
-//         });
-//     });
-// });
-
-//works 
-// app.post('/invoices', (req, res) => {
-//     const { workOrderID, clientID, amountDue } = req.body;
-
-//     // Validate input
-//     if (!workOrderID || !clientID || !amountDue) {
-//         res.status(400).json({ success: false, error: 'Missing required fields.' });
-//         return;
-//     }
-
-//     const sql = `
-//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-//         VALUES (?, ?, ?, NOW())
-//     `;
-
-//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
-//         if (err) {
-//             console.error('Error inserting invoice:', err);
-//             res.status(500).json({ success: false, error: 'Database error.' });
-//             return;
-//         }
-
-//         res.json({
-//             success: true,
-//             message: 'Invoice created successfully.',
-//             invoiceID: result.insertId,
-//         });
-//     });
-// });
-
-// app.post('/invoices', (req, res) => {
-//     console.log('Request body:', req.body); // Debug log
-//     const { workOrderID, clientID, amountDue } = req.body;
-
-//     if (!workOrderID || !clientID || !amountDue) {
-//         res.status(400).json({ success: false, error: 'Missing required fields.' });
-//         return;
-//     }
-
-//     const sql = `
-//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-//         VALUES (?, ?, ?, NOW())
-//     `;
-
-//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
-//         if (err) {
-//             console.error('Database error:', err);
-//             res.status(500).json({ success: false, error: 'Database error.' });
-//             return;
-//         }
-
-//         console.log('Invoice created with ID:', result.insertId); // Debug log
-//         res.json({
-//             success: true,
-//             message: 'Invoice created successfully.',
-//             invoiceID: result.insertId,
-//         });
-//     });
-// });
-
-//*****works perfectly******
-// app.post('/invoices', (req, res) => {
-//     console.log('Request received:', req.body); // Log the request data
-
-//     const { workOrderID, clientID, amountDue } = req.body;
-
-//     if (!workOrderID || !clientID || !amountDue) {
-//         console.error('Missing fields:', { workOrderID, clientID, amountDue });
-//         res.status(400).json({ success: false, error: 'Missing required fields.' });
-//         return;
-//     }
-
-//     const sql = `
-//         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-//         VALUES (?, ?, ?, NOW())
-//     `;
-
-//     db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
-//         if (err) {
-//             console.error('Database error:', err);
-//             res.status(500).json({ success: false, error: 'Database error.' });
-//             return;
-//         }
-
-//         console.log('Invoice created:', result.insertId); // Log success
-//         res.json({ success: true, message: 'Invoice created successfully.', invoiceID: result.insertId });
-//     });
-// });
+//invoices
 app.post('/invoices', (req, res) => {
     console.log('Request body:', req.body); // Log incoming request data
 
@@ -730,32 +399,6 @@ app.get("/quotehistory", (req, res) => {
     });
 });
 
-//works******
-
-// app.get("/workorders", (req, res) => {
-//     const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
-
-//     userDbService.query(query, (err, results) => {
-//         if (err) {
-//             console.error("Error fetching work orders:", err);
-//             res.status(500).send("Server error");
-//         } else {
-//             res.json(results);
-//         }
-//     });
-// });
-// app.get("/workorders", (req, res) => {
-//     const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
-
-//     userDbService.query(query, (err, results) => {
-//         if (err) {
-//             console.error("Error fetching work orders:", err);
-//             res.status(500).send("Server error");
-//         } else {
-//             res.json(results);
-//         }
-//     });
-// });
 
 app.put("/workorders/:workOrderID", (req, res) => {
     const { workOrderID } = req.params;
@@ -817,7 +460,9 @@ app.get('/revenue', (req, res) => {
         WHERE 
             w.status = 'Completed'
         AND 
-            i.datePaid BETWEEN ? AND ?;
+            SUBSTRING_INDEX(w.dateRange, ' to ', 1) >= ?
+        AND 
+            SUBSTRING_INDEX(w.dateRange, ' to ', 2) <= ?;
     `;
 
     userDbService.query(query, [startDate, endDate], (err, results) => {
@@ -830,14 +475,6 @@ app.get('/revenue', (req, res) => {
         }
     });
 });
-
-
-
-
-
-
-
-
 
 
 

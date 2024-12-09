@@ -122,30 +122,7 @@ function respondWithCounter(quoteID) {
     
 }
 
-// Reject Quote Request
-// function rejectRequest(quoteID) {
-//     console.log('rejectRequest called for Quote ID:', quoteID);
 
-//     const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
-
-//     if (!rejectionNote) {
-//         alert('Please provide a rejection note.');
-//         return;
-//     }
-
-//     // Send rejection to the server
-//     fetch(`/quotes/reject/${quoteID}`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ rejectionNote }),
-//     })
-//         .then(response => response.json())
-//         .then(data => {
-//             console.log('Server response:', data);
-//             alert(data.message);
-//         })
-//         .catch(error => console.error('Error:', error));
-// }
 function rejectRequest(quoteID, clientID) {
     const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
 
@@ -374,29 +351,8 @@ function fetchRevenueReport() {
         alert("Please select both start and end dates.");
         return;
     }
-
     const url = `http://localhost:5050/revenue?startDate=${startDate}&endDate=${endDate}`;
     console.log("Fetching URL:", url);
-
-    // fetch(url)
-    //     .then(response => {
-    //         if (!response.ok) {
-    //             throw new Error(`HTTP error! status: ${response.status}`);
-    //         }
-    //         return response.json();
-    //     })
-    //     .then(data => {
-    //         const revenueResult = document.getElementById("revenue-result");
-    //         revenueResult.innerHTML = `
-    //             <h2>Revenue Report</h2>
-    //             <p><strong>Total Revenue:</strong> $${data.totalRevenue.toFixed(2)}</p>
-    //             <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
-    //         `;
-    //     })
-    //     .catch(error => {
-    //         console.error("Error fetching revenue report:", error);
-    //         alert("Failed to fetch revenue report. Please check the console for details.");
-    //     });
     fetch(url)
     .then(response => {
         console.log("Fetch response:", response);
