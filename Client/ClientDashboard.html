@@ -6,32 +6,56 @@
     <link rel="stylesheet" href="clientstylesheet.css">
     <title>Client Dashboard</title>
 </head>
-<body data-page="ClientPage">
+<body data-page="ClientHomePage">
 <!-- <body> -->
     <div class ="side-bar">
-        <nav>
+        <nav class="client-nav">
             <ul class="nav-bar">
-                <!-- class tab-links and data-tab="" are previous properties -->
                 <li class="active"><a href="ClientDashboard.html" >Home</a></li>
-                <li><a href="ClientNewQuote.html">New Quote</a></li>
+                <li><a href="ClientQuoteHistory.html">New Quote</a></li>
                 <li><a href="ClientOrders.html">Orders</a></li>
                 <li><a href="ClientBills.html">Bills</a></li>
             </ul>
             <ul class="nav-bar-bottom">
-                <li><button id="Signout">Sign Out</button></li>
+                <li><button id="logout-btn">Sign Out</button></li>
                 <li><p class="side-bar-footer">Created by:<br>Saba Begum and Violet Yousif </p></li>
             </ul>
         </nav> 
     </div>
     <div class="clientContainer">
         <main>
-        <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
-            <h1 style="text-align: center;">Client Dashboard</h1>
-            <div id="Home" class="clientContent">
+            <h1>Client Dashboard</h1>
+            <div id="Home" class="clientDashContent">
                 <form id="clientHomeTab">
-                    <h2>Home</h2>
-                    <p>Welcome to the Home tab!</p>
+                    <h2>Welcome valued customer!</h2>
+                    <p>Use the sidebar to review pending requests, order history, and billing.<br>
+                    Looking to get a new quote request?</p>
+                    <a href="ClientNewQuote.html">Request New Quote</a>
                 </form>
+
+                <h2>Client's Information:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Client ID</th>
+                            <th>Email</th>
+                            <th>Password</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Phone Number</th>
+                            <th>CC Number</th>
+                            <th>CC CVV</th>
+                            <th>CC Exp</th>
+                            <th>Home Address</th>
+                            <th>Register Date</th>
+                            <th>Login Time</th>
+                            <th>Active Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be dynamically added here by JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </main>
     </div>

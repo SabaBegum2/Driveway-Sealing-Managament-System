@@ -6,19 +6,19 @@
     <link rel="stylesheet" href="clientstylesheet.css">
     <title>Client Dashboard</title>
 </head>
-<body data-page="ClientPage">
+<body data-page="ClientHomePage">
 <!-- <body> -->
     <div class ="side-bar">
-        <nav>
+        <nav class="client-nav">
             <ul class="nav-bar">
                 <!-- class tab-links and data-tab="" are previous properties -->
-                <li><a href="ClientDashboard.html" >Home</a></li>
-                <li class="active"><a href="ClientNewQuote.html">New Quote</a></li>
+                <li class="active"><a href="ClientDashboard.html">Home</a></li>
+                <li><a href="ClientQuoteHistory.html">New Quote</a></li>
                 <li><a href="ClientOrders.html">Orders</a></li>
                 <li><a href="ClientBills.html">Bills</a></li>
             </ul>
             <ul class="nav-bar-bottom">
-                <li><button id="Signout">Sign Out</button></li>
+                <li><button id="logout-btn">Sign Out</button></li>
                 <li><p class="side-bar-footer">Created by:<br>Saba Begum and Violet Yousif </p></li>
             </ul>
         </nav> 
@@ -26,16 +26,82 @@
     <div class="clientContainer">
         <main>
         <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
-            <h1 style="text-align: center;">Client Dashboard</h1>
+            <h1>Client Dashboard</h1>
             <div id="Home" class="clientContent">
-                <form id="clientHomeTab">
-                    <h2>Home</h2>
-                    <p>Welcome to the Home tab!</p>
+                <h3>Once your request is submitted, Dave will reply back as soon as possible.</h3>
+                <form id="newQuoteForm">
+                    <!-- <input class="fillInputWidth" type="tel" id="phoneNumber-input" placeholder="Phone Number" required><br>
+                    <input class="fillInputWidth" type="text" id="creditCardNum-input" placeholder="Credit Card Number"><br>
+                    <input type="text" id="creditCardCVV-input" placeholder="CVV">
+                    <input type="text" id="creditCardExp-input" placeholder="Exp. MM/YY"> -->
+
+                    <input type="text" id="streetAddress-input" placeholder="Street Address" required>
+                    <input type="text" id="city-input" placeholder="City" required>
+                    <input type="text" id="state-input" placeholder="State" required>
+                    <input type="text" id="zipCode-input" placeholder="Zip Code" required>
+                    <input type="text" id="driveway-sqft-input" placeholder="Driveway Sqft" required>
+                    <input type="text" id="proposed-price-input" placeholder="0.00">
+                    <label for="fileInput"><p>Upload 5 images showing different angles of the driveway:</p></label>
+                    <input type="file" id="fileInput1" accept="image/*" required>
+                    <input type="file" id="fileInput2" accept="image/*" required>
+                    <input type="file" id="fileInput3" accept="image/*" required>
+                    <input type="file" id="fileInput4" accept="image/*" required>
+                    <input type="file" id="fileInput5" accept="image/*" required>
+
+                    <br>
+                    <button type="submit" id="new-quote-btn" style="margin-left: 38%">Register</button>
                 </form>
+                <p>Dates will be discussed once order has been acknowledged and responded to.<br>
+                Thank you for your support and patience!</p>
             </div>
         </main>
-    </body><div>
+    </div>
     <script src="clientindex.js"></script>
 </body>
 
 </html>
+
+<!-- <script>
+    // var loadFile = function (event) {
+    // var image = document.getElementById ('output');
+    // image.scr = URL.createObjectURL(event.target.files[0]);
+    // };
+document.getElementById('fileInput').addEventListener('change', function(event) {
+    var files = event.target.files;
+    var preview = document.getElementById('preview');
+    
+    // Clear any existing content
+    preview.innerHTML = '';
+
+    // Loop through all selected files
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+
+      // Only process image files
+      if (!file.type.match('image.*')) {
+        continue;
+      }
+
+      var imgContainer = document.createElement('div');
+      imgContainer.style.marginBottom = '20px'; // Spacing between each image container
+
+      var img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.height = '100px';
+      img.style.display = 'block'; // Ensure the image is displayed in a block to put it on a new line
+      img.style.marginBottom = '10px';
+
+      var fileInfo = document.createElement('p');
+      fileInfo.textContent = `File Name: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`;
+      fileInfo.style.fontSize = '14px';
+      fileInfo.style.marginTop = '0';
+
+      // Append the image and file info to the container
+      imgContainer.appendChild(img);
+      imgContainer.appendChild(fileInfo);
+
+      // Append the container to the preview div
+      preview.appendChild(imgContainer);
+    }
+  });
+</script> -->

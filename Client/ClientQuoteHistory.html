@@ -6,16 +6,16 @@
     <link rel="stylesheet" href="clientstylesheet.css">
     <title>Client Dashboard</title>
 </head>
-<body data-page="ClientPage">
+<body data-page="QuoteHistoryPage">
 <!-- <body> -->
     <div class ="side-bar">
         <nav class="client-nav">
             <ul class="nav-bar">
                 <!-- class tab-links and data-tab="" are previous properties -->
                 <li><a href="ClientDashboard.html" >Home</a></li>
-                <li><a href="ClientQuoteHistory.html">New Quote</a></li>
+                <li class="active"><a href="ClientQuoteHistory.html">New Quote</a></li>
                 <li><a href="ClientOrders.html">Orders</a></li>
-                <li class="active"><a href="ClientBills.html">Bills</a></li>
+                <li><a href="ClientBills.html">Bills</a></li>
             </ul>
             <ul class="nav-bar-bottom">
                 <li><button id="logout-btn">Sign Out</button></li>
@@ -26,7 +26,7 @@
     <div class="clientContainer">
         <main>
         <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
-            <h1>Service Bill</h1>
+            <h1>Request New Quote</h1>
             <div id="Home" class="clientContent">
                 <form id="clientHomeTab">
                     <h2>Home</h2>

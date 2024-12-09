@@ -44,24 +44,23 @@ class userDbService {
       return instance ? instance : new userDbService();
    }
 
-   async getAllClientData() {
+   async getAllClientData(clientID) {
       try {
          // use await to call an asynchronous function
          const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB;";
-            connection.query(query,
-               (err, results) => {
+            const query = "SELECT * FROM ClientDB WHERE clientID LIKE ?;";
+            connection.query(query, [clientID], (err, results) => {
                   if (err) reject(new Error(err.message));
                   else resolve(results);
                }
             );
          });
          return response;
-
       } catch (error) {
-         console.log(error);
+         console.log("Error in getAllClientData: ", error);
       }
    }
+
 
    // async getAllData() {
    //    try {
@@ -84,7 +83,7 @@ class userDbService {
 
    // FOR REGISTRATION
    async registerNewUser(clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress) {
-      const active = "online"
+
       try {
          // const registerDate = new Date().toISOString().split('T')[0];
          const register = new Date();
@@ -123,6 +122,7 @@ class userDbService {
    // FOR LOGIN
    async searchByClientIDAndPassword(clientID, password) {
       const newLoginTime = new Date();
+      const active = 'online';
 
       try {
          const response = await new Promise((resolve, reject) => {
@@ -135,9 +135,9 @@ class userDbService {
                   resolve(results);
                }
             });
-            const datequery = "UPDATE ClientDB SET loginTime = ? WHERE clientID = ? AND password = ?;";
-            console.log("executing sign in date query:", datequery, [newLoginTime, clientID, password]); // debugging
-            connection.query(datequery, [newLoginTime, clientID, password], (err, results) => {
+            const datequery = "UPDATE ClientDB SET loginTime = ?, activeStatus = ? WHERE clientID = ? AND password = ?;";
+            console.log("executing sign in date query:", datequery, [newLoginTime, active, clientID, password]); // debugging
+            connection.query(datequery, [newLoginTime, active, clientID, password], (err, results) => {
                if (err) {
                   reject(new Error(err.message));
                } else {
@@ -158,6 +158,53 @@ class userDbService {
          return null; // Return null on error
       }
    }
+
+   // Search ClientDB by username and change active status to offline
+   async logoutClient(clientID, activeStatus) {
+      console.log("Logging out client with ID:", clientID); // Debugging
+      activeStatus = 'offline';
+      try {
+         const response = await new Promise((resolve, reject) => {
+            const query = "UPDATE ClientDB SET activeStatus = ? WHERE clientID = ?";
+            connection.query(query, [activeStatus, clientID], (err, results) => {
+               if (err) reject(new Error(err.message));
+               else resolve(results);
+            });
+         });
+         return response;
+      } catch (error) {
+         console.error("Error logging Client out:", error);
+      }
+   }
+
+
+
+   // FOR REFRESHING SESSION (possibly)
+   // async function checkSession(clientID, password) {
+   //    const response = await fetch('/check-session', { credentials: 'include' });
+   //    if (!response.ok) {
+   //          window.location.href = '/login.html'; // Redirect to login if session expired
+   //    }
+   // }
+
+   async getWorkOrderHistory(clientID) {
+      try {
+          const response = await new Promise((resolve, reject) => {
+              const query = "SELECT * FROM WorkOrder WHERE clientID = ?";
+              connection.query(query, [clientID], (err, results) => {
+                  if (err) reject(new Error(err.message));
+                  else resolve(results);
+              });
+          });
+
+          console.log(response); // for debugging to see the result of select
+          return response;
+      } catch (error) {
+          console.error('Quote History query error:', error);
+      }
+  }
+
+
 
    async searchByClientID(clientID) {
       try {
@@ -209,6 +256,7 @@ class userDbService {
          console.error("Error in searchByLastName:", error);
       }
    }
+
 
    // Search ClientDB by first and last name
    async searchByFirstAndLastName(firstName, lastName) {

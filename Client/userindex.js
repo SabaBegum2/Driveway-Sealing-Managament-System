@@ -17,16 +17,25 @@ document.addEventListener('DOMContentLoaded', function () {
         registrationForm.addEventListener("submit", submitRegistrationForm);
         //submitRegistrationForm();  // Setup registration form event
     }
+
+    // else if (currentPage === 'ClientDashboard') {
+    //     const clientForm = document.createElement('script');
+    //     script.src = 'clientindex.js';
+    //     script.onload = () => {
+    //         console.log('clientindex.js loaded successfully');
+    //         // Any initialization code after script load
+    //     };
+    //     script.onerror = () => {
+    //         console.error('Error loading clientindex.js');
+    //     };
+    //     document.head.appendChild(script);
+    //     document.head.appendChild(script);
+    // }
     // else {
     //     fetch('http://localhost:5050/getClientData')
     //     .then(response => response.json())
     //     .then(data => loadHTMLTable(data['data']));    
     // }
-    else {
-        const script = document.createElement('script');
-        script.src = 'clientindex.js';
-        document.head.appendChild(script);
-    }
 
     // else if (currentPage === 'ClientPage') {
     //     // const clientForm = document.getElementById('clientForm');
@@ -35,12 +44,12 @@ document.addEventListener('DOMContentLoaded', function () {
     //     setupClientPage() 
 
     // }
-    // else {
-    // // keep "getall" as a debugging tool when we need to validate data is working
-    // fetch('http://localhost:5050/getall')     
-    // .then(response => response.json())
-    // .then(data => loadHTMLTable(data['data']));
-    // }
+    else {
+    // keep "getall" as a debugging tool when we need to validate data is working
+    fetch('http://localhost:5050/getall')     
+    .then(response => response.json())
+    .then(data => loadHTMLTable(data['data']));
+    }
 });
 
 
@@ -71,15 +80,29 @@ function submitLoginForm(event) {
     .then(data => {
         if (data.success) {
             alert('Login successful');
-            //// The following lines are to test out setting an active user globally after sign-in:
-            // globalThis.activeClient = clientID; // Set the active user globally
-            // console.log("Active user: ", activeUser);
+
+            /* OPTION IF WE WANT THE SIGN IN TO HAPPEN ON THE SAME PAGE:
+            if (userRole === 'admin') {
+                script.src = '/DavidSmith/Davidindex.js';
+            } else {
+                script.src = '/client/clientindex.js';
+            }
+            
+            We would also have to change the proceeding code too!
+            */
+
+
+            // // Store clientID in sessionStorage
+            // sessionStorage.setItem('clientID', clientID);
 
             const newUrl = new URL(window.location.href);
+            console.log("newUrl: ", newUrl);
+
             newUrl.pathname = '/Client/ClientDashboard.html';
             newUrl.protocol = 'http:';
-            window.location.href = newUrl.toString(); // Redirect after successful login
-            } else {
+            newUrl.searchParams.set('clientID', clientID); // Add clientID to query params
+            window.location.href = newUrl.toString();
+        } else {
             alert(data.error); // Show error message from the server
         }
     })
@@ -88,6 +111,10 @@ function submitLoginForm(event) {
         alert('An error occurred during login. Please try again.');
     });
 }
+
+
+
+
 // function submitLoginForm(e) {
 //     e.preventDefault(); // Prevent default form submission
 
@@ -230,7 +257,6 @@ function submitRegistrationForm(event) {
             alert("Password cannot contain special characters: []{};:\\|.<>/?"); // Throw error to user
             return;
         }
-
  
         fetch('http://localhost:5050/register', {
             headers: {
@@ -266,148 +292,148 @@ function submitRegistrationForm(event) {
 /* ----------------------------------------------- */
 
 // when the searchBtn is clicked
-const searchBtn = document.querySelector('#search-btn');
-searchBtn.onclick = function (){
-    console.log("Search button clicked for first name");
-    const searchInput = document.querySelector('#search-input');
-    console.log("Search input: ", searchInput);
-    const searchValue = searchInput.value;
-    console.log("Search value: ", searchValue);
-    searchInput.value = "";
+// const searchBtn = document.querySelector('#search-btn');
+// searchBtn.onclick = function (){
+//     console.log("Search button clicked for first name");
+//     const searchInput = document.querySelector('#search-input');
+//     console.log("Search input: ", searchInput);
+//     const searchValue = searchInput.value;
+//     console.log("Search value: ", searchValue);
+//     searchInput.value = "";
 
-    fetch('http://localhost:5050/search/' + searchValue)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-    console.log("Search button clicked for first name");
-}
+//     fetch('http://localhost:5050/search/' + searchValue)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+//     console.log("Search button clicked for first name");
+// }
 
-// when the searchBtn is clicked
-const searchLastNameBtn =  document.querySelector('#search-lastName-btn');
-searchLastNameBtn.onclick = function (){
-    console.log("Search button clicked for last name");
-    const searchInput = document.querySelector('#search-lastName-input');
-    console.log("Search input: ", searchInput);
-    const searchValue = searchInput.value;
-    console.log("Search value: ", searchValue);
-    searchInput.value = "";
+// // when the searchBtn is clicked
+// const searchLastNameBtn =  document.querySelector('#search-lastName-btn');
+// searchLastNameBtn.onclick = function (){
+//     console.log("Search button clicked for last name");
+//     const searchInput = document.querySelector('#search-lastName-input');
+//     console.log("Search input: ", searchInput);
+//     const searchValue = searchInput.value;
+//     console.log("Search value: ", searchValue);
+//     searchInput.value = "";
 
-    fetch('http://localhost:5050/searchLastName/' + searchValue)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-    console.log("Search button clicked for last name");
-}
-
-
-// when the searchBtn is clicked
-const searchFullNameBtn =  document.querySelector('#search-full-name-btn');
-searchFullNameBtn.onclick = function (){
-    const firstInput = document.querySelector('#firstName-input');
-    const firstName = firstInput.value;
-    firstInput.value = "";
-
-    const lastInput = document.querySelector('#lastName-input');
-    const lastName = lastInput.value;
-    lastInput.value = "";
-
-    fetch(`http://localhost:5050/search/fullname/${firstName}/${lastName}`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
+//     fetch('http://localhost:5050/searchLastName/' + searchValue)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+//     console.log("Search button clicked for last name");
+// }
 
 
-// When clientID search button is clicked
-const searchClientIDBtn =  document.querySelector('#search-clientID-btn');
-searchClientIDBtn.onclick = function (){
-    console.log("Search button clicked for clientID");
-    const searchInput = document.querySelector('#search-clientID-input');
-    console.log("Search input: ", searchInput);
-    const searchValue = searchInput.value;
-    console.log("Search value: ", searchValue);
-    searchInput.value = "";
+// // when the searchBtn is clicked
+// const searchFullNameBtn =  document.querySelector('#search-full-name-btn');
+// searchFullNameBtn.onclick = function (){
+//     const firstInput = document.querySelector('#firstName-input');
+//     const firstName = firstInput.value;
+//     firstInput.value = "";
 
-    fetch('http://localhost:5050/searchClientID/' + searchValue)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-    console.log("Search button clicked for last name");
-}
+//     const lastInput = document.querySelector('#lastName-input');
+//     const lastName = lastInput.value;
+//     lastInput.value = "";
 
-
-// When Salary search button is clicked
-const searchSalaryBtn =  document.querySelector('#search-salary-btn');
-searchSalaryBtn.onclick = function (){
-    const minInput = document.querySelector('#min-salary-input');
-    const minSalary = minInput.value;
-    minInput.value = "";
-
-    const maxInput = document.querySelector('#max-salary-input');
-    const maxSalary = maxInput.value;
-    maxInput.value = "";
-
-    fetch(`http://localhost:5050/search/salary/${minSalary}/${maxSalary}`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
+//     fetch(`http://localhost:5050/search/fullname/${firstName}/${lastName}`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
 
 
-// When Salary search button is clicked
-const searchAgeBtn =  document.querySelector('#search-age-btn');
-searchAgeBtn.onclick = function (){
-    const minInput = document.querySelector('#min-age-input');
-    const minAge = minInput.value;
-    minInput.value = "";
+// // When clientID search button is clicked
+// const searchClientIDBtn =  document.querySelector('#search-clientID-btn');
+// searchClientIDBtn.onclick = function (){
+//     console.log("Search button clicked for clientID");
+//     const searchInput = document.querySelector('#search-clientID-input');
+//     console.log("Search input: ", searchInput);
+//     const searchValue = searchInput.value;
+//     console.log("Search value: ", searchValue);
+//     searchInput.value = "";
 
-    const maxInput = document.querySelector('#max-age-input');
-    const maxAge = maxInput.value;
-    maxInput.value = "";
-
-    fetch(`http://localhost:5050/search/age/${minAge}/${maxAge}`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
-
-
-// Search registered after a specific user
-const searchRegAfterUserBtn = document.querySelector('#search-reg-after-btn');
-searchRegAfterUserBtn.onclick = function () {
-    const ClientIDInput = document.querySelector('#after-reg-input');
-    const clientID = ClientIDInput.value;
-    ClientIDInput.value = "";
-
-    fetch(`http://localhost:5050/search/regAfter/${clientID}`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
+//     fetch('http://localhost:5050/searchClientID/' + searchValue)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+//     console.log("Search button clicked for last name");
+// }
 
 
-// Search registered on same day as a specific user
-const searchRegSameDayAsUserBtn = document.querySelector('#search-same-day-reg-btn');
-searchRegSameDayAsUserBtn.onclick = function () {
-    const ClientIDInput = document.querySelector('#same-day-reg-input');
-    const clientID = ClientIDInput.value;
-    ClientIDInput.value = "";
+// // When Salary search button is clicked
+// const searchSalaryBtn =  document.querySelector('#search-salary-btn');
+// searchSalaryBtn.onclick = function (){
+//     const minInput = document.querySelector('#min-salary-input');
+//     const minSalary = minInput.value;
+//     minInput.value = "";
 
-    fetch(`http://localhost:5050/search/regSameDay/${clientID}`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
+//     const maxInput = document.querySelector('#max-salary-input');
+//     const maxSalary = maxInput.value;
+//     maxInput.value = "";
+
+//     fetch(`http://localhost:5050/search/salary/${minSalary}/${maxSalary}`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
 
 
-// Search ClientDB who never signed in
-const searchNeverSignedInBtn = document.querySelector('#search-never-signedin-btn');
-searchNeverSignedInBtn.onclick = function () {
-    fetch(`http://localhost:5050/search/neverSignedIn`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
+// // When Salary search button is clicked
+// const searchAgeBtn =  document.querySelector('#search-age-btn');
+// searchAgeBtn.onclick = function (){
+//     const minInput = document.querySelector('#min-age-input');
+//     const minAge = minInput.value;
+//     minInput.value = "";
 
-// Search ClientDB who never signed in
-const searchRegToday = document.querySelector('#search-new-reg-btn');
-searchRegToday.onclick = function () {
+//     const maxInput = document.querySelector('#max-age-input');
+//     const maxAge = maxInput.value;
+//     maxInput.value = "";
 
-    fetch(`http://localhost:5050/search/regToday`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-}
+//     fetch(`http://localhost:5050/search/age/${minAge}/${maxAge}`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
+
+
+// // Search registered after a specific user
+// const searchRegAfterUserBtn = document.querySelector('#search-reg-after-btn');
+// searchRegAfterUserBtn.onclick = function () {
+//     const ClientIDInput = document.querySelector('#after-reg-input');
+//     const clientID = ClientIDInput.value;
+//     ClientIDInput.value = "";
+
+//     fetch(`http://localhost:5050/search/regAfter/${clientID}`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
+
+
+// // Search registered on same day as a specific user
+// const searchRegSameDayAsUserBtn = document.querySelector('#search-same-day-reg-btn');
+// searchRegSameDayAsUserBtn.onclick = function () {
+//     const ClientIDInput = document.querySelector('#same-day-reg-input');
+//     const clientID = ClientIDInput.value;
+//     ClientIDInput.value = "";
+
+//     fetch(`http://localhost:5050/search/regSameDay/${clientID}`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
+
+
+// // Search ClientDB who never signed in
+// const searchNeverSignedInBtn = document.querySelector('#search-never-signedin-btn');
+// searchNeverSignedInBtn.onclick = function () {
+//     fetch(`http://localhost:5050/search/neverSignedIn`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
+
+// // Search ClientDB who never signed in
+// const searchRegToday = document.querySelector('#search-new-reg-btn');
+// searchRegToday.onclick = function () {
+
+//     fetch(`http://localhost:5050/search/regToday`)
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// }
 
 
 /* ----------------------------------------------- */

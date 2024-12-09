@@ -74,3 +74,39 @@ FOR SAVING USER SESSIONS:
             res.redirect('/login');
         });
     });
+
+
+DESTRUCTURING IN JS:
+    const person = {
+        firstname: "James",
+        lastname: "Smith"
+    }
+
+    Grabbing 1 property or more properties off an object:
+        const firstname = person.firstname;
+
+    Destructuring from arrays using the "state hook":
+        const {firstname} = person;
+
+
+SPREAD OPERATOR: "Spread operator" allows you to take all the items in an array and spread them out
+    const names = ["James","Jess"]
+    const otherNames = ["Lily", "Sevi"]
+
+    // can pass items in an array as parameters to a function
+    const allNames = [...names, ...otherNames];
+
+    // can also spread out items in an array and pass them as individual parameters
+    console.log(allNames);      // Would show [James, Jess, Lily, Sevi]
+
+    // Other uses: can make copies of arrays and objects, pull out unique keys, etc
+
+
+BACKTICKS (``): Allows us to do variable or string interpolation with the data in the literal string
+    const person = {
+        firstname: "James",
+        lastname: "Smith"
+    }
+
+    console.log(`${person.firstname} ${person.lastname}`)
+

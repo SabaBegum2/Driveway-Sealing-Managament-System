@@ -6,40 +6,24 @@ const dotenv = require('dotenv')
 dotenv.config()
 const bodyParser = require('body-parser'); // Import body-parser
 
+// Import the express-session library to manage user sessions
+//const session = require('express-session');
 const app = express();
+
 const userDbService = require('./userDbService');
 
 app.use(cors());
+// app.use(cors({
+//     origin: 'http://127.0.0.1:5500', // Replace with your frontend origin
+//     credentials: true // Allow cookies and session credentials
+// }));
+
 app.use(express.json())
 app.use(express.urlencoded({extended: false}));
+let activeClient;
 
 
-// // Read all client data
-app.get('/getClientData', (request, response) => {
-    
-    const db = userDbService.getUserDbServiceInstance();
-    
-    const result =  db.getAllClientData(); // call a DB function
-
-    result
-    .then(data => response.json({ data: data }))
-    .catch(err => console.log(err));
-});
-
-//Read all data
-app.get('/getAll', (request, response) => {
-    
-    const db = userDbService.getUserDbServiceInstance();
-    
-    const result =  db.getAllData(); // call a DB function
-
-    result
-    .then(data => response.json({ data: data }))
-    .catch(err => console.log(err));
-});
-
-
-// Create new Client
+/* REGISTER NEW CLIENT */
 app.post('/register', async(request, response) => {
     console.log("userApp: insert a row.");
     try {
@@ -62,9 +46,8 @@ app.post('/register', async(request, response) => {
     }
 });
 
-
+/* NEW LOGIN */
 app.post('/login', async (request, response) => {
-
     app.use(bodyParser.json());
 
     const { clientID, password } = request.body;
@@ -84,14 +67,122 @@ app.post('/login', async (request, response) => {
         }
 
         // Successful login
+        activeClient = result.clientID;
         response.json({ success: true });
-        // activeUser = clientID;
-        // console.log("Active user: ", activeUser);
+
     } catch (err) {
         console.error(err);
         response.status(500).json({ error: "An error occurred while logging in." });
     }
 });
+
+
+// read 
+app.get('/ClientDB/:clientID', (request, response) => {
+    const { clientID } = request.params;
+    console.log(clientID);  // Debugging
+
+    const db = userDbService.getUserDbServiceInstance();
+    const result =  db.getAllClientData(clientID); // call a DB function
+
+    result
+    .then(data => response.json({ data: data }))
+    .catch(err => console.log('Error: ', err));
+});
+
+
+app.post('/logout/:clientID', async (request, response) => {
+    const{ clientID, activeStatus } = request.body;
+    console.log("Logging ", clientID, " out of app...");
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.logoutClient(clientID);
+
+        response.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to log out." });
+    }
+});
+
+
+
+
+
+
+// // Read all data
+// app.get('/getAll', (request, response) => {
+    
+//     const db = userDbService.getUserDbServiceInstance();
+    
+//     const result = db.getAllClientData(); // call a DB function
+
+//     result
+//     .then(data => response.json({ data: data }))
+//     .catch(err => console.log(err));
+// });
+
+
+
+// // Read all client data
+// app.get('/getClientData', (request, response) => {
+    
+//     const db = userDbService.getUserDbServiceInstance();
+    
+//     const result = db.getAllClientData(clientID); // call a DB function
+
+//     result
+//     .then(data => response.json({ data: data }))
+//     .catch(err => console.log(err));
+// });
+
+
+app.get('/getWorkOrderHistory', async (request, response) => {
+    if (!request.session || !request.session.loggedIn) {
+        return response.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const clientID = request.session.clientID;
+
+        // Query the database for the client's order history
+        const workOrderHistory = await db.getWorkOrderHistory(clientID);
+
+        response.json({ success: true,  workOrderHistory});
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: 'Failed to retrieve quote history in app.' });
+    }
+});
+
+/* LOGOUT ROUTE */
+// app.post('/logout', async (request, response) => {
+//     console.log("Logging out...");
+
+//     const db = userDbService.getUserDbServiceInstance();
+
+//     try {
+//         const clientID = request.session.clientID;
+//         await db.logoutClient(clientID);
+
+//         request.session.destroy(err => {
+//             if (err) {
+//                 return response.status(500).json({ error: "Failed to log out." });
+//             }
+
+//             response.clearCookie('connect.sid'); // Clear the session cookie
+//             response.json({ success: true });
+//         });
+//     } catch (err) {
+//         console.error(err);
+//         response.status(500).json({ error: "An error occurred while logging out." });
+//     }
+// });
+
+
 
 
 app.get('/search/:firstName', (request, response) => { // we can debug by URL
