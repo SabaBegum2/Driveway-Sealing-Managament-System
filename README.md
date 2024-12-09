@@ -44,73 +44,112 @@ The Entity-Relationship (ER) diagram models the structure of the database, ident
 Create a database on PHPmyadmin called web_app.
 Below is the set of CREATE TABLE statements to implement the database:
 ```sql
-CREATE TABLE Client (
-    client_id INT PRIMARY KEY AUTO_INCREMENT,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    address TEXT NOT NULL,
-    credit_card_info VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE
+CREATE TABLE ClientDB (
+    clientID VARCHAR(20) PRIMARY KEY,
+    email VARCHAR(30) NOT NULL UNIQUE,
+    password VARCHAR(20) NOT NULL,
+    firstName VARCHAR(20) NOT NULL,
+    lastName VARCHAR(20) NOT NULL,
+    phoneNumber VARCHAR(10),
+    creditCardNum VARCHAR(16),
+    creditCardCVV VARCHAR(3),
+    creditCardExp VARCHAR(5),
+    homeAddress VARCHAR(60) NOT NULL,
+    registerDate DATETIME,
+    loginTime DATETIME,
+    activeStatus ENUM("online","offline") DEFAULT "offline"
 );
 
 CREATE TABLE QuoteRequest (
-    request_id INT PRIMARY KEY AUTO_INCREMENT,
-    client_id INT NOT NULL,
-    property_address TEXT NOT NULL,
-    driveway_sqft INT NOT NULL,
-    proposed_price DECIMAL(10, 2),
-    note TEXT,
-    status VARCHAR(50) DEFAULT 'Pending',
-    FOREIGN KEY (client_id) REFERENCES Client(client_id)
+    quoteID INT AUTO_INCREMENT,
+    clientID VARCHAR(20),
+    propertyAddress TEXT NOT NULL,
+    drivewaySqft INT,
+    proposedPrice DECIMAL(10, 2) NOT NULL,
+    addNote VARCHAR(500),
+    PRIMARY KEY (quoteID),
+    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
 
 CREATE TABLE QuoteRequestImage (
-    image_id INT PRIMARY KEY AUTO_INCREMENT,
-    request_id INT NOT NULL,
-    image_path VARCHAR(255) NOT NULL,
-    FOREIGN KEY (request_id) REFERENCES QuoteRequest(request_id)
+    quoteID INT,
+    image1 VARCHAR(255) NOT NULL,
+    image2 VARCHAR(255) NOT NULL,
+    image3 VARCHAR(255) NOT NULL,
+    image4 VARCHAR(255) NOT NULL,
+    image5 VARCHAR(255) NOT NULL,
+    FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID)
 );
 
-CREATE TABLE QuoteResponse (
-    response_id INT PRIMARY KEY AUTO_INCREMENT,
-    request_id INT NOT NULL,
-    response_price DECIMAL(10, 2),
-    work_start_date DATE,
-    work_end_date DATE,
-    response_note TEXT,
-    response_date DATE DEFAULT CURRENT_DATE,
-    status VARCHAR(50) DEFAULT 'Pending',
-    FOREIGN KEY (request_id) REFERENCES QuoteRequest(request_id)
+
+-- clientID is already stored in the QuoteRequest table and 
+-- can be retrieved through quoteID using a JOIN method to 
+-- reduce the amount of data one table needs to hold.
+
+CREATE TABLE QuoteHistory (
+    responseID INT AUTO_INCREMENT,
+    clientID VARCHAR(20),
+    quoteID INT,
+    proposedPrice DECIMAL(10, 2),
+    startDate DATE,
+    endDate DATE,
+    addNote VARCHAR(300),
+    responseDATE DATE DEFAULT CURRENT_DATE,
+    status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending',
+    PRIMARY KEY (responseID),
+    FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
+    FOREIGN KEY (clientID) REFERENCES QuoteRequest(clientID)
 );
 
-CREATE TABLE OrderOfWork (
-    order_id INT PRIMARY KEY AUTO_INCREMENT,
-    client_id INT NOT NULL,
-    quote_response_id INT NOT NULL,
-    order_date DATE DEFAULT CURRENT_DATE,
-    status VARCHAR(50) DEFAULT 'Ongoing',
-    FOREIGN KEY (client_id) REFERENCES Client(client_id),
-    FOREIGN KEY (quote_response_id) REFERENCES QuoteResponse(response_id)
+
+CREATE TABLE WorkOrder (
+    workOrderID INT PRIMARY KEY AUTO_INCREMENT,
+    clientID VARCHAR(20),
+    quoteID INT,
+    responseID INT,
+    dateRange VARCHAR(30),
+    status ENUM('Scheduled', 'Completed', 'Cancelled') DEFAULT 'Scheduled',
+    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID),
+    FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
+    FOREIGN KEY (responseID) REFERENCES QuoteHistory(responseID)
 );
 
-CREATE TABLE Bill (
-    bill_id INT PRIMARY KEY AUTO_INCREMENT,
-    order_id INT NOT NULL,
-    client_id INT NOT NULL,
-    bill_amount DECIMAL(10, 2),
-    bill_date DATE DEFAULT CURRENT_DATE,
-    status VARCHAR(50) DEFAULT 'Pending',
-    FOREIGN KEY (order_id) REFERENCES OrderOfWork(order_id),
-    FOREIGN KEY (client_id) REFERENCES Client(client_id)
+
+DELIMITER //
+
+CREATE TRIGGER createWorkOrder
+AFTER UPDATE ON QuoteHistory
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Accepted' THEN
+        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
+        FROM QuoteRequest qr
+        WHERE qr.quoteID = NEW.quoteID;
+    END IF;
+END;
+//
+
+DELIMITER ;
+
+
+CREATE TABLE Invoice (
+    invoiceID INT PRIMARY KEY AUTO_INCREMENT,
+    workOrderID INT,
+    clientID VARCHAR(20),
+    amountDue DECIMAL(10, 2),
+    dateCreated DATETIME,
+    datePaid DATETIME DEFAULT NULL,
+    FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
+    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
 
-CREATE TABLE BillResponse (
-    response_id INT PRIMARY KEY AUTO_INCREMENT,
-    bill_id INT NOT NULL,
-    response_note TEXT,
-    response_date DATE DEFAULT CURRENT_DATE,
-    FOREIGN KEY (bill_id) REFERENCES Bill(bill_id)
+CREATE TABLE InvoiceResponses (
+    responseID INT PRIMARY KEY AUTO_INCREMENT,
+    invoiceID INT NOT NULL,
+    responseNote VARCHAR(500),
+    responseDate DATE DEFAULT CURRENT_DATE,
+    FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
 ```
 ## Functionalities
