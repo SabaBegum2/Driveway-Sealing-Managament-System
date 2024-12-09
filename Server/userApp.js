@@ -455,16 +455,95 @@ app.post('/quotes/counter/:quoteID', async (req, res) => {
     }
 });
 
+// app.post('/quotes/reject/:quoteID', async (req, res) => {
+//     const { quoteID } = req.params;
+//     const { addNote, clientID } = req.body;
+
+//     console.log('Rejecting quote:', { quoteID, addNote, clientID });
+
+//     // Validate input
+//     if (!addNote) {
+//         res.status(400).json({ error: 'Rejection note is required.' });
+//         return;
+//     }
+
+//     const sql = `
+//         INSERT INTO QuoteHistory (quoteID, clientID, addNote, status)
+//         VALUES (?, ?, ?, 'Rejected')
+//     `;
+
+//     try {
+//         const result = await userDbService.query(sql, [quoteID, clientID, addNote]);
+//         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
+//     } catch (err) {
+//         console.error('Error rejecting quote:', err);
+//         res.status(500).json({ error: 'Failed to reject the quote.' });
+//     }
+// });
+// app.post('/quotes/reject/:quoteID', async (req, res) => {
+//     const { quoteID } = req.params;
+//     const { rejectionNote } = req.body;
+
+//     console.log('Rejecting quote:', { quoteID, rejectionNote });
+
+//     // Validate input
+//     if (!rejectionNote || typeof rejectionNote !== 'string') {
+//         res.status(400).json({ error: 'Rejection note must be a non-empty string.' });
+//         return;
+//     }
+
+//     const sql = `
+//         INSERT INTO QuoteHistory (quoteID, addNote, status)
+//         VALUES (?, ?, 'Rejected')
+//     `;
+
+//     try {
+//         const result = await userDbService.query(sql, [quoteID, rejectionNote]);
+//         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
+//     } catch (err) {
+//         console.error('Error rejecting quote:', err);
+//         res.status(500).json({ error: 'Failed to reject the quote.' });
+//     }
+// });
+
+
+// app.post('/quotes/reject/:quoteID', async (req, res) => {
+//     const { quoteID } = req.params;
+//     const { rejectionNote } = req.body;
+
+//     console.log('Rejecting quote:', { quoteID, rejectionNote });
+
+//     // Validate the rejection note
+//     if (!rejectionNote || typeof rejectionNote !== 'string') {
+//         return res.status(400).json({ error: 'Rejection note must be a non-empty string.' });
+//     }
+
+//     if (rejectionNote.length > 255) {
+//         return res.status(400).json({ error: 'Rejection note is too long. Max length is 255 characters.' });
+//     }
+
+//     const sql = `
+//         INSERT INTO QuoteHistory (quoteID, addNote, status)
+//         VALUES (?, ?, 'Rejected')
+//     `;
+
+//     try {
+//         const result = await userDbService.query(sql, [quoteID, rejectionNote]);
+//         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
+//     } catch (err) {
+//         console.error('Error rejecting quote:', err);
+//         res.status(500).json({ error: 'Failed to reject the quote.' });
+//     }
+// });
+
 app.post('/quotes/reject/:quoteID', async (req, res) => {
     const { quoteID } = req.params;
-    const { addNote, clientID } = req.body;
+    const { rejectionNote, clientID } = req.body;
 
-    console.log('Rejecting quote:', { quoteID, addNote, clientID });
+    console.log('Rejecting quote:', { quoteID, rejectionNote, clientID });
 
-    // Validate input
-    if (!addNote) {
-        res.status(400).json({ error: 'Rejection note is required.' });
-        return;
+    if (!rejectionNote || !clientID) {
+        return res.status(400).json({ error: 'Rejection note and client ID are required.' });
     }
 
     const sql = `
@@ -473,7 +552,7 @@ app.post('/quotes/reject/:quoteID', async (req, res) => {
     `;
 
     try {
-        const result = await userDbService.query(sql, [quoteID, clientID, addNote]);
+        const result = await userDbService.query(sql, [quoteID, clientID, rejectionNote]);
         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
     } catch (err) {
         console.error('Error rejecting quote:', err);
@@ -715,6 +794,43 @@ app.get("/workorders", (req, res) => {
         }
     });
 });
+
+//revenue
+app.get('/revenue', (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    console.log("Received query parameters:", startDate, endDate);
+
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: "Start date and end date are required." });
+    }
+
+    const query = `
+        SELECT 
+            SUM(i.amountDue) AS totalRevenue
+        FROM 
+            WorkOrder w
+        JOIN 
+            Invoice i
+        ON 
+            w.workOrderID = i.workOrderID
+        WHERE 
+            w.status = 'Completed'
+        AND 
+            i.datePaid BETWEEN ? AND ?;
+    `;
+
+    userDbService.query(query, [startDate, endDate], (err, results) => {
+        if (err) {
+            console.error("Error calculating revenue:", err);
+            res.status(500).send("Failed to calculate revenue");
+        } else {
+            const totalRevenue = results[0]?.totalRevenue || 0;
+            res.json({ totalRevenue });
+        }
+    });
+});
+
 
 
 

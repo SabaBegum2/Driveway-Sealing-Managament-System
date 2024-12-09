@@ -56,26 +56,6 @@
                 <div id="response-message" style="margin-top: 20px; color: green;"></div>
             </div>
             
-
-            <!-- Bill Generation Form -->
-            <div id="GenerateBill" class="DavidContent">
-                <h1>Generate Bill</h1>
-                <form id="generate-bill-form">
-                    <h3>State of Work Done:</h3>
-                    <textarea id="work-done" rows="4" required placeholder="Describe the work completed"></textarea>
-
-                    <h3>Cost:</h3>
-                    <input type="number" id="cost" placeholder="Enter the cost" required>
-
-                    <h3>Optional Discount:</h3>
-                    <input type="number" id="discount" placeholder="Enter discount if any">
-
-                    <h3>Optional Note:</h3>
-                    <textarea id="bill-note" rows="4" placeholder="Enter any additional notes"></textarea>
-
-                    <button id="submit-bill">Submit Bill</button>
-                </form>
-            </div>
         
             <!-- Bills Tab -->
             <div id="Bills" class="DavidContent">
@@ -99,12 +79,6 @@
                     <ul id="quote-list">
                         <!-- Additional quote items will be dynamically generated here -->
                     </ul>
-                    <button onclick="respondWithCounter(1)">Submit Counter Proposal</button>
-                    <button onclick="rejectRequest(1)">Reject Proposal</button>
-                    <input type="number" id="counter-price-123" placeholder="Enter Counter Price">
-                    <input type="date" id="start-date-123" placeholder="Start Date">
-                    <input type="date" id="end-date-123" placeholder="End Date">
-                    <textarea id="note-123" placeholder="Enter a Comment"></textarea>
 
                 </div>
             </div>
@@ -124,6 +98,25 @@
                     <button id="submit-response">Submit Response</button>
                 </form>
             </div>
+
+            <div id="RevenueReport" class="RevenueContent">
+                <h1>Generate Revenue Report</h1>
+                <p>Enter the date range to calculate the total revenue for completed work orders:</p>
+                <form id="revenue-form">
+                    <label for="start-date">Start Date:</label>
+                    <input type="date" id="start-date" required>
+                    <br><br>
+                    <label for="end-date">End Date:</label>
+                    <input type="date" id="end-date" required>
+                    <br><br>
+                    <button type="button" onclick="fetchRevenueReport()">Generate Report</button>
+                </form>
+                <br>
+                <div id="revenue-result">
+                    <!-- The result will be displayed here -->
+                </div>
+            </div>
+            
 
         </main>
     </div>

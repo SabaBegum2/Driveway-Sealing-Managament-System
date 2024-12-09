@@ -74,9 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
                         <input type="date" id="start-date-${quote.quoteID}" placeholder="Start Date">
                         <input type="date" id="end-date-${quote.quoteID}" placeholder="End Date">
-                        <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
+                        <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter a Comment"></textarea>
                         <button onclick="respondWithCounter(${quote.quoteID})">Submit Counter Proposal</button>
-                        <button onclick="rejectRequest(${quote.quoteID})">Reject Request</button>
+                        <button onclick="rejectRequest(${quote.quoteID}, '${quote.clientID}')">Reject Request</button>
                     `;
                     quoteList.appendChild(listItem);
                 });
@@ -98,7 +98,7 @@ function respondWithCounter(quoteID) {
     const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
     const startDate = document.getElementById(`start-date-${quoteID}`).value;
     const endDate = document.getElementById(`end-date-${quoteID}`).value;
-    const addNote = document.getElementById(`note-${quoteID}`).value;
+    const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
 
     if (!counterPrice || !startDate || !endDate) {
         alert('Please provide all details for the counter proposal.');
@@ -123,29 +123,64 @@ function respondWithCounter(quoteID) {
 }
 
 // Reject Quote Request
-function rejectRequest(quoteID) {
-    console.log('rejectRequest called for Quote ID:', quoteID);
+// function rejectRequest(quoteID) {
+//     console.log('rejectRequest called for Quote ID:', quoteID);
 
-    const rejectionNote = document.getElementById(`note-${quoteID}`).value;
+//     const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
+
+//     if (!rejectionNote) {
+//         alert('Please provide a rejection note.');
+//         return;
+//     }
+
+//     // Send rejection to the server
+//     fetch(`/quotes/reject/${quoteID}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ rejectionNote }),
+//     })
+//         .then(response => response.json())
+//         .then(data => {
+//             console.log('Server response:', data);
+//             alert(data.message);
+//         })
+//         .catch(error => console.error('Error:', error));
+// }
+function rejectRequest(quoteID, clientID) {
+    const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
 
     if (!rejectionNote) {
         alert('Please provide a rejection note.');
         return;
     }
 
-    // Send rejection to the server
+    console.log(`Rejection Note: ${rejectionNote}`);
+    console.log(`Quote ID: ${quoteID}`);
+    console.log(`Client ID: ${clientID}`);
+
     fetch(`/quotes/reject/${quoteID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rejectionNote }),
+        body: JSON.stringify({ rejectionNote, clientID }),
     })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
             console.log('Server response:', data);
             alert(data.message);
         })
-        .catch(error => console.error('Error:', error));
+        .catch((error) => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
+        });
 }
+
+
+
     
     document.getElementById('invoice-form').addEventListener('submit', function (event) {
         event.preventDefault(); // Prevent default form submission
@@ -242,152 +277,6 @@ function respondToQuote(responseID) {
 // Fetch and display the data on page load
 document.addEventListener("DOMContentLoaded", fetchQuoteHistory);
 
-// async function fetchWorkOrders() {
-//     try {
-//         const response = await fetch("http://localhost:5050/workorders");
-//         if (!response.ok) {
-//             throw new Error(`Error fetching work orders: ${response.statusText}`);
-//         }
-
-//         const workOrders = await response.json();
-
-//         const ordersList = document.getElementById("orders-list");
-//         if (!ordersList) {
-//             console.error("The element #orders-list does not exist in the DOM.");
-//             return;
-//         }
-
-//         // Clear existing content
-//         ordersList.innerHTML = "";
-
-//         // Populate work orders with buttons
-//         workOrders.forEach((order) => {
-//             const orderDiv = document.createElement("div");
-//             orderDiv.classList.add("work-order");
-
-//             orderDiv.innerHTML = `
-//                 <p><strong>Order ID:</strong> #${order.workOrderID}</p>
-//                 <p><strong>Client ID:</strong> ${order.clientID}</p>
-//                 <p><strong>Date:</strong> ${order.dateRange}</p>
-//                 <p><strong>Status:</strong> <span id="status-${order.workOrderID}">${order.status}</span></p>
-//                 <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Scheduled')">Scheduled</button>
-//                 <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
-//                 <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
-//             `;
-
-//             ordersList.appendChild(orderDiv);
-//         });
-//     } catch (error) {
-//         console.error("Error fetching work orders:", error);
-//     }
-// }
-
-// // Function to update the status of a work order
-// async function updateWorkOrderStatus(workOrderID, newStatus) {
-//     try {
-//         const response = await fetch(`http://localhost:5050/workorders/${workOrderID}`, {
-//             method: "PUT",
-//             headers: {
-//                 "Content-Type": "application/json",
-//             },
-//             body: JSON.stringify({ status: newStatus }),
-//         });
-
-//         if (!response.ok) {
-//             throw new Error(`Error updating work order status: ${response.statusText}`);
-//         }
-
-//         // Update the status displayed on the page
-//         const statusElement = document.getElementById(`status-${workOrderID}`);
-//         statusElement.textContent = newStatus;
-
-//         alert(`Work order #${workOrderID} status updated to ${newStatus}`);
-//     } catch (error) {
-//         console.error("Error updating work order status:", error);
-//         alert("Failed to update work order status.");
-//     }
-// }
-
-// document.addEventListener("DOMContentLoaded", fetchWorkOrders);
-
-//*****works  */
-// async function fetchWorkOrders() {
-//     try {
-//         const response = await fetch("http://localhost:5050/workorders");
-//         if (!response.ok) {
-//             throw new Error(`Error fetching work orders: ${response.statusText}`);
-//         }
-
-//         const workOrders = await response.json();
-
-//         const ordersList = document.getElementById("orders-list");
-//         if (!ordersList) {
-//             console.error("The element #orders-list does not exist in the DOM.");
-//             return;
-//         }
-
-//         // Clear existing content
-//         ordersList.innerHTML = "";
-
-//         // Populate work orders with buttons
-//         workOrders.forEach((order) => {
-//             const orderDiv = document.createElement("div");
-//             orderDiv.classList.add("work-order");
-//             orderDiv.setAttribute("id", `work-order-${order.workOrderID}`); // Add unique ID
-
-//             orderDiv.innerHTML = `
-//                 <p><strong>Order ID:</strong> #${order.workOrderID}</p>
-//                 <p><strong>Client ID:</strong> ${order.clientID}</p>
-//                 <p><strong>Date:</strong> ${order.dateRange}</p>
-//                 <p><strong>Status:</strong> <span id="status-${order.workOrderID}">${order.status}</span></p>
-//                 <div id="buttons-${order.workOrderID}">
-//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Scheduled')">Scheduled</button>
-//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
-//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
-//                 </div>
-//             `;
-
-//             ordersList.appendChild(orderDiv);
-//         });
-//     } catch (error) {
-//         console.error("Error fetching work orders:", error);
-//     }
-// }
-
-// async function updateWorkOrderStatus(workOrderID, newStatus) {
-//     try {
-//         const response = await fetch(`http://localhost:5050/workorders/${workOrderID}`, {
-//             method: "PUT",
-//             headers: {
-//                 "Content-Type": "application/json",
-//             },
-//             body: JSON.stringify({ status: newStatus }),
-//         });
-
-//         if (!response.ok) {
-//             const errorResponse = await response.json();
-//             console.error("Error response from server:", errorResponse);
-//             throw new Error(`Error updating work order status: ${errorResponse.error}`);
-//         }
-
-//         // Update the DOM
-//         const statusElement = document.getElementById(`status-${workOrderID}`);
-//         const buttonsContainer = document.getElementById(`buttons-${workOrderID}`);
-
-//         // Update status text
-//         statusElement.textContent = newStatus;
-
-//         // Remove buttons
-//         buttonsContainer.innerHTML = `<p>Status updated to <strong>${newStatus}</strong>.</p>`;
-
-//         alert(`Work order #${workOrderID} status updated to ${newStatus}`);
-//     } catch (error) {
-//         console.error("Error updating work order status:", error);
-//         alert("Failed to update work order status.");
-//     }
-// }
-
-// document.addEventListener("DOMContentLoaded", fetchWorkOrders);
 
 async function fetchWorkOrders() {
     try {
@@ -475,4 +364,63 @@ async function updateWorkOrderStatus(workOrderID, newStatus) {
 }
 
 document.addEventListener("DOMContentLoaded", fetchWorkOrders);
+
+//revenue function
+function fetchRevenueReport() {
+    const startDate = document.getElementById("start-date").value;
+    const endDate = document.getElementById("end-date").value;
+
+    if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+    }
+
+    const url = `http://localhost:5050/revenue?startDate=${startDate}&endDate=${endDate}`;
+    console.log("Fetching URL:", url);
+
+    // fetch(url)
+    //     .then(response => {
+    //         if (!response.ok) {
+    //             throw new Error(`HTTP error! status: ${response.status}`);
+    //         }
+    //         return response.json();
+    //     })
+    //     .then(data => {
+    //         const revenueResult = document.getElementById("revenue-result");
+    //         revenueResult.innerHTML = `
+    //             <h2>Revenue Report</h2>
+    //             <p><strong>Total Revenue:</strong> $${data.totalRevenue.toFixed(2)}</p>
+    //             <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
+    //         `;
+    //     })
+    //     .catch(error => {
+    //         console.error("Error fetching revenue report:", error);
+    //         alert("Failed to fetch revenue report. Please check the console for details.");
+    //     });
+    fetch(url)
+    .then(response => {
+        console.log("Fetch response:", response);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Fetched data:", data);
+        const revenueResult = document.getElementById("revenue-result");
+        revenueResult.innerHTML = `
+            <h2>Revenue Report</h2>
+            <p><strong>Total Revenue:</strong> $${data.totalRevenue.toFixed(2)}</p>
+            <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
+        `;
+    })
+    .catch(error => {
+        console.error("Error fetching revenue report:", error);
+        alert(`Failed to fetch revenue report: ${error.message}`);
+    });
+
+}
+
+
+
 
