@@ -310,6 +310,85 @@ document.addEventListener("DOMContentLoaded", fetchQuoteHistory);
 
 // document.addEventListener("DOMContentLoaded", fetchWorkOrders);
 
+//*****works  */
+// async function fetchWorkOrders() {
+//     try {
+//         const response = await fetch("http://localhost:5050/workorders");
+//         if (!response.ok) {
+//             throw new Error(`Error fetching work orders: ${response.statusText}`);
+//         }
+
+//         const workOrders = await response.json();
+
+//         const ordersList = document.getElementById("orders-list");
+//         if (!ordersList) {
+//             console.error("The element #orders-list does not exist in the DOM.");
+//             return;
+//         }
+
+//         // Clear existing content
+//         ordersList.innerHTML = "";
+
+//         // Populate work orders with buttons
+//         workOrders.forEach((order) => {
+//             const orderDiv = document.createElement("div");
+//             orderDiv.classList.add("work-order");
+//             orderDiv.setAttribute("id", `work-order-${order.workOrderID}`); // Add unique ID
+
+//             orderDiv.innerHTML = `
+//                 <p><strong>Order ID:</strong> #${order.workOrderID}</p>
+//                 <p><strong>Client ID:</strong> ${order.clientID}</p>
+//                 <p><strong>Date:</strong> ${order.dateRange}</p>
+//                 <p><strong>Status:</strong> <span id="status-${order.workOrderID}">${order.status}</span></p>
+//                 <div id="buttons-${order.workOrderID}">
+//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Scheduled')">Scheduled</button>
+//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
+//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
+//                 </div>
+//             `;
+
+//             ordersList.appendChild(orderDiv);
+//         });
+//     } catch (error) {
+//         console.error("Error fetching work orders:", error);
+//     }
+// }
+
+// async function updateWorkOrderStatus(workOrderID, newStatus) {
+//     try {
+//         const response = await fetch(`http://localhost:5050/workorders/${workOrderID}`, {
+//             method: "PUT",
+//             headers: {
+//                 "Content-Type": "application/json",
+//             },
+//             body: JSON.stringify({ status: newStatus }),
+//         });
+
+//         if (!response.ok) {
+//             const errorResponse = await response.json();
+//             console.error("Error response from server:", errorResponse);
+//             throw new Error(`Error updating work order status: ${errorResponse.error}`);
+//         }
+
+//         // Update the DOM
+//         const statusElement = document.getElementById(`status-${workOrderID}`);
+//         const buttonsContainer = document.getElementById(`buttons-${workOrderID}`);
+
+//         // Update status text
+//         statusElement.textContent = newStatus;
+
+//         // Remove buttons
+//         buttonsContainer.innerHTML = `<p>Status updated to <strong>${newStatus}</strong>.</p>`;
+
+//         alert(`Work order #${workOrderID} status updated to ${newStatus}`);
+//     } catch (error) {
+//         console.error("Error updating work order status:", error);
+//         alert("Failed to update work order status.");
+//     }
+// }
+
+// document.addEventListener("DOMContentLoaded", fetchWorkOrders);
+
 async function fetchWorkOrders() {
     try {
         const response = await fetch("http://localhost:5050/workorders");
@@ -328,11 +407,22 @@ async function fetchWorkOrders() {
         // Clear existing content
         ordersList.innerHTML = "";
 
-        // Populate work orders with buttons
+        // Populate work orders with buttons conditionally
         workOrders.forEach((order) => {
             const orderDiv = document.createElement("div");
             orderDiv.classList.add("work-order");
             orderDiv.setAttribute("id", `work-order-${order.workOrderID}`); // Add unique ID
+
+            // Add status-specific buttons or disable options
+            let buttonsHTML = "";
+            if (order.status === "Scheduled") {
+                buttonsHTML = `
+                    <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
+                    <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
+                `;
+            } else {
+                buttonsHTML = `<p>No further actions available. Status is <strong>${order.status}</strong>.</p>`;
+            }
 
             orderDiv.innerHTML = `
                 <p><strong>Order ID:</strong> #${order.workOrderID}</p>
@@ -340,9 +430,7 @@ async function fetchWorkOrders() {
                 <p><strong>Date:</strong> ${order.dateRange}</p>
                 <p><strong>Status:</strong> <span id="status-${order.workOrderID}">${order.status}</span></p>
                 <div id="buttons-${order.workOrderID}">
-                    <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Scheduled')">Scheduled</button>
-                    <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
-                    <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
+                    ${buttonsHTML}
                 </div>
             `;
 
@@ -376,8 +464,8 @@ async function updateWorkOrderStatus(workOrderID, newStatus) {
         // Update status text
         statusElement.textContent = newStatus;
 
-        // Remove buttons
-        buttonsContainer.innerHTML = `<p>Status updated to <strong>${newStatus}</strong>.</p>`;
+        // Replace buttons with a message
+        buttonsContainer.innerHTML = `<p>No further actions available. Status is <strong>${newStatus}</strong>.</p>`;
 
         alert(`Work order #${workOrderID} status updated to ${newStatus}`);
     } catch (error) {
@@ -387,3 +475,4 @@ async function updateWorkOrderStatus(workOrderID, newStatus) {
 }
 
 document.addEventListener("DOMContentLoaded", fetchWorkOrders);
+
