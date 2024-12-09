@@ -241,3 +241,72 @@ function respondToQuote(responseID) {
 
 // Fetch and display the data on page load
 document.addEventListener("DOMContentLoaded", fetchQuoteHistory);
+
+async function fetchWorkOrders() {
+    try {
+        const response = await fetch("http://localhost:5050/workorders");
+        if (!response.ok) {
+            throw new Error(`Error fetching work orders: ${response.statusText}`);
+        }
+
+        const workOrders = await response.json();
+
+        const ordersList = document.getElementById("orders-list");
+        if (!ordersList) {
+            console.error("The element #orders-list does not exist in the DOM.");
+            return;
+        }
+
+        // Clear existing content
+        ordersList.innerHTML = "";
+
+        // Populate work orders with buttons
+        workOrders.forEach((order) => {
+            const orderDiv = document.createElement("div");
+            orderDiv.classList.add("work-order");
+
+            orderDiv.innerHTML = `
+                <p><strong>Order ID:</strong> #${order.workOrderID}</p>
+                <p><strong>Client ID:</strong> ${order.clientID}</p>
+                <p><strong>Date:</strong> ${order.dateRange}</p>
+                <p><strong>Status:</strong> <span id="status-${order.workOrderID}">${order.status}</span></p>
+                <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Scheduled')">Scheduled</button>
+                <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
+                <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
+            `;
+
+            ordersList.appendChild(orderDiv);
+        });
+    } catch (error) {
+        console.error("Error fetching work orders:", error);
+    }
+}
+
+// Function to update the status of a work order
+async function updateWorkOrderStatus(workOrderID, newStatus) {
+    try {
+        const response = await fetch(`http://localhost:5050/workorders/${workOrderID}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error updating work order status: ${response.statusText}`);
+        }
+
+        // Update the status displayed on the page
+        const statusElement = document.getElementById(`status-${workOrderID}`);
+        statusElement.textContent = newStatus;
+
+        alert(`Work order #${workOrderID} status updated to ${newStatus}`);
+    } catch (error) {
+        console.error("Error updating work order status:", error);
+        alert("Failed to update work order status.");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", fetchWorkOrders);
+

@@ -665,6 +665,44 @@ app.get("/quotehistory", (req, res) => {
 //         }
 //     });
 // });
+// app.get("/workorders", (req, res) => {
+//     const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
+
+//     userDbService.query(query, (err, results) => {
+//         if (err) {
+//             console.error("Error fetching work orders:", err);
+//             res.status(500).send("Server error");
+//         } else {
+//             res.json(results);
+//         }
+//     });
+// });
+
+app.put("/workorders/:workOrderID", (req, res) => {
+    const { workOrderID } = req.params;
+    const { status } = req.body;
+
+    // Validate the status
+    if (!["Scheduled", "Completed", "Cancelled"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status value." });
+    }
+
+    const query = `
+        UPDATE WorkOrder
+        SET status = ?
+        WHERE workOrderID = ?;
+    `;
+
+    userDbService.query(query, [status, workOrderID], (err, result) => {
+        if (err) {
+            console.error("Error updating work order status:", err);
+            res.status(500).send("Server error");
+        } else {
+            res.json({ message: `Work order #${workOrderID} updated to ${status}` });
+        }
+    });
+});
+
 app.get("/workorders", (req, res) => {
     const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
 
@@ -673,10 +711,13 @@ app.get("/workorders", (req, res) => {
             console.error("Error fetching work orders:", err);
             res.status(500).send("Server error");
         } else {
-            res.json(results);
+            res.json(results); // Send work orders as JSON
         }
     });
 });
+
+
+
 
 
 
