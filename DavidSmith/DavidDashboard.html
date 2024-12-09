@@ -25,38 +25,7 @@
                 <h1>Home</h1>
                 <p>Welcome to the David Smith Dashboard!</p>
             </div>
-        
-            <!-- Quotes Tab -->
-            <div id="Quotes" class="DavidContent">
-                <h1>Manage Quotes</h1>
-                <form id="quoteForm">
-                    <h3>Client Name:</h3>
-                    <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter Client Name" id="client-name" required>
-                    <h3>Requested Service:</h3>
-                    <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter Service Details" id="service-details" required>
-                    <h3>Requested Time Window:</h3>
-                    <input class="fillInputWidth" type="date" style="margin-left: 25px; width:90%" id="time-start" required>
-                    <input class="fillInputWidth" type="date" style="margin-left: 25px; width:90%" id="time-end" required>
-                    <h3>Quote Price:</h3>
-                    <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="quote-price" required>
-                    <h3>Driveway Address:</h3> <!-- New input for the address -->
-                    <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter Driveway Address" id="driveway-address" required>
-                    <h3>Driveway Square Feet:</h3> <!-- New input for the square feet -->
-                    <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="square-feet" required>
-                    <h3>Proposed Price for Work:</h3> <!-- New input for the proposed price -->
-                    <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="proposed-price" required>
-                    <h3>Upload Pictures (5 angles):</h3> <!-- New input for pictures -->
-                    <input type="file" id="picture-1" accept="image/*" required>
-                    <input type="file" id="picture-2" accept="image/*" required>
-                    <input type="file" id="picture-3" accept="image/*" required>
-                    <input type="file" id="picture-4" accept="image/*" required>
-                    <input type="file" id="picture-5" accept="image/*" required>
-                    <h3>Client Notes (Optional):</h3> <!-- New input for the note -->
-                    <textarea id="client-notes" placeholder="Enter any additional information"></textarea>
 
-                    <button class="submitQuote">Submit Quote</button>
-                </form>
-            </div>
         
             <!-- Work Orders Tab -->
             <div id="WorkOrders" class="DavidContent">
@@ -146,6 +115,13 @@
                     <ul id="quote-list">
                         <!-- Additional quote items will be dynamically generated here -->
                     </ul>
+                    <button onclick="respondWithCounter(1)">Submit Counter Proposal</button>
+                    <button onclick="rejectRequest(1)">Reject Proposal</button>
+                    <input type="number" id="counter-price-123" placeholder="Enter Counter Price">
+                    <input type="date" id="start-date-123" placeholder="Start Date">
+                    <input type="date" id="end-date-123" placeholder="End Date">
+                    <textarea id="rejection-note-123" placeholder="Enter Rejection Note"></textarea>
+
                 </div>
             </div>
 

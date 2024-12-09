@@ -371,7 +371,59 @@
 
 // // Load quotes on page load
 // document.addEventListener('DOMContentLoaded', loadQuotes);
+function respondWithCounter(quoteID) {
+    console.log('respondWithCounter called for Quote ID:', quoteID);
 
+    const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
+    const startDate = document.getElementById(`start-date-${quoteID}`).value;
+    const endDate = document.getElementById(`end-date-${quoteID}`).value;
+
+    if (!counterPrice || !startDate || !endDate) {
+        alert('Please provide all details for the counter proposal.');
+        return;
+    }
+
+    // Send counter proposal to the server
+    fetch(`http://127.0.0.1:5050/quotes/counter/${quoteID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ counterPrice, startDate, endDate, addNote: "Some note", clientID: "C001" }),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => alert(data.message))
+        .catch(error => console.error('Error:', error));
+    
+}
+
+// Reject Quote Request
+function rejectRequest(quoteID) {
+    console.log('rejectRequest called for Quote ID:', quoteID);
+
+    const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
+
+    if (!rejectionNote) {
+        alert('Please provide a rejection note.');
+        return;
+    }
+
+    // Send rejection to the server
+    fetch(`/quotes/reject/${quoteID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rejectionNote }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server response:', data);
+            alert(data.message);
+        })
+        .catch(error => console.error('Error:', error));
+}
 document.addEventListener('DOMContentLoaded', () => {
     // Load quotes when the DOM is fully loaded
     function loadQuotes() {
@@ -412,44 +464,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to respond with a counter proposal
-    function respondWithCounter(quoteID) {
-        const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
-        const startDate = document.getElementById(`start-date-${quoteID}`).value;
-        const endDate = document.getElementById(`end-date-${quoteID}`).value;
+    // Define the functions globally
+    // Respond with Counter Proposal
 
-        if (!counterPrice || !startDate || !endDate) {
-            alert('Please provide all details for the counter proposal.');
-            return;
-        }
-
-        fetch(`/quotes/counter/${quoteID}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ counterPrice, startDate, endDate }),
-        })
-            .then(response => response.json())
-            .then(data => alert(data.message))
-            .catch(error => console.error('Error:', error));
-    }
-
-    // Function to reject the request with a note
-    function rejectRequest(quoteID) {
-        const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
-
-        if (!rejectionNote) {
-            alert('Please provide a rejection note.');
-            return;
-        }
-
-        fetch(`/quotes/reject/${quoteID}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rejectionNote }),
-        })
-            .then(response => response.json())
-            .then(data => alert(data.message))
-            .catch(error => console.error('Error:', error));
-    }
 
     // Load quotes when the DOM is ready
     loadQuotes();

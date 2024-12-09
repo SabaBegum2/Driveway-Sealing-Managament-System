@@ -406,10 +406,62 @@ app.get('/quotes', (req, res) => {
 //         .catch(error => console.error('Error:', error));
 // }
 
-app.post('/quotes/reject/:quoteID', (req, res) => {
+// app.post('/quotes/reject/:quoteID', (req, res) => {
+//     const { quoteID } = req.params;
+//     const { rejectionNote, clientID } = req.body;
+//     console.log('Received data:', { quoteID, counterPrice, startDate, endDate, addNote, clientID });
+
+//     if (!rejectionNote) {
+//         res.status(400).json({ error: 'Rejection note is required.' });
+//         return;
+//     }
+
+//     const sql = `
+//         INSERT INTO QuoteHistory (quoteID, clientID, addNote, status)
+//         VALUES (?, ?, ?, 'Rejected')
+//     `;
+
+//     db.query(sql, [quoteID, clientID, rejectionNote], (err, result) => {
+//         if (err) {
+//             console.error('Error rejecting quote:', err);
+//             res.status(500).json({ error: 'Failed to reject the quote.' });
+//             return;
+//         }
+
+//         res.json({ message: `Quote ${quoteID} has been rejected.` });
+//     });
+// });
+
+app.post('/quotes/counter/:quoteID', async (req, res) => {
+    const { quoteID } = req.params;
+    const { counterPrice, startDate, endDate, addNote, clientID } = req.body;
+
+    if (!counterPrice || !startDate || !endDate || !clientID) {
+        res.status(400).json({ error: 'All fields are required.' });
+        return;
+    }
+
+    const sql = `
+        INSERT INTO QuoteHistory (quoteID, clientID, proposedPrice, startDate, endDate, addNote, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+    `;
+
+    try {
+        const result = await userDbService.query(sql, [quoteID, clientID, counterPrice, startDate, endDate, addNote]);
+        res.json({ message: `Counter proposal for Quote ${quoteID} has been submitted.`, responseID: result.insertId });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Failed to insert counter proposal into QuoteHistory.' });
+    }
+});
+
+app.post('/quotes/reject/:quoteID', async (req, res) => {
     const { quoteID } = req.params;
     const { rejectionNote, clientID } = req.body;
 
+    console.log('Rejecting quote:', { quoteID, rejectionNote, clientID });
+
+    // Validate input
     if (!rejectionNote) {
         res.status(400).json({ error: 'Rejection note is required.' });
         return;
@@ -420,41 +472,17 @@ app.post('/quotes/reject/:quoteID', (req, res) => {
         VALUES (?, ?, ?, 'Rejected')
     `;
 
-    db.query(sql, [quoteID, clientID, rejectionNote], (err, result) => {
-        if (err) {
-            console.error('Error rejecting quote:', err);
-            res.status(500).json({ error: 'Failed to reject the quote.' });
-            return;
-        }
-
-        res.json({ message: `Quote ${quoteID} has been rejected.` });
-    });
-});
-
-app.post('/quotes/counter/:quoteID', (req, res) => {
-    const { quoteID } = req.params;
-    const { counterPrice, startDate, endDate, addNote, clientID } = req.body;
-
-    if (!counterPrice || !startDate || !endDate) {
-        res.status(400).json({ error: 'Counter price, start date, and end date are required.' });
-        return;
+    try {
+        const result = await userDbService.query(sql, [quoteID, clientID, rejectionNote]);
+        res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
+    } catch (err) {
+        console.error('Error rejecting quote:', err);
+        res.status(500).json({ error: 'Failed to reject the quote.' });
     }
-
-    const sql = `
-        INSERT INTO QuoteHistory (quoteID, clientID, proposedPrice, startDate, endDate, addNote, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'Pending')
-    `;
-
-    db.query(sql, [quoteID, clientID, counterPrice, startDate, endDate, addNote], (err, result) => {
-        if (err) {
-            console.error('Error submitting counter proposal:', err);
-            res.status(500).json({ error: 'Failed to submit counter proposal.' });
-            return;
-        }
-
-        res.json({ message: `Counter proposal for Quote ${quoteID} has been submitted.` });
-    });
 });
+
+
+
 
 //bills
 // app.post('/invoices', (req, res) => {
