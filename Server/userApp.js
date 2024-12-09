@@ -457,12 +457,12 @@ app.post('/quotes/counter/:quoteID', async (req, res) => {
 
 app.post('/quotes/reject/:quoteID', async (req, res) => {
     const { quoteID } = req.params;
-    const { rejectionNote, clientID } = req.body;
+    const { addNote, clientID } = req.body;
 
-    console.log('Rejecting quote:', { quoteID, rejectionNote, clientID });
+    console.log('Rejecting quote:', { quoteID, addNote, clientID });
 
     // Validate input
-    if (!rejectionNote) {
+    if (!addNote) {
         res.status(400).json({ error: 'Rejection note is required.' });
         return;
     }
@@ -473,7 +473,7 @@ app.post('/quotes/reject/:quoteID', async (req, res) => {
     `;
 
     try {
-        const result = await userDbService.query(sql, [quoteID, clientID, rejectionNote]);
+        const result = await userDbService.query(sql, [quoteID, clientID, addNote]);
         res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
     } catch (err) {
         console.error('Error rejecting quote:', err);
@@ -632,6 +632,49 @@ app.post('/invoices', (req, res) => {
             message: 'Invoice created successfully.',
             invoiceID: result.insertId,
         });
+    });
+});
+
+
+//All quotes and bills
+app.get("/quotehistory", (req, res) => {
+    console.log("Fetching quote history...");
+    const query = "SELECT * FROM QuoteHistory";
+    userDbService.query(query, (err, results) => {
+        if (err) {
+            console.error("Database query error:", err);
+            res.status(500).send("Server error");
+        } else {
+            console.log("Query results:", results);
+            res.json(results);
+        }
+    });
+});
+
+//works******
+
+// app.get("/workorders", (req, res) => {
+//     const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
+
+//     userDbService.query(query, (err, results) => {
+//         if (err) {
+//             console.error("Error fetching work orders:", err);
+//             res.status(500).send("Server error");
+//         } else {
+//             res.json(results);
+//         }
+//     });
+// });
+app.get("/workorders", (req, res) => {
+    const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
+
+    userDbService.query(query, (err, results) => {
+        if (err) {
+            console.error("Error fetching work orders:", err);
+            res.status(500).send("Server error");
+        } else {
+            res.json(results);
+        }
     });
 });
 

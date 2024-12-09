@@ -28,24 +28,15 @@
 
         
             <!-- Work Orders Tab -->
-            <div id="WorkOrders" class="DavidContent">
+            <div id="work-orders">
                 <h1>Manage Work Orders</h1>
                 <p>Check your work orders and their status.</p>
-                <div class="order-list">
-                    <h3>Work Orders</h3>
-                    <ul id="work-orders">
-                        <li>
-                            <p><strong>Order ID:</strong> #001</p>
-                            <p><strong>Status:</strong> Completed</p>
-                            <button class="generate-bill-btn">Generate Bill</button>
-                        </li>
-                        <li>
-                            <p><strong>Order ID:</strong> #002</p>
-                            <p><strong>Status:</strong> In Progress</p>
-                        </li>
-                    </ul>
+                <div id="orders-list">
+                    <!-- Work orders will be dynamically added here -->
                 </div>
             </div>
+            
+            
             
             <!-- generating invoices -->
             <div id="GenerateInvoice">
@@ -93,18 +84,11 @@
                 <div class="bill-list">
                     <h3>All Bills</h3>
                     <ul id="bill-list">
-                        <li>
-                            <p><strong>Bill ID:</strong> #101</p>
-                            <p><strong>Status:</strong> Pending Payment</p>
-                            <button class="respond-bill-btn">Respond</button>
-                        </li>
-                        <li>
-                            <p><strong>Bill ID:</strong> #102</p>
-                            <p><strong>Status:</strong> Paid</p>
-                        </li>
+                        <!-- Dynamically populated by JavaScript -->
                     </ul>
                 </div>
             </div>
+            
 
             <!-- View Quotes Tab (New) -->
             <div id="ViewQuotes" class="DavidContent">
@@ -120,7 +104,7 @@
                     <input type="number" id="counter-price-123" placeholder="Enter Counter Price">
                     <input type="date" id="start-date-123" placeholder="Start Date">
                     <input type="date" id="end-date-123" placeholder="End Date">
-                    <textarea id="rejection-note-123" placeholder="Enter Rejection Note"></textarea>
+                    <textarea id="note-123" placeholder="Enter a Comment"></textarea>
 
                 </div>
             </div>

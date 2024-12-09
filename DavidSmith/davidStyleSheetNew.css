@@ -1,0 +1,103 @@
+/* General Styling */
+body {
+    margin: 0;
+    font-family: 'Lucida Sans', sans-serif;
+    display: flex;
+    background-color: #e8f5f5;
+}
+
+/* Sidebar Styling */
+.side-bar {
+    width: 250px;
+    background: linear-gradient(to bottom, #d4f1f9, #a4ebf3);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+    position: fixed;
+}
+
+.nav-bar {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-bar li {
+    margin: 10px 0;
+    border-radius: 25px;
+    overflow: hidden;
+    text-align: left;
+    padding: 15px;
+    transition: background-color 0.3s, color 0.3s;
+    cursor: pointer;
+}
+
+.nav-bar li.active {
+    background-color: white;
+    color: #004e63;
+    font-weight: bold;
+    box-shadow: -3px 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.nav-bar li a {
+    text-decoration: none;
+    color: #004e63;
+    font-size: 18px;
+    text-transform: capitalize;
+    display: block;
+}
+
+.nav-bar li:hover {
+    background-color: #eefbff;
+    color: #004e63;
+}
+
+.sign-out-btn {
+    background: none;
+    border: none;
+    color: grey;
+    cursor: pointer;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: auto;
+    align-self: center;
+}
+
+.sign-out-btn:hover {
+    color: #004e63;
+    font-weight: bold;
+}
+
+/* Main Content Area */
+.DavidContainer {
+    margin-left: 270px;
+    padding: 40px;
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    font-size: 36px;
+    font-weight: lighter;
+    text-align: left;
+    color: #004e63;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: lighter;
+    color: #004e63;
+}
+
+p {
+    font-size: 14px;
+    color: #555;
+}
+
+
