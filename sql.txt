@@ -22,7 +22,7 @@ CREATE TABLE QuoteRequest (
     propertyAddress TEXT NOT NULL,
     drivewaySqft INT,
     proposedPrice DECIMAL(10, 2) NOT NULL,
-    addNote VARCHAR(500),
+    addNote VARCHAR(300),
     PRIMARY KEY (quoteID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
