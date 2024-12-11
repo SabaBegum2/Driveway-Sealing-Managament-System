@@ -22,6 +22,12 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}));
 let activeClient;
 
+const fileUpload = require('express-fileupload');
+
+// Enable file upload middleware
+app.use(fileUpload());
+
+
 
 /* REGISTER NEW CLIENT */
 app.post('/register', async(request, response) => {
@@ -107,6 +113,64 @@ app.post('/logout/:clientID', async (request, response) => {
 });
 
 
+const path = require('path'); // For handling file paths
+
+app.post('/newQuoteRequest', async (req, res) => {
+    console.log("Received new quote request:", req.body);
+
+    try {
+        const { clientID, propertyAddress, drivewaySqft, proposedPrice, addNotes } = req.body;
+
+        // Validate required fields
+        if (!clientID || !propertyAddress || !drivewaySqft || !proposedPrice) {
+            return res.status(400).json({ error: "All required fields must be filled." });
+        }
+
+        if (!req.files || Object.keys(req.files).length < 5) {
+            return res.status(400).json({ error: "Please upload all 5 images." });
+        }
+
+        // Extract uploaded files
+        const uploadedFiles = req.files;
+        const filePaths = {
+            fileInput1: saveFile(uploadedFiles.fileInput1),
+            fileInput2: saveFile(uploadedFiles.fileInput2),
+            fileInput3: saveFile(uploadedFiles.fileInput3),
+            fileInput4: saveFile(uploadedFiles.fileInput4),
+            fileInput5: saveFile(uploadedFiles.fileInput5),
+        };
+
+        console.log("Saved file paths:", filePaths);
+
+        // Call database function to save the quote request and images
+        const db = userDbService.getUserDbServiceInstance();
+        const result = await db.createQuoteRequest(clientID, propertyAddress, drivewaySqft, proposedPrice, addNotes, filePaths);
+
+        res.status(201).json({ success: true, data: result });
+    } catch (error) {
+        console.error("Error processing new quote request:", error);
+        res.status(500).json({ error: "An error occurred while processing the quote request." });
+    }
+});
+
+// Helper function to save uploaded files
+function saveFile(file) {
+    const uploadPath = path.join(__dirname, 'uploads', file.name);
+
+    try {
+        file.mv(uploadPath, (err) => {
+            if (err) {
+                console.error("Error saving file:", err);
+                throw new Error("Failed to save file");
+            }
+        });
+        return uploadPath; // Return the saved file path for database storage
+    } catch (error) {
+        console.error("Failed to save file:", error);
+        throw error;
+    }
+}
+
 
 
 
@@ -125,17 +189,19 @@ app.post('/logout/:clientID', async (request, response) => {
 
 
 
-// // Read all client data
-// app.get('/getClientData', (request, response) => {
-    
-//     const db = userDbService.getUserDbServiceInstance();
-    
-//     const result = db.getAllClientData(clientID); // call a DB function
+// Read all client data
+app.get('/Cient/QuoteHistory', async (request, response) => {
+    console.log("Getting quote history for client...");
 
-//     result
-//     .then(data => response.json({ data: data }))
-//     .catch(err => console.log(err));
-// });
+    const { clientID } = request.query; 
+    const db = userDbService.getUserDbServiceInstance();
+    
+    const result = await db.getQuoteHistoryTable(clientID); // call a DB function
+
+    result
+    .then(data => response.json({ data: data }))
+    .catch(err => console.log(err));
+});
 
 
 app.get('/getWorkOrderHistory', async (request, response) => {

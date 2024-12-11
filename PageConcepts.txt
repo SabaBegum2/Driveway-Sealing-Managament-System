@@ -8,6 +8,9 @@ IMPORTANT FOR TABLES:
     (Include datetime stamps on orders)
 
 
+npm install express-fileupload
+
+
 ------- Page concepts -------
 
 REGISTER PAGE:

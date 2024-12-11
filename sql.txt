@@ -37,6 +37,24 @@ CREATE TABLE QuoteRequestImage (
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID)
 );
 
+-- ---------------- TRIGGER: ------------------
+
+DELIMITER //
+
+CREATE TRIGGER addToQuoteHistory
+AFTER INSERT ON QuoteRequest
+FOR EACH ROW
+BEGIN
+    INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, addNote, status)
+    VALUES (NEW.clientID, NEW.quoteID, NEW.proposedPrice, NEW.addNote, 'Pending');
+END;
+//
+
+DELIMITER ;
+
+-- ----------------------------------------------
+
+
 
 -- clientID is already stored in the QuoteRequest table and 
 -- can be retrieved through quoteID using a JOIN method to 
@@ -50,7 +68,7 @@ CREATE TABLE QuoteHistory (
     startDate DATE,
     endDate DATE,
     addNote VARCHAR(300),
-    responseDATE DATE DEFAULT CURRENT_DATE,
+    responseDate DATE DEFAULT CURRENT_DATE,
     status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending',
     PRIMARY KEY (responseID),
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
@@ -244,6 +262,7 @@ SELECT
     firstName,
     lastName,
     email,
+
     propertyAddress,
     drivewaySqft,
     requestedPrice AS proposedPrice,
@@ -339,7 +358,24 @@ SET status = 'Completed'
 WHERE workOrderID = 1; -- Replace with an existing workOrderID
 
 
-
+SELECT 
+    qr.quoteID,
+    qr.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    qr.propertyAddress,
+    qr.drivewaySqft,
+    qr.proposedPrice AS requestedPrice,
+    qr.addNote AS clientNote,
+    qri.image1,
+    qri.image2,
+    qri.image3,
+    qri.image4,
+    qri.image5
+FROM QuoteRequest qr
+LEFT JOIN ClientDB c ON qr.clientID = c.clientID
+LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID;
 
 
 

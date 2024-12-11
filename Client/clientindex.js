@@ -77,25 +77,31 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error("No active client found! Redirecting to login...");
         window.location.href = '/Client/LoginPage.html'; // Redirect to login if no active client
     }
-    
-    // if (!document.body.dataset.sharedListenerSet) {
-    //     console.log("Setting up shared logout event listener...");
-    //     document.addEventListener("click", logout); 
-
-    //     document.body.dataset.sharedListenerSet = true; // Mark listener as set
-    // }
 
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
-
     console.log(`Current page: ${currentPage}`);
 
+    if (currentPage === "QuoteHistoryPage") {
+        console.log('Setting up QuoteHistoryPage');
+        getQuoteHistory(); // Automatically fetch quote history on page load
+    }
+    
     if (currentPage === 'ClientDashboardPage') {
         console.log('Setting up ClientPage');
         document.addEventListener("click", setClientDashboard);
     }
+    else if (currentPage === "QuoteHistoryPage") {
+        console.log('Setting up QuoteHistoryPage');
+        document.addEventListener("click", setQuoteHistoryPage);
+    }
     else if (currentPage === 'ClientWorkOrderPage') {
         console.log('Setting up WorkOrderPage');
         document.addEventListener("click", setWorkOrderPage);
+    }
+    else if (currentPage === 'ClientNewQuotePage') {
+        console.log('Setting up new quote request page');
+        const newQuoteForm = document.getElementById('newQuoteForm');
+        newQuoteForm.addEventListener('submit', submitNewQuoteRequest); 
     }
     else {
         fetch(`http://localhost:5050/ClientDB/${clientID}`)     
@@ -131,30 +137,6 @@ logoutBtn.onclick = function () {
 }
 
 
- //   else {
-        // fetch('http://localhost:5050/Client/clientDetails', {
-        //     method: 'GET',
-        //     credentials: 'include' // Ensure session cookie is sent
-        // })
-        //     .then(response => {
-        //         if (!response.ok) {
-        //             throw new Error('Failed to fetch client details. Status: ' + response.status);
-        //         }
-        //         return response.json();
-        //     })
-        //     .then(data => loadClientDetails(data['data']))
-        //     .catch(error => {
-        //         console.error('Error fetching client details:', error);
-        //         alert('Failed to load client details. Please try again.');
-        //     });
-        // }
-    // fetch('http://localhost:5050/Client/clientDetails')     
-    // .then(response => response.json())
-    // .then(data => loadClientDetails(data['data']));
-    // }
-
-//});
-
 // // fetch call is to call the backend
 // document.addEventListener('DOMContentLoaded', function() {
 //     // one can point your browser to http://localhost:5050/getAll to check what it returns first.
@@ -189,217 +171,239 @@ logoutBtn.onclick = function () {
 // }
 
 
-
 function setClientDashboard(event) {
     event.preventDefault();
-    
+    const target = event.target;
+
+    if (document.querySelector("#new-quote-page") === target) {
+        submitNewQuoteRequest(event);
+    }
 }
 
-function logout(event) {
+
+function submitNewQuoteRequest(event) {
     event.preventDefault();
-    console.log('Logging ' + activeClient + ' out...');
 
-    fetch(`http://localhost:5050/logout/${activeClient}/`)
-    .then(response => response.json())
-    .then(data => loadHTMLTable(data['data']));
-    console.log("Search button clicked for first name");
+    const clientID = activeClient;
+
+    // Get the address fields and concatenate them into a single string
+    const streetAddress = document.querySelector("#streetAddress-input").value.trim();
+    const city = document.querySelector("#city-input").value.trim();
+    const state = document.querySelector("#state-input").value.trim();
+    const zipCode = document.querySelector("#zipCode-input").value.trim();
+    const propertyAddress = `${streetAddress}, ${city}, ${state}, ${zipCode}`; // Concatenate address
+
+    // Get other fields
+    const drivewaySqft = parseInt(document.querySelector("#driveway-sqft-input").value.trim());
+    const proposedPrice = document.querySelector("#proposed-price-input").value.trim();
+    const addNotes = document.querySelector("#addtl-cmnt-input").value.trim();
+
+    // Validate fields
+    if (!streetAddress || !city || !state || !zipCode) {
+        alert("Please provide a complete address.");
+        return;
+    }
+
+    if (!drivewaySqft || isNaN(drivewaySqft)) {
+        alert("Please provide a valid driveway square footage.");
+        return;
+    }
+
+    if (!proposedPrice || isNaN(proposedPrice)) {
+        alert("Please provide a valid proposed price.");
+        return;
+    }
+
+    // Get the file inputs
+    const fileInput1 = document.querySelector("#fileInput1").files[0];
+    const fileInput2 = document.querySelector("#fileInput2").files[0];
+    const fileInput3 = document.querySelector("#fileInput3").files[0];
+    const fileInput4 = document.querySelector("#fileInput4").files[0];
+    const fileInput5 = document.querySelector("#fileInput5").files[0];
+
+    if (!fileInput1 || !fileInput2 || !fileInput3 || !fileInput4 || !fileInput5) {
+        alert("Please upload all 5 required images.");
+        return;
+    }
+
+    // Create FormData and append fields
+    const formData = new FormData();
+    formData.append("clientID", clientID);
+    formData.append("propertyAddress", propertyAddress); // Add the concatenated address
+    formData.append("drivewaySqft", drivewaySqft);
+    formData.append("proposedPrice", proposedPrice);
+    formData.append("addNotes", addNotes);
+    formData.append("fileInput1", fileInput1);
+    formData.append("fileInput2", fileInput2);
+    formData.append("fileInput3", fileInput3);
+    formData.append("fileInput4", fileInput4);
+    formData.append("fileInput5", fileInput5);
+
+    // Debugging: Log FormData
+    console.log('Submitting new quote request with the following data:');
+    formData.forEach((value, key) => console.log(`${key}: ${value}`));
+
+    // Send the FormData to the server
+    fetch("http://localhost:5050/newQuoteRequest", {
+        method: "POST",
+        body: formData,
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Quote request submitted successfully!");
+                console.log(data);
+
+                // Redirect to the dashboard
+                const newUrl = new URL(window.location.href);
+                newUrl.pathname = "/Client/ClientDashboard.html";
+                newUrl.protocol = "http:";
+                window.location.href = newUrl.toString();
+            } else {
+                alert(data.error || "An error occurred while submitting the quote request.");
+            }
+        })
+        .catch((error) => console.error("Error:", error));
 }
 
 
-
-function createNewQuote(event) {
-    event.preventDefault();
-    console.log('Setting up NewQuotePage');
-
-    const submitQuote = document.querySelector('#new-quote-btn');
-
-    // Hide and show tabs dynamically
-
-}
-
-
-// document.getElementById('fileInput').addEventListener('change', function(event) {
-//     var file = event.target.files[0];
-//     var fileInfo = `
-//       <p>File Name: ${file.name}</p>
-//       <p>File Size: ${file.size} bytes</p>
-//       <p>File Type: ${file.type}</p>
-//     `;
-//     document.getElementById('fileInfo').innerHTML = fileInfo;
-// });
-
-
-
-/* --------------- LOGOUT FUNCTION ---------------- */
-
-
-
-// const searchAgeBtn =  document.querySelector('#search-age-btn');
-// searchAgeBtn.onclick = function (){
+// function submitNewQuoteRequest(event) {
+//     // Prevent the default form submission behavior
 //     event.preventDefault();
-//     fetch('http://localhost:5050/logout', {
-//         method: 'POST',
-//         credentials: 'include' // Ensures cookies are sent
+
+//     // Get the input values from the form
+//     const clientID = activeClient;
+//     const streetAddress = document.querySelector("#streetAddress-input").value.trim();
+//     const city = document.querySelector("#city-input").value.trim();
+//     const state = document.querySelector("#state-input").value.trim();
+//     const zipCode = document.querySelector("#zipCode-input").value.trim();
+//     const drivewaySqft = document.querySelector("#driveway-sqft-input").value.trim();
+//     const proposedPrice = document.querySelector("#proposed-price-input").value.trim();
+//     const addNotes = document.querySelector("#addtl-cmnt-input").value.trim();
+//     const fileInput1 = document.querySelector("#fileInput1").files[0];
+//     const fileInput2 = document.querySelector("#fileInput2").files[0];
+//     const fileInput3 = document.querySelector("#fileInput3").files[0];
+//     const fileInput4 = document.querySelector("#fileInput4").files[0];
+//     const fileInput5 = document.querySelector("#fileInput5").files[0];
+
+//     // Concatenate the property address
+//     const propertyAddress = `${streetAddress}, ${city}, ${state}, ${zipCode}`;
+//     console.log("Property Address:", propertyAddress);
+
+//     // Validate the inputs
+//     if (!streetAddress || !city || !state || !zipCode) {
+//         alert("Please provide a complete address.");
+//         return;
+//     }
+
+//     if (!drivewaySqft || isNaN(drivewaySqft)) {
+//         alert("Please provide a valid driveway square footage.");
+//         return;
+//     }
+
+//     if (!proposedPrice || isNaN(proposedPrice)) {
+//         alert("Please provide a valid proposed price.");
+//         return;
+//     }
+
+//     if (!fileInput1 || !fileInput2 || !fileInput3 || !fileInput4 || !fileInput5) {
+//         alert("Please upload all 5 required images.");
+//         return;
+//     }
+
+//     // Send the data to the server
+//     fetch("http://localhost:5050/newQuoteRequest", {
+//         method: "POST",
+//         body: JSON.stringify({clientID, propertyAddress, drivewaySqft, proposedPrice, addNotes, fileInput1, fileInput2, fileInput3, fileInput4, fileInput5}),
 //     })
+//         .then((response) => response.json())
+//         .then((data) => {
+//             if (data.success) {
+//                 alert("Quote request submitted successfully!");
+//                 console.log(data);
+
+//                 // Redirect to a confirmation or dashboard page
+//                 const newUrl = new URL(window.location.href);
+//                 newUrl.pathname = "/Client/ClientDashboard.html";
+//                 newUrl.protocol = "http:";
+//                 window.location.href = newUrl.toString();
+//             } else {
+//                 alert(data.error || "An error occurred while submitting the quote request.");
+//             }
+//         })
+//         .catch((error) => console.error("Error:", error));
+// }
+
+// function logout(event) {
+//     event.preventDefault();
+//     console.log('Logging ' + activeClient + ' out...');
+
+//     fetch(`http://localhost:5050/logout/${activeClient}/`)
 //     .then(response => response.json())
-//     .then(data => {
-//         if (data.success) {
-//             alert('Logged out successfully');
-//             window.location.href = '/LoginPage.html'; // Redirect to login page
-//         }
-//     })
-//     .catch(error => {
-//         console.error('Error logging out:', error);
-//     });
+//     .then(data => loadHTMLTable(data['data']));
+//     console.log("Search button clicked for first name");
 // }
 
 
-function setupTabNavigation() {
-    //const tabLinks = document.querySelectorAll('.tabLinks');
-    const tabOptions = document.querySelectorAll('.toggleTabs');
 
-    tabOptions.addEventListener('click', function (event) {
-        if (event.target.classList.contains('toggleLinks')) {
 
-            event.preventDefault();
 
-            const tabName = event.target.getAttribute('data-tab');
-            if (!tabName) {
-                console.error('Failed to retrieve tab name');
-                return;
-            }
+function setQuoteHistoryPage(event) {
+    event.preventDefault();
+    const target = event.target;
 
-            history.pushState({ tab: tabName }, '', `./ClientDashboard.html#${tabName}`);
-            showTab(tabName);
-            callTabHandler(tabName);
-        }
-    });
-}
-    // Add click event listeners to each tab
-    // tabLinks.forEach(link => {
-    //     link.addEventListener('click', function (event) {
-    //         event.preventDefault(); // Prevent default link behavior
-    //         const tabName = this.getAttribute('data-tab');
-
-    //         // Update browser history
-    //         history.pushState({ tab: tabName }, '', `./ClientDashboard.html#${tabName}`);
-
-    //         // Show the selected tab
-    //         showTab(tabName);
-
-    //         // Call a specific function for each tab (extendable functionality)
-    //         callTabHandler(tabName);
-        
-    //     });
-    // });
-//}
-
-function showTab(tabName) {
-    const clientContents = document.querySelectorAll('.clientContent');
-    const tabLinks = document.querySelectorAll('.tabLinks');
-
-    // Hide all tabs
-    clientContents.forEach(content => content.style.display = 'none');
-
-    // Remove active class from all tab links
-    tabLinks.forEach(tab => tab.classList.remove('active'));
-
-    // Show the selected tab content
-    const selectedTab = document.getElementById(tabName);
-    if (selectedTab) {
-        selectedTab.style.display = 'block';
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    if (document.querySelector("#quote-history-page") === target) {
+        getQuoteHistory();
     }
 }
 
-
-function defineTabActions() {
-    const clientPage = document.querySelector('.clientContainer');
-
-    // Delegate all actions (clicks, submits) to the container
-    clientContainer.addEventListener('click', function (event) {
-        // Example: Handle button clicks
-        if (event.target && event.target.classList.contains('exampleButton')) {
-            console.log('Example button clicked!');
-            // Add button-specific logic here
-        }
-    });
-
-    clientContainer.addEventListener('submit', function (event) {
-        event.preventDefault(); // Prevent form submission
-
-        // Identify which form was submitted
-        const formId = event.target.getAttribute('id');
-        if (formId === 'quoteForm') {
-            submitNewQuote(event);
-        }
-    });
-}
-
-
-function callTabHandler(tabName) {
-    switch (tabName) {
-        case "Home":
-            handleHomeTab();
-            break;
-        case "NewQuote":
-            handleNewQuoteTab();
-            break;
-        case "Orders":
-            handleOrdersTab();
-            break;
-        case "Bills":
-            handleBillsTab();
-            break;
-        default:
-            console.error(`No handler defined for tab: ${tabName}`);
-    }
-}
-
-
-// Define individual tab functions
-function handleHomeTab() {
-    console.log("Home tab clicked");
-    // Add your Home tab-specific functionality here
-}
-
-
-function submitNewQuote() {
-    signInForm.onclick = function (event) {
-        event.preventDefault(); // Prevent default form submission
-
-        const clientID = document.getElementById("clientID-input").value;
-        const password = document.getElementById("password-input").value;
-
-        console.log("clientID:", clientID); // debugging
-        console.log("password:", password); // debugging
-
-        // Send the login data to the server
-        fetch('http://localhost:5050/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ clientID, password }),
+function getQuoteHistory() {
+    fetch(`http://localhost:5050/Client/QuoteHistory?clientID=${activeClient}`)
+        .then((response) => response.json())
+        .then((data) => {
+            console.log("Quote History Data:", data);
+            loadQuoteHistoryTable(data.data); // Populate the table
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Login successful');
-                const newUrl = new URL(window.location.href);
-                newUrl.pathname = '/Client/ClientDashboard.html';
-                newUrl.protocol = 'http:';
-                window.location.href = newUrl.toString(); // Redirect after successful login
-                } else {
-                alert(data.error); // Show error message from the server
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred during login. Please try again.');
-        });
-    }
+        .catch((error) => console.error("Error fetching quote history:", error));
 }
+
+
+// function getQuoteHistory() {
+//     signInForm.onclick = function (event) {
+//         event.preventDefault(); // Prevent default form submission
+
+//         const clientID = document.getElementById("clientID-input").value;
+//         const password = document.getElementById("password-input").value;
+
+//         console.log("clientID:", clientID); // debugging
+//         console.log("password:", password); // debugging
+
+//         // Send the login data to the server
+//         fetch('http://localhost:5050/login', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify({ clientID, password }),
+//         })
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.success) {
+//                 alert('Login successful');
+//                 const newUrl = new URL(window.location.href);
+//                 newUrl.pathname = '/Client/ClientDashboard.html';
+//                 newUrl.protocol = 'http:';
+//                 window.location.href = newUrl.toString(); // Redirect after successful login
+//                 } else {
+//                 alert(data.error); // Show error message from the server
+//             }
+//         })
+//         .catch(error => {
+//             console.error('Error:', error);
+//             alert('An error occurred during login. Please try again.');
+//         });
+//     }
+// }
 
 function handleNewQuoteTab() {
     console.log("New Quote tab clicked");
@@ -454,6 +458,37 @@ function loadClientHTMLTable(data) {
     table.innerHTML = tableHtml;
 }
 
+function loadQuoteHistoryTable(data) {
+    const table = document.querySelector("#quoteHistoryTable tbody");
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    let tableHtml = "";
+    data.forEach(({ responseDate, responseID, quoteID, clientID, propertyAddress, drivewaySqft, requestedPrice, clientNote, image1, image2, image3, image4, image5 }) => {
+        tableHtml += `
+            <tr>
+                <td>${responseDate}</td>
+                <td>${responseID}</td>
+                <td>${quoteID}</td>
+                <td>${clientID}</td>
+                <td>${propertyAddress}</td>
+                <td>${drivewaySqft}</td>
+                <td>${requestedPrice}</td>
+                <td>${clientNote}</td>
+                <td><img src="${image1}" alt="Image 1" width="50"></td>
+                <td><img src="${image2}" alt="Image 2" width="50"></td>
+                <td><img src="${image3}" alt="Image 3" width="50"></td>
+                <td><img src="${image4}" alt="Image 4" width="50"></td>
+                <td><img src="${image5}" alt="Image 5" width="50"></td>
+            </tr>
+        `;
+    });
+
+    table.innerHTML = tableHtml;
+}
 
 
 

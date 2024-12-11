@@ -12,7 +12,7 @@
         <nav class="client-nav">
             <ul class="nav-bar">
                 <li class="active"><a href="ClientDashboard.html" >Home</a></li>
-                <li><a href="ClientQuoteHistory.html">New Quote</a></li>
+                <li><a href="ClientQuoteHistory.html">Quotes</a></li>
                 <li><a href="ClientOrders.html">Orders</a></li>
                 <li><a href="ClientBills.html">Bills</a></li>
             </ul>
@@ -30,11 +30,11 @@
                     <h2>Welcome valued customer!</h2>
                     <p>Use the sidebar to review pending requests, order history, and billing.<br>
                     Looking to get a new quote request?</p>
-                    <a href="ClientNewQuote.html">Request New Quote</a>
+                    <button id="new-quote-page"><a href="ClientNewQuote.html">Request New Quote</a></button>
                 </form>
 
                 <h2>Client's Information:</h2>
-                <table>
+                <table id="clientInfo">
                     <thead>
                         <tr>
                             <th>Client ID</th>

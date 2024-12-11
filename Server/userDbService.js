@@ -178,31 +178,92 @@ class userDbService {
    }
 
 
+   async createQuoteRequest(clientID, propertyAddress, drivewaySqft, proposedPrice, addNote, imagePaths) {
+      console.log("Creating new quote request for clientID:", clientID); // Debugging
+      try {
+            //const createDate = new Date(); // Current timestamp
+            // Insert into QuoteRequest table
+            const insertProfile = await new Promise((resolve, reject) => {
+               const query = "INSERT INTO QuoteRequest (clientID, propertyAddress, drivewaySqft, proposedPrice, addNote) VALUES (?, ?, ?, ?, ?);";
+               connection.query(query, [clientID, propertyAddress, drivewaySqft, proposedPrice, addNote], (err, results) => {
+                  if (err) reject(new Error(err.message));
+                  else resolve(results.insertId); // Get the auto-generated quoteID
+               });
+            });
+            console.log("New quote request successfully inserted (text portion) for clientID:", clientID); // Debugging
 
-   // FOR REFRESHING SESSION (possibly)
-   // async function checkSession(clientID, password) {
-   //    const response = await fetch('/check-session', { credentials: 'include' });
-   //    if (!response.ok) {
-   //          window.location.href = '/login.html'; // Redirect to login if session expired
-   //    }
-   // }
+            const quoteID = insertProfile; // Use the auto-generated quoteID
+
+            // Insert images into QuoteRequestImage table
+            const insertImages = await new Promise((resolve, reject) => {
+               const imagequery = "INSERT INTO QuoteRequestImage (quoteID, image1, image2, image3, image4, image5) VALUES (?, ?, ?, ?, ?, ?);";
+               connection.query(imagequery, [quoteID, imagePaths.fileInput1, imagePaths.fileInput2, imagePaths.fileInput3, imagePaths.fileInput4, imagePaths.fileInput5], (err, results) => {
+                  if (err) reject(new Error(err.message));
+                  else resolve(results);
+               });
+            });
+
+            console.log("Images for new quote successfully inserted for quoteID:", quoteID); // Debugging
+
+            // Return the inserted data for confirmation
+            return {
+               quoteID,
+               clientID,
+               propertyAddress,
+               drivewaySqft,
+               proposedPrice,
+               addNote,
+               images: imagePaths,
+            };
+      } catch (error) {
+            console.error("Error creating new quote request:", error);
+            throw error;
+      }
+   }
+  
+   async getQuoteHistoryTable(clientID) {
+      try {
+          const response = await new Promise((resolve, reject) => {
+            const query = `SELECT qh.responseDate, qh.responseID, qh.quoteID, qh.clientID, qr.propertyAddress, qr.drivewaySqft, qr.proposedPrice AS requestedPrice, 
+               qr.addNote AS clientNote, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5 FROM QuoteHistory qh 
+               LEFT JOIN QuoteRequest qr ON qh.quoteID = qr.quoteID 
+               LEFT JOIN QuoteRequestImage qri ON qh.quoteID = qri.quoteID 
+               WHERE qh.clientID = ?;`;
+  
+              connection.query(query, [clientID], (err, results) => {
+                  if (err) {
+                      reject(new Error(err.message));
+                  } else {
+                      resolve(results);
+                  }
+              });
+          });
+  
+          console.log(response); // Debugging output
+          return response; // Return the query results
+      } catch (error) {
+          console.error("Quote History query error:", error);
+          throw error; // Re-throw the error to handle it where the function is called
+      }
+  }
+  
 
    async getWorkOrderHistory(clientID) {
       try {
-          const response = await new Promise((resolve, reject) => {
-              const query = "SELECT * FROM WorkOrder WHERE clientID = ?";
-              connection.query(query, [clientID], (err, results) => {
+            const response = await new Promise((resolve, reject) => {
+               const query = "SELECT * FROM WorkOrder WHERE clientID = ?";
+               connection.query(query, [clientID], (err, results) => {
                   if (err) reject(new Error(err.message));
                   else resolve(results);
-              });
-          });
+               });
+            });
 
-          console.log(response); // for debugging to see the result of select
-          return response;
+            console.log(response); // for debugging to see the result of select
+            return response;
       } catch (error) {
-          console.error('Quote History query error:', error);
+            console.error('Quote History query error:', error);
       }
-  }
+   }
 
 
 

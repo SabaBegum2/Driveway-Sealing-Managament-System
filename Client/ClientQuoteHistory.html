@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="clientstylesheet.css">
-    <title>Client Dashboard</title>
+    <title>Client Quote History</title>
 </head>
 <body data-page="QuoteHistoryPage">
 <!-- <body> -->
@@ -13,7 +13,7 @@
             <ul class="nav-bar">
                 <!-- class tab-links and data-tab="" are previous properties -->
                 <li><a href="ClientDashboard.html" >Home</a></li>
-                <li class="active"><a href="ClientQuoteHistory.html">New Quote</a></li>
+                <li class="active"><a href="ClientQuoteHistory.html">Quotes</a></li>
                 <li><a href="ClientOrders.html">Orders</a></li>
                 <li><a href="ClientBills.html">Bills</a></li>
             </ul>
@@ -26,11 +26,35 @@
     <div class="clientContainer">
         <main>
         <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
-            <h1>Request New Quote</h1>
+            <h1>Quote History</h1>
             <div id="Home" class="clientContent">
-                <form id="clientHomeTab">
-                    <h2>Home</h2>
-                    <p>Welcome to the Home tab!</p>
+                <form id="clientQuotesPage">
+                    <div>
+                        <h2>Quote History</h2>
+                        <table id="quoteHistoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Response Date</th>
+                                    <th>Response ID</th>
+                                    <th>Quote ID</th>
+                                    <th>Client ID</th>
+                                    <th>Property Address</th>
+                                    <th>Driveway Sqft</th>
+                                    <th>Requested Price</th>
+                                    <th>Client Note</th>
+                                    <th>Image 1</th>
+                                    <th>Image 2</th>
+                                    <th>Image 3</th>
+                                    <th>Image 4</th>
+                                    <th>Image 5</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
                 </form>
             </div>
         </main>
