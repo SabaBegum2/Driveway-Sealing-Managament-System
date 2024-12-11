@@ -37,7 +37,9 @@ CREATE TABLE QuoteRequestImage (
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID)
 );
 
--- ---------------- TRIGGER: ------------------
+-- -------------- 1. WILL DELETE THIS WHEN WE TEST TOGETHER!!! ----------------------------
+-- This is bc I don't have a function to accept in my DB yet, but don't want to go back and forth to do it
+-- ----------------- INSERT TRIGGER FOR QUOTEREQUEST TO QUOTEHISTORY : --------------------
 
 DELIMITER //
 
@@ -52,7 +54,7 @@ END;
 
 DELIMITER ;
 
--- ----------------------------------------------
+-- ----------------------------------------------------------------------------------------
 
 
 
@@ -75,29 +77,12 @@ CREATE TABLE QuoteHistory (
     FOREIGN KEY (clientID) REFERENCES QuoteRequest(clientID)
 );
 
--- ---------------- OLD TRIGGER: ------------------
-THIS WAS THE PREVIOUS TRIGGER (keeping in case new one messes up):
+
+-- ---------------- 2. INSERT TRIGGER FOR QUOTEHISTORY TO WORKORDER: ------------------
 DELIMITER //
 
 CREATE TRIGGER createWorkOrder
 AFTER UPDATE ON QuoteHistory
-FOR EACH ROW
-BEGIN
-    IF NEW.status = 'Accepted' THEN
-        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
-        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
-        FROM QuoteRequest qr
-        WHERE qr.quoteID = NEW.quoteID;
-    END IF;
-END;
-//
-
-DELIMITER ;
--- ---------------- NEW TRIGGER: ------------------
-DELIMITER //
-
-CREATE DEFINER=`root`@`localhost` TRIGGER `createWorkOrder`
-AFTER UPDATE ON `QuoteHistory`
 FOR EACH ROW
 BEGIN
     IF NEW.status = 'Accepted' THEN
@@ -108,7 +93,8 @@ END;
 //
 
 DELIMITER ;
--- ------------------------------------------------
+-- -----------------------------------------------------------------------------------
+
 
 CREATE TABLE WorkOrder (
     workOrderID INT PRIMARY KEY AUTO_INCREMENT,
@@ -123,13 +109,12 @@ CREATE TABLE WorkOrder (
 );
 
 
--- Written in a way to immediately insert into phpmyadmin 
--- (refer to previous trigger for how it should look without all 
--- the extra declarations for phpmyadmin)
+-- ---------------- 3. INSERT TRIGGER FOR WORKORDER TO CREATE A NEW INVOICE: ------------------
+-- The trigger is named "createInvoice"
+
 DELIMITER //
 
-CREATE DEFINER=`root`@`localhost` TRIGGER `createInvoice`
-AFTER UPDATE ON `WorkOrder`
+CREATE TRIGGER `createInvoice` AFTER UPDATE ON `WorkOrder`
 FOR EACH ROW
 BEGIN
     IF NEW.status = 'Completed' THEN
@@ -140,10 +125,10 @@ BEGIN
                  WHERE qh.responseID = NEW.responseID), 
                 NOW());
     END IF;
-END;
+END
 //
-
 DELIMITER ;
+-- -------------------------------------------------------------------------------------
 
 
 CREATE TABLE Invoice (
