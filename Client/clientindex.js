@@ -353,11 +353,13 @@ function setQuoteHistoryPage(event) {
     const target = event.target;
 
     if (document.querySelector("#quote-history-page") === target) {
-        getQuoteHistory();
+        getQuoteHistory(event);
     }
 }
 
-function getQuoteHistory() {
+function getQuoteHistory(event) {
+    event.preventDefault();
+    console.log("Fetching quote history for client:", activeClient);
     fetch(`http://localhost:5050/Client/QuoteHistory?clientID=${activeClient}`)
         .then((response) => response.json())
         .then((data) => {
