@@ -37,6 +37,24 @@ CREATE TABLE QuoteRequestImage (
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID)
 );
 
+-- ---------------- TRIGGER: ------------------
+
+DELIMITER //
+
+CREATE TRIGGER addToQuoteHistory
+AFTER INSERT ON QuoteRequest
+FOR EACH ROW
+BEGIN
+    INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, addNote, status)
+    VALUES (NEW.clientID, NEW.quoteID, NEW.proposedPrice, NEW.addNote, 'Pending');
+END;
+//
+
+DELIMITER ;
+
+-- ----------------------------------------------
+
+
 
 -- clientID is already stored in the QuoteRequest table and 
 -- can be retrieved through quoteID using a JOIN method to 
@@ -50,13 +68,47 @@ CREATE TABLE QuoteHistory (
     startDate DATE,
     endDate DATE,
     addNote VARCHAR(300),
-    responseDATE DATE DEFAULT CURRENT_DATE,
+    responseDate DATE DEFAULT CURRENT_DATE,
     status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending',
     PRIMARY KEY (responseID),
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
     FOREIGN KEY (clientID) REFERENCES QuoteRequest(clientID)
 );
 
+-- ---------------- OLD TRIGGER: ------------------
+THIS WAS THE PREVIOUS TRIGGER (keeping in case new one messes up):
+DELIMITER //
+
+CREATE TRIGGER createWorkOrder
+AFTER UPDATE ON QuoteHistory
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Accepted' THEN
+        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
+        FROM QuoteRequest qr
+        WHERE qr.quoteID = NEW.quoteID;
+    END IF;
+END;
+//
+
+DELIMITER ;
+-- ---------------- NEW TRIGGER: ------------------
+DELIMITER //
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `createWorkOrder`
+AFTER UPDATE ON `QuoteHistory`
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Accepted' THEN
+        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+        VALUES (NEW.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate));
+    END IF;
+END;
+//
+
+DELIMITER ;
+-- ------------------------------------------------
 
 CREATE TABLE WorkOrder (
     workOrderID INT PRIMARY KEY AUTO_INCREMENT,
@@ -71,17 +123,22 @@ CREATE TABLE WorkOrder (
 );
 
 
+-- Written in a way to immediately insert into phpmyadmin 
+-- (refer to previous trigger for how it should look without all 
+-- the extra declarations for phpmyadmin)
 DELIMITER //
 
-CREATE TRIGGER createWorkOrder
-AFTER UPDATE ON QuoteHistory
+CREATE DEFINER=`root`@`localhost` TRIGGER `createInvoice`
+AFTER UPDATE ON `WorkOrder`
 FOR EACH ROW
 BEGIN
-    IF NEW.status = 'Accepted' THEN
-        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
-        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
-        FROM QuoteRequest qr
-        WHERE qr.quoteID = NEW.quoteID;
+    IF NEW.status = 'Completed' THEN
+        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+        VALUES (NEW.workOrderID, NEW.clientID, 
+                (SELECT qh.proposedPrice 
+                 FROM QuoteHistory qh
+                 WHERE qh.responseID = NEW.responseID), 
+                NOW());
     END IF;
 END;
 //
@@ -142,6 +199,133 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
     (2, "I need an explanation for the additional charges.", "2024-12-08");
 
 
+
+-- -------------------- CLIENT SPECIFIC QUERIES --------------------
+
+CREATE VIEW ClientDetails AS
+SELECT 
+    c.clientID,
+    c.email,
+    c.firstName,
+    c.lastName,
+    c.phoneNumber,
+    c.homeAddress,
+    c.registerDate,
+    c.loginTime,
+    c.activeStatus,
+    
+    qr.quoteID,
+    qr.propertyAddress,
+    qr.drivewaySqft,
+    qr.proposedPrice AS requestedPrice,
+    qr.addNote AS clientNote,
+
+    qri.image1,
+    qri.image2,
+    qri.image3,
+    qri.image4,
+    qri.image5,
+
+    qh.responseID,
+    qh.proposedPrice AS responsePrice,
+    qh.startDate,
+    qh.endDate,
+    qh.addNote AS responseNote,
+    qh.status AS quoteStatus,
+    qh.responseDATE AS responseDate,
+
+    wo.workOrderID,
+    wo.dateRange AS workDateRange,
+    wo.status AS workStatus,
+
+    i.invoiceID,
+    i.amountDue,
+    i.dateCreated AS invoiceDateCreated,
+    i.datePaid AS invoiceDatePaid,
+
+    ir.responseNote AS invoiceResponseNote,
+    ir.responseDate AS invoiceResponseDate
+
+FROM ClientDB c
+LEFT JOIN QuoteRequest qr ON c.clientID = qr.clientID
+LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+LEFT JOIN QuoteHistory qh ON qr.quoteID = qh.quoteID
+LEFT JOIN WorkOrder wo ON qh.responseID = wo.responseID
+LEFT JOIN Invoice i ON wo.workOrderID = i.workOrderID
+LEFT JOIN InvoiceResponses ir ON i.invoiceID = ir.invoiceID;
+
+-- Grabs info for quotes
+CREATE VIEW QuoteRequestsHistory AS
+SELECT 
+    quoteID,
+    clientID,
+    firstName,
+    lastName,
+    email,
+
+    propertyAddress,
+    drivewaySqft,
+    requestedPrice AS proposedPrice,
+    clientNote,
+    image1,
+    image2,
+    image3,
+    image4,
+    image5
+FROM ClientDetails
+WHERE quoteID IS NOT NULL;
+
+
+-- Grabs info for working orders
+CREATE VIEW WorkOrderHistory AS
+SELECT 
+    wo.workOrderID,
+    wo.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    qr.quoteID,
+    qr.propertyAddress,
+    qr.proposedPrice AS originalQuotePrice,
+    qh.responseID,
+    qh.proposedPrice AS finalQuotePrice,
+    qh.startDate,
+    qh.endDate,
+    qh.status AS quoteStatus,
+    wo.dateRange,
+    wo.status AS workOrderStatus
+FROM WorkOrder wo
+LEFT JOIN ClientDB c ON wo.clientID = c.clientID
+LEFT JOIN QuoteHistory qh ON wo.responseID = qh.responseID
+LEFT JOIN QuoteRequest qr ON wo.quoteID = qr.quoteID
+WHERE qh.status = 'Accepted';
+
+-- 
+CREATE VIEW InvoiceHistory AS
+SELECT 
+    i.invoiceID,
+    i.workOrderID,
+    wo.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    c.creditCardNum,
+    c.creditCardCVV,
+    c.creditCardExp,
+    i.amountDue,
+    i.dateCreated AS invoiceDate,
+    i.datePaid,
+    wo.dateRange AS workOrderDateRange,
+    wo.status AS workOrderStatus,
+    ir.responseNote AS invoiceResponseNote,
+    ir.responseDate AS invoiceResponseDate
+FROM Invoice i
+LEFT JOIN WorkOrder wo ON i.workOrderID = wo.workOrderID
+LEFT JOIN ClientDB c ON wo.clientID = c.clientID
+LEFT JOIN InvoiceResponses ir ON i.invoiceID = ir.invoiceID
+WHERE wo.status = 'Completed';
+
+
 -- Use JOIN for ClientDB and QuoteRequest:
 SELECT c.clientID, c.firstName, c.lastName, qr.propertyAddress, qr.proposedPrice
 FROM ClientDB c
@@ -164,6 +348,38 @@ WHERE i.datePaid IS NULL;
 SELECT ir.responseID, ir.responseNote, ir.responseDate
 FROM InvoiceResponses ir
 WHERE ir.invoiceID = 1;
+
+-- Update an quote to "Accepted" status:
+
+
+-- Update a workOrder to "Completed" status:
+UPDATE WorkOrder
+SET status = 'Completed'
+WHERE workOrderID = 1; -- Replace with an existing workOrderID
+
+
+SELECT 
+    qr.quoteID,
+    qr.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    qr.propertyAddress,
+    qr.drivewaySqft,
+    qr.proposedPrice AS requestedPrice,
+    qr.addNote AS clientNote,
+    qri.image1,
+    qri.image2,
+    qri.image3,
+    qri.image4,
+    qri.image5
+FROM QuoteRequest qr
+LEFT JOIN ClientDB c ON qr.clientID = c.clientID
+LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID;
+
+
+
+----------------------------------------------------------------------
 
 
 -- for david database 

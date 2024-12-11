@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="clientstylesheet.css">
+    <title>Client New Quote</title>
+</head>
+<body data-page="ClientNewQuotePage">
+<!-- <body> -->
+    <div class ="side-bar">
+        <nav class="client-nav">
+            <ul class="nav-bar">
+                <!-- class tab-links and data-tab="" are previous properties -->
+                <li class="active"><a href="ClientDashboard.html">Home</a></li>
+                <li><a href="ClientQuoteHistory.html">Quotes</a></li>
+                <li><a href="ClientOrders.html">Orders</a></li>
+                <li><a href="ClientBills.html">Bulls</a></li>
+            </ul>
+            <ul class="nav-bar-bottom">
+                <li><button id="logout-btn">Sign Out</button></li>
+                <li><p class="side-bar-footer">Created by:<br>Saba Begum and Violet Yousif </p></li>
+            </ul>
+        </nav> 
+    </div>
+    <div class="clientContainer">
+        <main>
+        <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
+            <h1>New Quote Request</h1>
+            <div id="Home" class="clientContent">
+                <h3>Once your request is submitted, Dave will reply back as soon as possible.</h3>
+                <form id="newQuoteForm" enctype="multipart/form-data">
+                    <input type="text" id="streetAddress-input" placeholder="Street Address" required>
+                    <input type="text" id="city-input" placeholder="City" required>
+                    <input type="text" id="state-input" placeholder="State" required>
+                    <input type="text" id="zipCode-input" placeholder="Zip Code" required>
+                    <input type="text" id="driveway-sqft-input" placeholder="Driveway Sqft" required>
+                    <input type="text" id="proposed-price-input" placeholder="Proposed Price" required>
+
+                    <label for="fileInput"><p>Upload 5 images showing different angles of the driveway:</p></label>
+                    <input type="file" id="fileInput1" accept="image/*" required>
+                    <input type="file" id="fileInput2" accept="image/*" required>
+                    <input type="file" id="fileInput3" accept="image/*" required>
+                    <input type="file" id="fileInput4" accept="image/*" required>
+                    <input type="file" id="fileInput5" accept="image/*" required>
+                    <br>
+                    <input type="text" class="txtBox" id="addtl-cmnt-input" placeholder="Additional comments..." required>
+
+                    <button type="submit" id="new-quote-btn" style="margin-left:35%">Submit Quote Request</button>
+                </form>
+                <p>Dates will be discussed once the order has been acknowledged and responded to.<br>Thank you for your support and patience!</p>
+            </div>
+        </main>
+    </div>
+    <script src="clientindex.js"></script>
+</body>
+
+</html>
