@@ -61,26 +61,6 @@ class userDbService {
       }
    }
 
-
-   // async getAllData() {
-   //    try {
-   //       // use await to call an asynchronous function
-   //       const response = await new Promise((resolve, reject) => {
-   //          const query = "SELECT * FROM ClientDB;";
-   //          connection.query(query,
-   //             (err, results) => {
-   //                if (err) reject(new Error(err.message));
-   //                else resolve(results);
-   //             }
-   //          );
-   //       });
-   //       return response;
-
-   //    } catch (error) {
-   //       console.log(error);
-   //    }
-   // }
-
    // FOR REGISTRATION
    async registerNewUser(clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress) {
 
@@ -138,11 +118,8 @@ class userDbService {
             const datequery = "UPDATE ClientDB SET loginTime = ?, activeStatus = ? WHERE clientID = ? AND password = ?;";
             console.log("executing sign in date query:", datequery, [newLoginTime, active, clientID, password]); // debugging
             connection.query(datequery, [newLoginTime, active, clientID, password], (err, results) => {
-               if (err) {
-                  reject(new Error(err.message));
-               } else {
-                  resolve(results);
-               }
+               if (err) reject(new Error(err.message));
+               else resolve(results);
             });
          });
 
@@ -209,7 +186,7 @@ class userDbService {
 //   }
   
 
-   // NEW QUOTE: Create a new quote request
+   // CREATE NEW QUOTE REQUEST FOR CLIENT
    async createQuoteRequest(clientID, propertyAddress, drivewaySqft, proposedPrice, addNote, imagePaths) {
       console.log("Creating new quote request for clientID:", clientID); // Debugging
       try {
@@ -246,10 +223,10 @@ class userDbService {
    }
   
    
-   // GET QUOTE HISTORY: Get quote history for a client
+   // GET QUOTE HISTORY FOR CLIENT
    async getQuoteHistoryTable(clientID) {
       try {
-          const response = await new Promise((resolve, reject) => {
+            const response = await new Promise((resolve, reject) => {
                const query = `SELECT 
                         QH.responseID,
                         QH.clientID,
@@ -266,22 +243,22 @@ class userDbService {
                   JOIN QuoteRequest QR
                   ON QH.quoteID = QR.quoteID
                   WHERE QR.clientID LIKE ?;`;
-  
-              connection.query(query, [clientID], (err, results) => {
+
+               connection.query(query, [clientID], (err, results) => {
                   if (err) reject(new Error(err.message));
                   else resolve(results);
-              });
-          });
-  
-          console.log("Quote results from dbservice: ", response); // Debugging output
-          return response; // Return the query results
-      } catch (error) {
-          console.error("Quote History error in database: ", error);
-          throw error; // Re-throw the error to handle it where the function is called
-      }
-  }
-  
+               });
+            });
 
+            console.log("Quote results from dbservice: ", response); // Debugging output
+            return response; // Return the query results
+      } catch (error) {
+            console.error("Quote History error in database: ", error);
+            throw error; // Re-throw the error to handle it where the function is called
+      }
+   }
+  
+// GET WORK ORDER HISTORY FOR CLIENT
    async getWorkOrderHistory(clientID) {
       try {
             const response = await new Promise((resolve, reject) => {
@@ -298,10 +275,10 @@ class userDbService {
             JOIN QuoteHistory QH ON WO.responseID = QH.responseID
             WHERE WO.clientID LIKE ?;`;
 
-         connection.query(query, [clientID], (err, results) => {
-            if (err) reject(new Error(err.message));
-            else resolve(results);
-         });
+            connection.query(query, [clientID], (err, results) => {
+               if (err) reject(new Error(err.message));
+               else resolve(results);
+            });
          });
          console.log("Work Order results from dbservice: ", response); // for debugging to see the result of select
          return response;
@@ -310,9 +287,7 @@ class userDbService {
       }
    }
 
-
-   // TODO: Get work order history for a client
-   // Then start making response buttons
+// GET INVOICE HISTORY FOR CLIENT
    async getInvoiceHistory(clientID) {
       try {
          // Updates invoice status to 'Overdue' if datePaid is null and dateCreated is more than 7 days ago
@@ -328,6 +303,7 @@ class userDbService {
          // Get invoice history for a client
          const response = await new Promise((resolve, reject) => {
             const query = `SELECT 
+            i.clientID,
             i.status,
             i.invoiceID,
             ir.responseID,
@@ -367,7 +343,6 @@ class userDbService {
                else resolve(results);
             });
          });
-         // console.log(response); // for debugging to see the result of select
          return response;
       } catch (error) {
          console.error("Error: ", error);

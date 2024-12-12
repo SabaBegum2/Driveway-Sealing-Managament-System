@@ -72,18 +72,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
     console.log(`Current page: ${currentPage}`);
-
-    // if (currentPage === "QuoteHistoryPage") {
-    //     console.log('Setting up QuoteHistoryPage');
-    //     document.addEventListener("click", setQuoteHistoryPage);
-    //     //getQuoteHistory(); // Automatically fetch quote history on page load
-    // }
-    // fetch(`http://localhost:5050/ClientDB/${clientID}`)     
-    // .then(response => response.json())
-    // .then(data => loadClientHTMLTable(data['data']));
     
     if (currentPage === 'ClientDashboardPage') {
-        fetch(`http://localhost:5050/ClientDB/${clientID}`)     
+        fetch(`http://localhost:5050/ClientDB/${clientID}`)
             .then(response => response.json())
             .then(data => loadClientHTMLTable(data['data']))
             .catch(error => console.error("Error fetching client data: ", error));
@@ -97,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => loadQuoteHistoryTable(data['data']))
             .catch(error => console.error("Error fetching quote history: ", error));
-
+        quoteHistoryResponse();
         // console.log('Setting up QuoteHistoryPage');
         // const quoteHistoryPage = document.querySelector('Quote-History-Page');
         // quoteHistoryPage.document.addEventListener('click', setQuoteHistoryPage);
@@ -296,18 +287,38 @@ function submitNewQuoteRequest(event) {
 }
 
 
+quoteHistoryResponse = function() {
+    // when the respond btn is clicked
+    const addBtn = document.querySelector('#rspnd-quote-btn');
+    addBtn.onclick = function (){
+        const nameInput = document.querySelector('#name-input');
+        const name = nameInput.value;
+        nameInput.value = "";
 
-function setQuoteHistoryPage(event) {
-    event.preventDefault();
-    const target = event.target;
-    const clientID = activeClient;
-
-    console.log("Fetching quote history for client:", clientID);
-    fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
-        .then((response) => response.json())
-        .then(data => loadQuoteHistoryTable(data['data']))
-        .catch((error) => console.error("Error fetching quote history: ", error))
+        fetch('http://localhost:5050/insert', {
+            headers: {
+                'Content-type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({name: name})
+        })
+        .then(response => response.json())
+        .then(data => insertRowIntoTable(data['data']));
+    }
 }
+
+
+// function setQuoteHistoryPage(event) {
+//     event.preventDefault();
+//     const target = event.target;
+//     const clientID = activeClient;
+
+//     console.log("Fetching quote history for client:", clientID);
+//     fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
+//         .then((response) => response.json())
+//         .then(data => loadQuoteHistoryTable(data['data']))
+//         .catch((error) => console.error("Error fetching quote history: ", error))
+// }
 
 
 // const getQuoteHistory = document.addEventListener('Quote-History-Page');
@@ -328,25 +339,36 @@ function setQuoteHistoryPage(event) {
 // }
 
 
-function setworkOrderHistoryPage() {
+// function setworkOrderHistoryPage() {
 
-}
+// }
 
 
-function setInvoicePage() {
+// function setInvoicePage() {
 
-}
+// }
 
 
 
 function loadClientHTMLTable(data) {
     console.debug("loadHTMLTable called.");
-
+    const clientID = data[0]?.clientID || activeClient;
     const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#clientInfoTable caption'); // Locate the caption
 
     if (!data || data.length === 0) {
-        table.innerHTML = "<tr><td class='no-data' colspan='12'>No Data</td></tr>";
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
         return;
+    }
+
+    // Set the table caption to the clientID from the first record or active client variable
+    if (caption) {
+        caption.textContent = `Registration Information for ` + clientID;
+    } 
+    else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Registration Information for ` + clientID;
+        document.querySelector('table').prepend(newCaption);
     }
 
     let tableHtml = "";
@@ -359,13 +381,13 @@ function loadClientHTMLTable(data) {
         tableHtml += `<td>${password}</td>`;
         tableHtml += `<td>${firstName}</td>`;
         tableHtml += `<td>${lastName}</td>`;
-        tableHtml += `<td>${phoneNumber || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardNum || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardCVV || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardExp || 'N/A'}</td>`;
+        tableHtml += `<td>${phoneNumber || '--'}</td>`;
+        tableHtml += `<td>${creditCardNum || '--'}</td>`;
+        tableHtml += `<td>${creditCardCVV || '--'}</td>`;
+        tableHtml += `<td>${creditCardExp || '--'}</td>`;
         tableHtml += `<td>${homeAddress}</td>`;
         tableHtml += `<td>${new Date(registerDate).toISOString().split('T')[0]}</td>`;
-        tableHtml += `<td>${loginTime ? new Date(loginTime).toLocaleString() : 'N/A'}</td>`;
+        tableHtml += `<td>${loginTime ? new Date(loginTime).toLocaleString() : '--'}</td>`;
         tableHtml += `<td>${activeStatus}</td>`;
         tableHtml += "</tr>";
     });
@@ -376,8 +398,8 @@ function loadClientHTMLTable(data) {
 
 
 function loadQuoteHistoryTable(data) {
-    //debug("clientindex.js: loadQuoteHistoryTable called.");
-    console.log("loadQuoteHistoryTable called.");
+    const clientID = data[0]?.clientID || activeClient;
+    console.log("loadQuoteHistoryTable called for ", clientID);
 
     const table = document.querySelector('table tbody');
     let caption = document.querySelector('#quoteHistoryTable caption'); // Locate the caption
@@ -387,13 +409,13 @@ function loadQuoteHistoryTable(data) {
         return;
     }
 
-    // Set the table caption to the clientID from the first record
-    const clientID = data[0]?.clientID || "Unknown Client";
+    // Set the table caption to the clientID from the first record or active client variable
     if (caption) {
-        caption.textContent = `Quote History for ${clientID}`;
-    } else {
+        caption.textContent = `Quote History for ` + clientID;
+    } 
+    else {
         const newCaption = document.createElement('caption');
-        newCaption.textContent = `Quote History for ${clientID}`;
+        newCaption.textContent = `Quote History for ` + clientID;
         document.querySelector('table').prepend(newCaption);
     }
     
@@ -406,10 +428,10 @@ function loadQuoteHistoryTable(data) {
         tableHtml += `<td>${propertyAddress}</td>`;
         tableHtml += `<td>${drivewaySqft}</td>`;
         tableHtml += `<td>$${proposedPrice}</td>`;
-        tableHtml += `<td>${startDate ? new Date(startDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
-        tableHtml += `<td>${endDate ? new Date(endDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += `<td>${startDate ? new Date(startDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml += `<td>${endDate ? new Date(endDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
         tableHtml += `<td>${addNote}</td>`;
-        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
         tableHtml += `<td>${status}</td>`;
 
         // tableHtml += `<td><img src="/uploads/${image1.split('/').pop()}" width="50"></td>`;
@@ -427,7 +449,8 @@ function loadQuoteHistoryTable(data) {
 
 // For each function that loads the client data into a table
 function loadWorkOrderHistoryTable(data){
-    console.log("clientindex.js: loadWorkOrderHistory called.");
+    const clientID = data[0]?.clientID || activeClient;
+    console.log("clientindex.js: loadWorkOrderHistory called for ", clientID);
 
     const table = document.querySelector('table tbody');
     let caption = document.querySelector('#workOrderHistoryTable caption'); // Locate the caption
@@ -437,18 +460,18 @@ function loadWorkOrderHistoryTable(data){
         return;
     }
 
-    // Set the table caption to the clientID from the first record
-    const clientID = data[0]?.clientID || "Unknown Client";
+    // Set the table caption to the clientID from the first record or active client variable
     if (caption) {
-        caption.textContent = `Work Order History for ${clientID}`;
-    } else {
+        caption.textContent = `Work Order History for ` + clientID;
+    } 
+    else {
         const newCaption = document.createElement('caption');
-        newCaption.textContent = `Work Order History for ${clientID}`;
+        newCaption.textContent = `Work Order History for ` + clientID;
         document.querySelector('table').prepend(newCaption);
     }
 
     let tableHtml = "";
-    data.forEach(function ({workOrderID, quoteID, clientID, propertyAddress, dateRange, price, status}){
+    data.forEach(function ({ workOrderID, quoteID, clientID, propertyAddress, dateRange, price, status }){
         tableHtml += "<tr>";
         tableHtml +=`<td>${workOrderID}</td>`;
         tableHtml +=`<td>${quoteID}</td>`;
@@ -466,7 +489,9 @@ function loadWorkOrderHistoryTable(data){
 
 
 loadInvoiceTable = function(data){
-    console.log("clientindex.js: loadInvoiceTable called.");
+    const clientID = data[0]?.clientID || activeClient;
+    console.log("clientindex.js: loadInvoiceTable called for ", clientID);
+    console.log("Client ID:", clientID);
 
     const table = document.querySelector('table tbody');
     let caption = document.querySelector('#invoiceTable caption'); // Locate the caption
@@ -476,20 +501,15 @@ loadInvoiceTable = function(data){
         return;
     }
 
-    // Set the table caption to the clientID from the first record
-    const clientID = data[0]?.clientID || "Unknown Client";
+    // Set the table caption to the clientID from the first record or active client variable
     if (caption) {
         caption.textContent = `Invoice History for ${clientID}`;
-    } else {
+    } 
+    else {
         const newCaption = document.createElement('caption');
         newCaption.textContent = `Invoice History for ${clientID}`;
         document.querySelector('table').prepend(newCaption);
     }    
-    
-    if(data.length === 0){
-        table.innerHTML = "<tr><td class='no-data' colspan='10'>No Data</td></tr>";
-        return;
-    }
 
     let tableHtml = "";
     // workOrderID, clientID
@@ -497,14 +517,14 @@ loadInvoiceTable = function(data){
         tableHtml += "<tr>";
         tableHtml +=`<td>${status}</td>`;
         tableHtml +=`<td>${invoiceID}</td>`;
-        tableHtml +=`<td>${responseID || ' '}</td>`;
+        tableHtml +=`<td>${responseID || '--'}</td>`;
         tableHtml +=`<td>${workOrderID}</td>`;
         tableHtml +=`<td>${amountDue}</td>`;
         tableHtml +=`<td>${propertyAddress}</td>`;
-        tableHtml += `<td>${dateBilled ? new Date(dateBilled).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
-        tableHtml +=`<td>${responseNote || 'N/A'}</td>`;
-        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
-        tableHtml +=`<td>${datePaid ? new Date(datePaid).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += `<td>${dateBilled ? new Date(dateBilled).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml +=`<td>${responseNote || '--'}</td>`;
+        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml +=`<td>${datePaid ? new Date(datePaid).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
         tableHtml += "</tr>";
     });
 
@@ -513,67 +533,67 @@ loadInvoiceTable = function(data){
 
 
 
-function loadClientDetails(data) {
-    debug("clientindex.js: loadClientDetails called.");
+// function loadClientDetails(data) {
+//     const clientID = data[0]?.clientID || activeClient;
+//     console.log("clientindex.js: loadClientDetails called for ", clientID);
+//     const table = document.querySelector('table tbody');
 
-    const table = document.querySelector('table tbody');
+//     if (data.length === 0) {
+//         table.innerHTML = "<tr><td class='no-data' colspan='20'>No Data</td></tr>";
+//         return;
+//     }
 
-    if (data.length === 0) {
-        table.innerHTML = "<tr><td class='no-data' colspan='20'>No Data</td></tr>";
-        return;
-    }
+//     let tableHtml = "";
+//     data.forEach(function ({
+//         clientID, email, firstName, lastName, phoneNumber, homeAddress, registerDate, loginTime, activeStatus,
+//         quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote,
+//         image1, image2, image3, image4, image5,
+//         responseID, responsePrice, startDate, endDate, responseNote, quoteStatus, responseDate,
+//         workOrderID, workDateRange, workStatus,
+//         invoiceID, amountDue, invoiceDateCreated, invoiceDatePaid,
+//         invoiceResponseNote, invoiceResponseDate
+//     }) {
+//         tableHtml += "<tr>";
+//         tableHtml += `<td>${clientID}</td>`;
+//         tableHtml += `<td>${email}</td>`;
+//         tableHtml += `<td>${firstName}</td>`;
+//         tableHtml += `<td>${lastName}</td>`;
+//         tableHtml += `<td>${phoneNumber}</td>`;
+//         tableHtml += `<td>${homeAddress}</td>`;
+//         tableHtml += `<td>${registerDate}</td>`;
+//         tableHtml += `<td>${loginTime}</td>`;
+//         tableHtml += `<td>${activeStatus}</td>`;
+//         tableHtml += `<td>${quoteID ?? '--'}</td>`;
+//         tableHtml += `<td>${propertyAddress ?? '--'}</td>`;
+//         tableHtml += `<td>${drivewaySqft ?? '--'}</td>`;
+//         tableHtml += `<td>${requestedPrice ?? '--'}</td>`;
+//         tableHtml += `<td>${clientNote ?? '--'}</td>`;
+//         tableHtml += `<td>${image1 ?? '--'}</td>`;
+//         tableHtml += `<td>${image2 ?? '--'}</td>`;
+//         tableHtml += `<td>${image3 ?? '--'}</td>`;
+//         tableHtml += `<td>${image4 ?? '--'}</td>`;
+//         tableHtml += `<td>${image5 ?? '--'}</td>`;
+//         tableHtml += `<td>${responseID ?? '--'}</td>`;
+//         tableHtml += `<td>${responsePrice ?? '--'}</td>`;
+//         tableHtml += `<td>${startDate ?? '--'}</td>`;
+//         tableHtml += `<td>${endDate ?? '--'}</td>`;
+//         tableHtml += `<td>${responseNote ?? '--'}</td>`;
+//         tableHtml += `<td>${quoteStatus ?? '--'}</td>`;
+//         tableHtml += `<td>${responseDate ?? '--'}</td>`;
+//         tableHtml += `<td>${workOrderID ?? '--'}</td>`;
+//         tableHtml += `<td>${workDateRange ?? '--'}</td>`;
+//         tableHtml += `<td>${workStatus ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceID ?? '--'}</td>`;
+//         tableHtml += `<td>${amountDue ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceDateCreated ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceDatePaid ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceResponseNote ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceResponseDate ?? '--'}</td>`;
+//         tableHtml += "</tr>";
+//     });
 
-    let tableHtml = "";
-    data.forEach(function ({
-        clientID, email, firstName, lastName, phoneNumber, homeAddress, registerDate, loginTime, activeStatus,
-        quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote,
-        image1, image2, image3, image4, image5,
-        responseID, responsePrice, startDate, endDate, responseNote, quoteStatus, responseDate,
-        workOrderID, workDateRange, workStatus,
-        invoiceID, amountDue, invoiceDateCreated, invoiceDatePaid,
-        invoiceResponseNote, invoiceResponseDate
-    }) {
-        tableHtml += "<tr>";
-        tableHtml += `<td>${clientID}</td>`;
-        tableHtml += `<td>${email}</td>`;
-        tableHtml += `<td>${firstName}</td>`;
-        tableHtml += `<td>${lastName}</td>`;
-        tableHtml += `<td>${phoneNumber}</td>`;
-        tableHtml += `<td>${homeAddress}</td>`;
-        tableHtml += `<td>${registerDate}</td>`;
-        tableHtml += `<td>${loginTime}</td>`;
-        tableHtml += `<td>${activeStatus}</td>`;
-        tableHtml += `<td>${quoteID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${propertyAddress ?? 'N/A'}</td>`;
-        tableHtml += `<td>${drivewaySqft ?? 'N/A'}</td>`;
-        tableHtml += `<td>${requestedPrice ?? 'N/A'}</td>`;
-        tableHtml += `<td>${clientNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image1 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image2 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image3 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image4 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image5 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responsePrice ?? 'N/A'}</td>`;
-        tableHtml += `<td>${startDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${endDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${quoteStatus ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workOrderID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workDateRange ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workStatus ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${amountDue ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceDateCreated ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceDatePaid ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceResponseNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceResponseDate ?? 'N/A'}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}
+//     table.innerHTML = tableHtml;
+// }
 
 
 

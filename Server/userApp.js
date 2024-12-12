@@ -236,7 +236,7 @@ app.get('/Client/QuoteHistory/:clientID', async (request, response) => {
 
     try {
         const data = await db.getQuoteHistoryTable(clientID); // Fetch quote history
-        response.status(200).json({ data: data }); // Return the fetched data
+        response.json({ data: data }); // Return the fetched data
     } catch (err) {
         console.error('Error in userApp fetching quote history: ', err);
         response.status(500).json({ error: "Failed to fetch quote history." });
