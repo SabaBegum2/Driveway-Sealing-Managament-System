@@ -301,7 +301,7 @@ JOIN QuoteRequest qr ON c.clientID = qr.clientID;
 -- List all QuoteHistory records for a specified client (C001 used here for example):
 SELECT qh.responseID, qh.proposedPrice, qh.startDate, qh.endDate, qh.status
 FROM QuoteHistory qh
-WHERE qh.clientID = "C001";
+WHERE qh.clientID LIKE ?;
 
 
 -- Show unpaid invoices:
@@ -315,14 +315,22 @@ SELECT ir.responseID, ir.responseNote, ir.responseDate
 FROM InvoiceResponses ir
 WHERE ir.invoiceID = 1;
 
--- Update an quote to "Accepted" status:
-
-
--- Update a workOrder to "Completed" status:
-UPDATE WorkOrder
-SET status = 'Completed'
-WHERE workOrderID = 1; -- Replace with an existing workOrderID
-
+SELECT 
+    QH.responseID,
+    QH.clientID,
+    QH.quoteID,
+    QH.proposedPrice,
+    QH.startDate,
+    QH.endDate,
+    QH.addNote,
+    QH.responseDate,
+    QH.status,
+    QR.propertyAddress,
+    QR.drivewaySqft
+FROM QuoteHistory QH
+JOIN QuoteRequest QR
+ON QH.quoteID = QR.quoteID
+WHERE QR.clientID LIKE ?;
 
 SELECT 
     qr.quoteID,

@@ -6,16 +6,16 @@
     <link rel="stylesheet" href="clientstylesheet.css">
     <title>Client Bills</title>
 </head>
-<body data-page="ClientPage">
+<body data-page="ClientBillsPage">
 <!-- <body> -->
     <div class ="side-bar">
         <nav class="client-nav">
             <ul class="nav-bar">
                 <!-- class tab-links and data-tab="" are previous properties -->
-                <li><a href="ClientDashboard.html" >Home</a></li>
-                <li><a href="ClientQuoteHistory.html">Quotes</a></li>
-                <li><a href="ClientOrders.html">Orders</a></li>
-                <li class="active"><a href="ClientBills.html">Bills</a></li>
+                <li><a href="ClientDashboard.html" id="Client-Dashboard-Page">Home</a></li>
+                <li><a href="ClientQuoteHistory.html" id="Quote-History-Page">Quotes</a></li>
+                <li><a href="ClientOrders.html" id="Work-Order-History-Page">Orders</a></li>
+                <li class="active"><a href="ClientBills.html" id="Bills-Page">Bills</a></li>
             </ul>
             <ul class="nav-bar-bottom">
                 <li><button id="logout-btn">Sign Out</button></li>
@@ -26,11 +26,33 @@
     <div class="clientContainer">
         <main>
         <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
-            <h1>Service Bills</h1>
+            <h1>Review Bills</h1>
             <div id="Home" class="clientContent">
                 <form id="clientHomeTab">
                     <h2>Home</h2>
-                    <p>Welcome to the Home tab!</p>
+                    <div>
+                        <!-- <h2>Quote History</h2> -->
+                        <table id="invoiceTable">
+                            <caption>Invoice History for </caption>
+                            <thead>
+                                <tr>
+                                    <th>status</th>
+                                    <th>Invoice ID</th>
+                                    <th>Response ID</th>
+                                    <th>Order ID</th>
+                                    <th>Amount Due</th>
+                                    <th>Property Address</th>
+                                    <th>Date Billed</th>
+                                    <th>Notes</th>
+                                    <th>Resp Date</th>
+                                    <th>Date Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </form>
             </div>
         </main>

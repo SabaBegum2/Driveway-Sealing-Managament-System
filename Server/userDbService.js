@@ -119,7 +119,7 @@ class userDbService {
       }
    }
 
-   // FOR LOGIN
+   // LOGIN: get ClientDB by username and password, update login and active status to online
    async searchByClientIDAndPassword(clientID, password) {
       const newLoginTime = new Date();
       const active = 'online';
@@ -159,7 +159,7 @@ class userDbService {
       }
    }
 
-   // Search ClientDB by username and change active status to offline
+   // LOGOUT: get ClientDB by username and change active status to offline
    async logoutClient(clientID, activeStatus) {
       console.log("Logging out client with ID:", clientID); // Debugging
       activeStatus = 'offline';
@@ -177,7 +177,39 @@ class userDbService {
       }
    }
 
+//    async createQuoteRequest(clientID, propertyAddress, drivewaySqft, proposedPrice, addNote, filePaths) {
+//       try {
+//           // Insert into QuoteRequest table
+//           const quoteID = await new Promise((resolve, reject) => {
+//               const query = "INSERT INTO QuoteRequest (clientID, propertyAddress, drivewaySqft, proposedPrice, addNote) VALUES (?, ?, ?, ?, ?);";
+//               connection.query(query, [clientID, propertyAddress, drivewaySqft, proposedPrice, addNote], (err, results) => {
+//                   if (err) reject(err);
+//                   else resolve(results.insertId);
+//               });
+//           });
+  
+//           // Insert into QuoteRequestImage table
+//           await new Promise((resolve, reject) => {
+//               const imageQuery = "INSERT INTO QuoteRequestImage (quoteID, image1, image2, image3, image4, image5) VALUES (?, ?, ?, ?, ?, ?);";
+//               connection.query(
+//                   imageQuery,
+//                   [quoteID, filePaths.fileInput1, filePaths.fileInput2, filePaths.fileInput3, filePaths.fileInput4, filePaths.fileInput5],
+//                   (err, results) => {
+//                       if (err) reject(err);
+//                       else resolve(results);
+//                   }
+//               );
+//           });
+  
+//           return { quoteID, clientID, propertyAddress, drivewaySqft, proposedPrice, addNote, filePaths };
+//       } catch (error) {
+//           console.error("Error creating quote request:", error);
+//           throw error;
+//       }
+//   }
+  
 
+   // NEW QUOTE: Create a new quote request
    async createQuoteRequest(clientID, propertyAddress, drivewaySqft, proposedPrice, addNote, imagePaths) {
       console.log("Creating new quote request for clientID:", clientID); // Debugging
       try {
@@ -206,43 +238,45 @@ class userDbService {
             console.log("Images for new quote successfully inserted for quoteID:", quoteID); // Debugging
 
             // Return the inserted data for confirmation
-            return {
-               quoteID,
-               clientID,
-               propertyAddress,
-               drivewaySqft,
-               proposedPrice,
-               addNote,
-               images: imagePaths,
-            };
+            return { quoteID, clientID, propertyAddress, drivewaySqft, proposedPrice, addNote, images: imagePaths};
       } catch (error) {
             console.error("Error creating new quote request:", error);
             throw error;
       }
    }
   
+   
+   // GET QUOTE HISTORY: Get quote history for a client
    async getQuoteHistoryTable(clientID) {
       try {
           const response = await new Promise((resolve, reject) => {
-            const query = `SELECT qh.responseDate, qh.responseID, qh.quoteID, qh.clientID, qr.propertyAddress, qr.drivewaySqft, qr.proposedPrice AS requestedPrice, 
-               qr.addNote AS clientNote, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5 FROM QuoteHistory qh 
-               LEFT JOIN QuoteRequest qr ON qh.quoteID = qr.quoteID 
-               LEFT JOIN QuoteRequestImage qri ON qh.quoteID = qri.quoteID 
-               WHERE qh.clientID = ?;`;
+               const query = `SELECT 
+                        QH.responseID,
+                        QH.clientID,
+                        QH.quoteID,
+                        QR.propertyAddress,
+                        QR.drivewaySqft,
+                        QH.proposedPrice,
+                        QH.startDate,
+                        QH.endDate,
+                        QH.addNote,
+                        QH.responseDate,
+                        QH.status
+                  FROM QuoteHistory QH
+                  JOIN QuoteRequest QR
+                  ON QH.quoteID = QR.quoteID
+                  WHERE QR.clientID LIKE ?;`;
   
               connection.query(query, [clientID], (err, results) => {
-                  if (err) {
-                      reject(new Error(err.message));
-                  } else {
-                      resolve(results);
-                  }
+                  if (err) reject(new Error(err.message));
+                  else resolve(results);
               });
           });
   
-          console.log(response); // Debugging output
+          console.log("Quote results from dbservice: ", response); // Debugging output
           return response; // Return the query results
       } catch (error) {
-          console.error("Quote History query error:", error);
+          console.error("Quote History error in database: ", error);
           throw error; // Re-throw the error to handle it where the function is called
       }
   }
@@ -251,21 +285,77 @@ class userDbService {
    async getWorkOrderHistory(clientID) {
       try {
             const response = await new Promise((resolve, reject) => {
-               const query = "SELECT * FROM WorkOrder WHERE clientID = ?";
-               connection.query(query, [clientID], (err, results) => {
-                  if (err) reject(new Error(err.message));
-                  else resolve(results);
-               });
-            });
+               const query = `SELECT 
+               WO.workOrderID,
+               WO.quoteID,
+               WO.clientID,
+               QR.propertyAddress,
+               WO.dateRange,
+               QH.proposedPrice AS price,
+               WO.status
+            FROM WorkOrder WO
+            JOIN QuoteRequest QR ON WO.quoteID = QR.quoteID
+            JOIN QuoteHistory QH ON WO.responseID = QH.responseID
+            WHERE WO.clientID LIKE ?;`;
 
-            console.log(response); // for debugging to see the result of select
-            return response;
+         connection.query(query, [clientID], (err, results) => {
+            if (err) reject(new Error(err.message));
+            else resolve(results);
+         });
+         });
+         console.log("Work Order results from dbservice: ", response); // for debugging to see the result of select
+         return response;
       } catch (error) {
             console.error('Quote History query error:', error);
       }
    }
 
 
+   // TODO: Get work order history for a client
+   // Then start making response buttons
+   async getInvoiceHistory(clientID) {
+      try {
+         // Updates invoice status to 'Overdue' if datePaid is null and dateCreated is more than 7 days ago
+         const update = await new Promise((resolve, reject) => {
+            const query = `UPDATE Invoice SET status = 'Overdue' WHERE datePaid IS NULL AND DATEDIFF(CURDATE(), dateCreated) > 7;`;
+            connection.query(query, (err, results) => {
+               if (err) reject(new Error(err.message));
+               else resolve(results);
+            });
+         });
+         console.log("Invoice status updated: ", update); // for debugging to see the result of select
+
+         // Get invoice history for a client
+         const response = await new Promise((resolve, reject) => {
+            const query = `SELECT 
+            i.status,
+            i.invoiceID,
+            ir.responseID,
+            i.workOrderID,
+            i.amountDue,
+            qr.propertyAddress,
+            i.dateCreated,
+            ir.responseNote,
+            i.datePaid,
+            ir.responseDate
+            FROM Invoice i
+            LEFT JOIN InvoiceResponses ir ON i.invoiceID = ir.invoiceID
+            LEFT JOIN WorkOrder wo ON i.workOrderID = wo.workOrderID
+            LEFT JOIN QuoteRequest qr ON wo.quoteID = qr.quoteID
+            WHERE i.clientID LIKE ?;`;
+
+         connection.query(query, [clientID], (err, results) => {
+            if (err) reject(new Error(err.message));
+            else resolve(results);
+         });
+      });
+      console.log("Invoice results from dbservice: ", response); // for debugging to see the result of select
+      return response;
+   } catch (error) {
+         console.error('Invoice History query error:', error);
+   }
+   
+   }
 
    async searchByClientID(clientID) {
       try {
@@ -284,176 +374,176 @@ class userDbService {
       }
    }
 
-   // Search ClientDB by first name
-   async searchByFirstName(firstName) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE firstName LIKE ?;";
-            connection.query(query, [firstName], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.log(error);
-         // console.error("Error in searchByFirstName: ", error);
-         // throw error; // Ensure the error is propagated
-      }
-   }
+   // // Search ClientDB by first name
+   // async searchByFirstName(firstName) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE firstName LIKE ?;";
+   //          connection.query(query, [firstName], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.log(error);
+   //       // console.error("Error in searchByFirstName: ", error);
+   //       // throw error; // Ensure the error is propagated
+   //    }
+   // }
 
-   // Search ClientDB by last name
-   async searchByLastName(lastName) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE lastName LIKE ?;";
-            connection.query(query, [lastName], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.error("Error in searchByLastName:", error);
-      }
-   }
+   // // Search ClientDB by last name
+   // async searchByLastName(lastName) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE lastName LIKE ?;";
+   //          connection.query(query, [lastName], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.error("Error in searchByLastName:", error);
+   //    }
+   // }
 
 
-   // Search ClientDB by first and last name
-   async searchByFirstAndLastName(firstName, lastName) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE firstName LIKE ? AND lastName LIKE ?;";
-            connection.query(query, [`%${firstName}%`, `%${lastName}%`], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.log(error);
-      }
-   }
+   // // Search ClientDB by first and last name
+   // async searchByFirstAndLastName(firstName, lastName) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE firstName LIKE ? AND lastName LIKE ?;";
+   //          connection.query(query, [`%${firstName}%`, `%${lastName}%`], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.log(error);
+   //    }
+   // }
 
-   // Search ClientDB by clientID
-   async searchByClientID(clientID) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE clientID LIKE ?;";
-            connection.query(query, [clientID], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.error("Error in searchByClientID:", error);
-      }
-   }
+   // // Search ClientDB by clientID
+   // async searchByClientID(clientID) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE clientID LIKE ?;";
+   //          connection.query(query, [clientID], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.error("Error in searchByClientID:", error);
+   //    }
+   // }
 
-   // Search ClientDB by salary range
-   async searchBySalary(minSalary, maxSalary) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE salary BETWEEN ? AND ?;";
-            connection.query(query, [minSalary, maxSalary], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.log(error);
-      }
-   }
+   // // Search ClientDB by salary range
+   // async searchBySalary(minSalary, maxSalary) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE salary BETWEEN ? AND ?;";
+   //          connection.query(query, [minSalary, maxSalary], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.log(error);
+   //    }
+   // }
 
-   // Search ClientDB by age range
-   async searchByAge(minAge, maxAge) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE age BETWEEN ? AND ?;";
-            connection.query(query, [minAge, maxAge], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.log(error);
-      }
-   }
+   // // Search ClientDB by age range
+   // async searchByAge(minAge, maxAge) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE age BETWEEN ? AND ?;";
+   //          connection.query(query, [minAge, maxAge], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.log(error);
+   //    }
+   // }
 
-   // Search ClientDB registered after specific user
-   async searchAfterRegDate(clientID) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE registerDate > (SELECT registerDate FROM ClientDB WHERE clientID = ?);";
-            connection.query(query, [clientID], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         console.log(response); // for debugging to see the result of select
-         return response;
-      } catch (error) {
-         console.error(error);
-      }
-   }
+   // // Search ClientDB registered after specific user
+   // async searchAfterRegDate(clientID) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE registerDate > (SELECT registerDate FROM ClientDB WHERE clientID = ?);";
+   //          connection.query(query, [clientID], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       console.log(response); // for debugging to see the result of select
+   //       return response;
+   //    } catch (error) {
+   //       console.error(error);
+   //    }
+   // }
 
-   // Search ClientDB registered on same day as user
-   async searchSameDayRegDate(clientID) {
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE registerDate = (SELECT registerDate FROM ClientDB WHERE clientID = ?);";
-            connection.query(query, [clientID], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         console.log(response); // for debugging to see the result of select
-         return response;
-      } catch (error) {
-         console.error(error);
-      }
-   }
+   // // Search ClientDB registered on same day as user
+   // async searchSameDayRegDate(clientID) {
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE registerDate = (SELECT registerDate FROM ClientDB WHERE clientID = ?);";
+   //          connection.query(query, [clientID], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       console.log(response); // for debugging to see the result of select
+   //       return response;
+   //    } catch (error) {
+   //       console.error(error);
+   //    }
+   // }
 
-   // Search ClientDB who never signed in
-   async searchNeverSignedIn() {
-      // const emptyDate = '0000-00-00 00:00:00.00';
-      let emptyDate = new Date('0000-00-00 00:00:00.00');
+   // // Search ClientDB who never signed in
+   // async searchNeverSignedIn() {
+   //    // const emptyDate = '0000-00-00 00:00:00.00';
+   //    let emptyDate = new Date('0000-00-00 00:00:00.00');
 
-      // let emptyDate = 'null';
-      // const emptyDate = "";
-      try {
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE loginTime IS NULL;";
-            connection.query(query, (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.log(error);
-      }
-   }
+   //    // let emptyDate = 'null';
+   //    // const emptyDate = "";
+   //    try {
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE loginTime IS NULL;";
+   //          connection.query(query, (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.log(error);
+   //    }
+   // }
 
-   // Search ClientDB who registered today
-   async searchRegToday() {
-      try {
-         const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-         const response = await new Promise((resolve, reject) => {
-            const query = "SELECT * FROM ClientDB WHERE registerDate = ?;";
-            connection.query(query, [today], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         return response;
-      } catch (error) {
-         console.log(error);
-      }
-   }
+   // // Search ClientDB who registered today
+   // async searchRegToday() {
+   //    try {
+   //       const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+   //       const response = await new Promise((resolve, reject) => {
+   //          const query = "SELECT * FROM ClientDB WHERE registerDate = ?;";
+   //          connection.query(query, [today], (err, results) => {
+   //             if (err) reject(new Error(err.message));
+   //             else resolve(results);
+   //          });
+   //       });
+   //       return response;
+   //    } catch (error) {
+   //       console.log(error);
+   //    }
+   // }
 }
 
 module.exports = userDbService;

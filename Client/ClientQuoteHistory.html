@@ -12,10 +12,10 @@
         <nav class="client-nav">
             <ul class="nav-bar">
                 <!-- class tab-links and data-tab="" are previous properties -->
-                <li><a href="ClientDashboard.html" >Home</a></li>
-                <li class="active"><a href="ClientQuoteHistory.html">Quotes</a></li>
-                <li><a href="ClientOrders.html">Orders</a></li>
-                <li><a href="ClientBills.html">Bills</a></li>
+                <li><a href="ClientDashboard.html" id="Client-Dashboard-Page">Home</a></li>
+                <li class="active"><a href="ClientQuoteHistory.html"  id="Quote-History-Page">Quotes</a></li>
+                <li id="Quote-History-Page"><a href="ClientOrders.html" id="Work-Order-History-Page">Orders</a></li>
+                <li><a href="ClientBills.html" id="Bills-Page">Bills</a></li>
             </ul>
             <ul class="nav-bar-bottom">
                 <li><button id="logout-btn">Sign Out</button></li>
@@ -30,23 +30,27 @@
             <div id="Home" class="clientContent">
                 <form id="clientQuotesPage">
                     <div>
-                        <h2>Quote History</h2>
+                        <!-- <h2>Quote History</h2> -->
                         <table id="quoteHistoryTable">
+                            <caption>Quote History for </caption>
                             <thead>
                                 <tr>
-                                    <th>Response Date</th>
-                                    <th>Response ID</th>
+                                    <th>Resp ID</th>
                                     <th>Quote ID</th>
-                                    <th>Client ID</th>
                                     <th>Property Address</th>
-                                    <th>Driveway Sqft</th>
-                                    <th>Requested Price</th>
-                                    <th>Client Note</th>
+                                    <th>Sqft</th>
+                                    <th>Prpsd Price</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Notes</th>
+                                    <th>Resp Date</th>
+                                    <th>status</th>
+                                    <!-- <th>Status</th>
                                     <th>Image 1</th>
                                     <th>Image 2</th>
                                     <th>Image 3</th>
                                     <th>Image 4</th>
-                                    <th>Image 5</th>
+                                    <th>Image 5</th> -->
                                 </tr>
                             </thead>
                             <tbody>

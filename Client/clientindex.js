@@ -3,6 +3,7 @@
 //     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
 //     console.log(`Current page: ${currentPage}`);
 
+
 //     if (currentPage === 'ClientDashboardPage') {
 //         //const clientForm = document.getElementById('clientForm');
 //         document.addEventListener("click", setClientDashboard);
@@ -50,21 +51,12 @@ let activeClient;
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Client DOM loaded.");
 
-    // const clientID = sessionStorage.getItem('clientID'); // Retrieve clientID from sessionStorage
-    // console.log("Client ID:", clientID); // Use this value as needed
-
-    // const urlParams = new URLSearchParams(window.location.search);
-    // const clientID = urlParams.get('clientID'); // Retrieve the clientID from the query parameter
-    // activeClient = clientID;
-    // console.log("Client ID:", clientID); // Use this value as needed
-    // console.log("Active ID:", activeClient); // Use this value as needed
-
-    // Retrieve clientID from URL query parameters (if available)
     const urlParams = new URLSearchParams(window.location.search);
     let clientID = urlParams.get('clientID');
 
     // If no clientID in the URL, try to retrieve it from sessionStorage
     if (!clientID) {
+        console.log("No clientID found in URL. Checking sessionStorage...");
         clientID = sessionStorage.getItem('clientID');
     }
 
@@ -81,22 +73,55 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
     console.log(`Current page: ${currentPage}`);
 
-    if (currentPage === "QuoteHistoryPage") {
-        console.log('Setting up QuoteHistoryPage');
-        getQuoteHistory(); // Automatically fetch quote history on page load
-    }
+    // if (currentPage === "QuoteHistoryPage") {
+    //     console.log('Setting up QuoteHistoryPage');
+    //     document.addEventListener("click", setQuoteHistoryPage);
+    //     //getQuoteHistory(); // Automatically fetch quote history on page load
+    // }
+    // fetch(`http://localhost:5050/ClientDB/${clientID}`)     
+    // .then(response => response.json())
+    // .then(data => loadClientHTMLTable(data['data']));
     
     if (currentPage === 'ClientDashboardPage') {
-        console.log('Setting up ClientPage');
-        document.addEventListener("click", setClientDashboard);
+        fetch(`http://localhost:5050/ClientDB/${clientID}`)     
+            .then(response => response.json())
+            .then(data => loadClientHTMLTable(data['data']))
+            .catch(error => console.error("Error fetching client data: ", error));
+
+        // console.log('Setting up ClientPage');
+        // const clientDbPage = document.querySelector('Client-Dashboard-Page');
+        // clientDbPage.document.addEventListener('click', setClientDashboard);
     }
     else if (currentPage === "QuoteHistoryPage") {
-        console.log('Setting up QuoteHistoryPage');
-        document.addEventListener("click", setQuoteHistoryPage);
+        fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
+            .then(response => response.json())
+            .then(data => loadQuoteHistoryTable(data['data']))
+            .catch(error => console.error("Error fetching quote history: ", error));
+
+        // console.log('Setting up QuoteHistoryPage');
+        // const quoteHistoryPage = document.querySelector('Quote-History-Page');
+        // quoteHistoryPage.document.addEventListener('click', setQuoteHistoryPage);
     }
     else if (currentPage === 'ClientWorkOrderPage') {
-        console.log('Setting up WorkOrderPage');
-        document.addEventListener("click", setWorkOrderPage);
+        fetch(`http://localhost:5050/Client/WorkOrderHistory/${clientID}`)
+            .then(response => response.json())
+            .then(data => loadWorkOrderHistoryTable(data['data']))
+            .catch(error => console.error("Error fetching quote history: ", error));
+
+        // console.log('Setting up WorkOrderPage');
+        // const workOrderHistoryPage = document.getElementById('Work-Order-History-Page');
+        // workOrderHistoryPage.document.addEventListener('click', setworkOrderHistoryPage);
+        // document.addEventListener("click", setWorkOrderPage);
+    }
+    else if (currentPage === 'ClientBillsPage') {
+        fetch(`http://localhost:5050/Client/Invoices/${clientID}`)
+            .then(response => response.json())
+            .then(data => loadInvoiceTable(data['data']))
+            .catch(error => console.error("Error fetching quote history: ", error));
+
+        // console.log('Setting up BillsPage');
+        // const billsPage = document.getElementById('Bills-Page');
+        // billsPage.document.addEventListener('click', setInvoicePage);
     }
     else if (currentPage === 'ClientNewQuotePage') {
         console.log('Setting up new quote request page');
@@ -104,14 +129,16 @@ document.addEventListener('DOMContentLoaded', function () {
         newQuoteForm.addEventListener('submit', submitNewQuoteRequest); 
     }
     else {
-        fetch(`http://localhost:5050/ClientDB/${clientID}`)     
-        .then(response => response.json())
-        .then(data => loadClientHTMLTable(data['data']));
-        }
+        console.error("No page-specific setup function found.");
+    }
 });
 
 
+/* ----------------------------------------------- */
+/* -------------- ALL PAGE FUNCTIONS ------------- */
+/* ----------------------------------------------- */
 
+// logout button
 const logoutBtn = document.querySelector('#logout-btn');
 logoutBtn.onclick = function () {
     // logoutBtn.addEventListener('click', logout);
@@ -125,8 +152,9 @@ logoutBtn.onclick = function () {
     })
     .then(response => response.json())
     .then(data => {
-        alert("User successfully logged out!");
-        console.log(data);  // debugging
+        alert(activeClient + " successfully logged out!");
+        console.log(activeClient + "successfully logged out.");  // debugging
+        activeClient = null;
 
         const newUrl = new URL(window.location.href);
         newUrl.pathname = '/Client/LoginPage.html';
@@ -172,7 +200,8 @@ logoutBtn.onclick = function () {
 
 
 function setClientDashboard(event) {
-    event.preventDefault();
+    //event.preventDefault();
+    //event.stopEventPropagation();
     const target = event.target;
 
     if (document.querySelector("#new-quote-page") === target) {
@@ -183,7 +212,7 @@ function setClientDashboard(event) {
 
 function submitNewQuoteRequest(event) {
     event.preventDefault();
-
+    //event.stopPropagation();
     const clientID = activeClient;
 
     // Get the address fields and concatenate them into a single string
@@ -267,6 +296,287 @@ function submitNewQuoteRequest(event) {
 }
 
 
+
+function setQuoteHistoryPage(event) {
+    event.preventDefault();
+    const target = event.target;
+    const clientID = activeClient;
+
+    console.log("Fetching quote history for client:", clientID);
+    fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
+        .then((response) => response.json())
+        .then(data => loadQuoteHistoryTable(data['data']))
+        .catch((error) => console.error("Error fetching quote history: ", error))
+}
+
+
+// const getQuoteHistory = document.addEventListener('Quote-History-Page');
+// getQuoteHistory.onclick = function () {
+// function getQuoteHistory(target) {
+//     target.preventDefault();
+//     const clientID = activeClient;
+
+//     console.log("Fetching quote history for client:", clientID);
+//     fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
+//         .then((response) => response.json())
+//         // .then((data) => {
+//         //     console.log("Quote History Data:", data);
+//         //     loadQuoteHistoryTable(data.data); // Populate the table
+//         // })
+//         .then(data => loadQuoteHistoryTable(data['data']))
+//         .catch((error) => console.error("Error fetching quote history: ", error));
+// }
+
+
+function setworkOrderHistoryPage() {
+
+}
+
+
+function setInvoicePage() {
+
+}
+
+
+
+function loadClientHTMLTable(data) {
+    console.debug("loadHTMLTable called.");
+
+    const table = document.querySelector('table tbody');
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td class='no-data' colspan='12'>No Data</td></tr>";
+        return;
+    }
+
+    let tableHtml = "";
+    data.forEach(function ({ clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, 
+        creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime, activeStatus
+    }) {
+        tableHtml += "<tr>";
+        tableHtml += `<td>${clientID}</td>`;
+        tableHtml += `<td>${email}</td>`;
+        tableHtml += `<td>${password}</td>`;
+        tableHtml += `<td>${firstName}</td>`;
+        tableHtml += `<td>${lastName}</td>`;
+        tableHtml += `<td>${phoneNumber || 'N/A'}</td>`;
+        tableHtml += `<td>${creditCardNum || 'N/A'}</td>`;
+        tableHtml += `<td>${creditCardCVV || 'N/A'}</td>`;
+        tableHtml += `<td>${creditCardExp || 'N/A'}</td>`;
+        tableHtml += `<td>${homeAddress}</td>`;
+        tableHtml += `<td>${new Date(registerDate).toISOString().split('T')[0]}</td>`;
+        tableHtml += `<td>${loginTime ? new Date(loginTime).toLocaleString() : 'N/A'}</td>`;
+        tableHtml += `<td>${activeStatus}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+function loadQuoteHistoryTable(data) {
+    //debug("clientindex.js: loadQuoteHistoryTable called.");
+    console.log("loadQuoteHistoryTable called.");
+
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#quoteHistoryTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record
+    const clientID = data[0]?.clientID || "Unknown Client";
+    if (caption) {
+        caption.textContent = `Quote History for ${clientID}`;
+    } else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Quote History for ${clientID}`;
+        document.querySelector('table').prepend(newCaption);
+    }
+    
+    let tableHtml = "";
+    //data.forEach(({ responseID, clientID, quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote, responseDate, status, image1, image2, image3, image4, image5 }) => {
+    data.forEach(({ responseID, quoteID, propertyAddress, drivewaySqft, proposedPrice, startDate, endDate, addNote, responseDate, status }) => {
+        tableHtml += "<tr>";
+        tableHtml += `<td>${responseID}</td>`;
+        tableHtml += `<td>${quoteID}</td>`;
+        tableHtml += `<td>${propertyAddress}</td>`;
+        tableHtml += `<td>${drivewaySqft}</td>`;
+        tableHtml += `<td>$${proposedPrice}</td>`;
+        tableHtml += `<td>${startDate ? new Date(startDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += `<td>${endDate ? new Date(endDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += `<td>${addNote}</td>`;
+        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += `<td>${status}</td>`;
+
+        // tableHtml += `<td><img src="/uploads/${image1.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image2.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image3.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image4.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image5.split('/').pop()}" width="50"></td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+// For each function that loads the client data into a table
+function loadWorkOrderHistoryTable(data){
+    console.log("clientindex.js: loadWorkOrderHistory called.");
+
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#workOrderHistoryTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record
+    const clientID = data[0]?.clientID || "Unknown Client";
+    if (caption) {
+        caption.textContent = `Work Order History for ${clientID}`;
+    } else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Work Order History for ${clientID}`;
+        document.querySelector('table').prepend(newCaption);
+    }
+
+    let tableHtml = "";
+    data.forEach(function ({workOrderID, quoteID, clientID, propertyAddress, dateRange, price, status}){
+        tableHtml += "<tr>";
+        tableHtml +=`<td>${workOrderID}</td>`;
+        tableHtml +=`<td>${quoteID}</td>`;
+        tableHtml +=`<td>${clientID}</td>`;
+        tableHtml +=`<td>${propertyAddress}</td>`;
+        tableHtml +=`<td>${dateRange}</td>`;
+        tableHtml +=`<td>$${price}</td>`;
+        tableHtml +=`<td>${status}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+loadInvoiceTable = function(data){
+    console.log("clientindex.js: loadInvoiceTable called.");
+
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#invoiceTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record
+    const clientID = data[0]?.clientID || "Unknown Client";
+    if (caption) {
+        caption.textContent = `Invoice History for ${clientID}`;
+    } else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Invoice History for ${clientID}`;
+        document.querySelector('table').prepend(newCaption);
+    }    
+    
+    if(data.length === 0){
+        table.innerHTML = "<tr><td class='no-data' colspan='10'>No Data</td></tr>";
+        return;
+    }
+
+    let tableHtml = "";
+    // workOrderID, clientID
+    data.forEach(function ({ status, invoiceID, responseID, workOrderID, amountDue, propertyAddress, dateBilled, responseNote, responseDate, datePaid }){
+        tableHtml += "<tr>";
+        tableHtml +=`<td>${status}</td>`;
+        tableHtml +=`<td>${invoiceID}</td>`;
+        tableHtml +=`<td>${responseID || ' '}</td>`;
+        tableHtml +=`<td>${workOrderID}</td>`;
+        tableHtml +=`<td>${amountDue}</td>`;
+        tableHtml +=`<td>${propertyAddress}</td>`;
+        tableHtml += `<td>${dateBilled ? new Date(dateBilled).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml +=`<td>${responseNote || 'N/A'}</td>`;
+        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml +=`<td>${datePaid ? new Date(datePaid).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "N/A"}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+function loadClientDetails(data) {
+    debug("clientindex.js: loadClientDetails called.");
+
+    const table = document.querySelector('table tbody');
+
+    if (data.length === 0) {
+        table.innerHTML = "<tr><td class='no-data' colspan='20'>No Data</td></tr>";
+        return;
+    }
+
+    let tableHtml = "";
+    data.forEach(function ({
+        clientID, email, firstName, lastName, phoneNumber, homeAddress, registerDate, loginTime, activeStatus,
+        quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote,
+        image1, image2, image3, image4, image5,
+        responseID, responsePrice, startDate, endDate, responseNote, quoteStatus, responseDate,
+        workOrderID, workDateRange, workStatus,
+        invoiceID, amountDue, invoiceDateCreated, invoiceDatePaid,
+        invoiceResponseNote, invoiceResponseDate
+    }) {
+        tableHtml += "<tr>";
+        tableHtml += `<td>${clientID}</td>`;
+        tableHtml += `<td>${email}</td>`;
+        tableHtml += `<td>${firstName}</td>`;
+        tableHtml += `<td>${lastName}</td>`;
+        tableHtml += `<td>${phoneNumber}</td>`;
+        tableHtml += `<td>${homeAddress}</td>`;
+        tableHtml += `<td>${registerDate}</td>`;
+        tableHtml += `<td>${loginTime}</td>`;
+        tableHtml += `<td>${activeStatus}</td>`;
+        tableHtml += `<td>${quoteID ?? 'N/A'}</td>`;
+        tableHtml += `<td>${propertyAddress ?? 'N/A'}</td>`;
+        tableHtml += `<td>${drivewaySqft ?? 'N/A'}</td>`;
+        tableHtml += `<td>${requestedPrice ?? 'N/A'}</td>`;
+        tableHtml += `<td>${clientNote ?? 'N/A'}</td>`;
+        tableHtml += `<td>${image1 ?? 'N/A'}</td>`;
+        tableHtml += `<td>${image2 ?? 'N/A'}</td>`;
+        tableHtml += `<td>${image3 ?? 'N/A'}</td>`;
+        tableHtml += `<td>${image4 ?? 'N/A'}</td>`;
+        tableHtml += `<td>${image5 ?? 'N/A'}</td>`;
+        tableHtml += `<td>${responseID ?? 'N/A'}</td>`;
+        tableHtml += `<td>${responsePrice ?? 'N/A'}</td>`;
+        tableHtml += `<td>${startDate ?? 'N/A'}</td>`;
+        tableHtml += `<td>${endDate ?? 'N/A'}</td>`;
+        tableHtml += `<td>${responseNote ?? 'N/A'}</td>`;
+        tableHtml += `<td>${quoteStatus ?? 'N/A'}</td>`;
+        tableHtml += `<td>${responseDate ?? 'N/A'}</td>`;
+        tableHtml += `<td>${workOrderID ?? 'N/A'}</td>`;
+        tableHtml += `<td>${workDateRange ?? 'N/A'}</td>`;
+        tableHtml += `<td>${workStatus ?? 'N/A'}</td>`;
+        tableHtml += `<td>${invoiceID ?? 'N/A'}</td>`;
+        tableHtml += `<td>${amountDue ?? 'N/A'}</td>`;
+        tableHtml += `<td>${invoiceDateCreated ?? 'N/A'}</td>`;
+        tableHtml += `<td>${invoiceDatePaid ?? 'N/A'}</td>`;
+        tableHtml += `<td>${invoiceResponseNote ?? 'N/A'}</td>`;
+        tableHtml += `<td>${invoiceResponseDate ?? 'N/A'}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
 // function submitNewQuoteRequest(event) {
 //     // Prevent the default form submission behavior
 //     event.preventDefault();
@@ -343,242 +653,3 @@ function submitNewQuoteRequest(event) {
 //     .then(data => loadHTMLTable(data['data']));
 //     console.log("Search button clicked for first name");
 // }
-
-
-
-
-
-function setQuoteHistoryPage(event) {
-    event.preventDefault();
-    const target = event.target;
-
-    if (document.querySelector("#quote-history-page") === target) {
-        getQuoteHistory(event);
-    }
-}
-
-function getQuoteHistory(event) {
-    event.preventDefault();
-    console.log("Fetching quote history for client:", activeClient);
-    fetch(`http://localhost:5050/Client/QuoteHistory?clientID=${activeClient}`)
-        .then((response) => response.json())
-        .then((data) => {
-            console.log("Quote History Data:", data);
-            loadQuoteHistoryTable(data.data); // Populate the table
-        })
-        .catch((error) => console.error("Error fetching quote history:", error));
-}
-
-
-// function getQuoteHistory() {
-//     signInForm.onclick = function (event) {
-//         event.preventDefault(); // Prevent default form submission
-
-//         const clientID = document.getElementById("clientID-input").value;
-//         const password = document.getElementById("password-input").value;
-
-//         console.log("clientID:", clientID); // debugging
-//         console.log("password:", password); // debugging
-
-//         // Send the login data to the server
-//         fetch('http://localhost:5050/login', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({ clientID, password }),
-//         })
-//         .then(response => response.json())
-//         .then(data => {
-//             if (data.success) {
-//                 alert('Login successful');
-//                 const newUrl = new URL(window.location.href);
-//                 newUrl.pathname = '/Client/ClientDashboard.html';
-//                 newUrl.protocol = 'http:';
-//                 window.location.href = newUrl.toString(); // Redirect after successful login
-//                 } else {
-//                 alert(data.error); // Show error message from the server
-//             }
-//         })
-//         .catch(error => {
-//             console.error('Error:', error);
-//             alert('An error occurred during login. Please try again.');
-//         });
-//     }
-// }
-
-function handleNewQuoteTab() {
-    console.log("New Quote tab clicked");
-    // Add your New Quote tab-specific functionality here
-    submitNewQuote();
-}
-
-function handleOrdersTab(event) {
-    console.log("Orders tab clicked");
-    // Add your Orders tab-specific functionality here
-}
-
-function handleBillsTab(event) {
-    console.log("Bills tab clicked");
-    // Add your Bills tab-specific functionality here
-}
-
-
-
-
-function loadClientHTMLTable(data) {
-    console.debug("loadHTMLTable called.");
-
-    const table = document.querySelector('table tbody');
-
-    if (!data || data.length === 0) {
-        table.innerHTML = "<tr><td class='no-data' colspan='12'>No Data</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(function ({ clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, 
-        creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime, activeStatus
-    }) {
-        tableHtml += "<tr>";
-        tableHtml += `<td>${clientID}</td>`;
-        tableHtml += `<td>${email}</td>`;
-        tableHtml += `<td>${password}</td>`;
-        tableHtml += `<td>${firstName}</td>`;
-        tableHtml += `<td>${lastName}</td>`;
-        tableHtml += `<td>${phoneNumber || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardNum || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardCVV || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardExp || 'N/A'}</td>`;
-        tableHtml += `<td>${homeAddress}</td>`;
-        tableHtml += `<td>${new Date(registerDate).toISOString().split('T')[0]}</td>`;
-        tableHtml += `<td>${loginTime ? new Date(loginTime).toLocaleString() : 'N/A'}</td>`;
-        tableHtml += `<td>${activeStatus}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}
-
-function loadQuoteHistoryTable(data) {
-    const table = document.querySelector("#quoteHistoryTable tbody");
-
-    if (!data || data.length === 0) {
-        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(({ responseDate, responseID, quoteID, clientID, propertyAddress, drivewaySqft, requestedPrice, clientNote, image1, image2, image3, image4, image5 }) => {
-        tableHtml += `
-            <tr>
-                <td>${responseDate}</td>
-                <td>${responseID}</td>
-                <td>${quoteID}</td>
-                <td>${clientID}</td>
-                <td>${propertyAddress}</td>
-                <td>${drivewaySqft}</td>
-                <td>${requestedPrice}</td>
-                <td>${clientNote}</td>
-                <td><img src="${image1}" alt="Image 1" width="50"></td>
-                <td><img src="${image2}" alt="Image 2" width="50"></td>
-                <td><img src="${image3}" alt="Image 3" width="50"></td>
-                <td><img src="${image4}" alt="Image 4" width="50"></td>
-                <td><img src="${image5}" alt="Image 5" width="50"></td>
-            </tr>
-        `;
-    });
-
-    table.innerHTML = tableHtml;
-}
-
-
-
-// For each function that loads the client data into a table
-function loadWorkOrderHistory(data){
-    debug("userindex.js: loadHTMLTable called.");
-
-    const table = document.querySelector('table tbody'); 
-    
-    if(data.length === 0){
-        table.innerHTML = "<tr><td class='no-data' colspan='10'>No Data</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(function ({workOrderID, clientID, quoteID, responseID, dateRange, status}){
-        tableHtml += "<tr>";
-        tableHtml +=`<td>${workOrderID}</td>`;
-        tableHtml +=`<td>${clientID}</td>`;
-        tableHtml +=`<td>${quoteID}</td>`;
-        tableHtml +=`<td>${responseID}</td>`;
-        tableHtml +=`<td>${dateRange}</td>`;
-        tableHtml +=`<td>${status}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}
-
-
-function loadClientDetails(data) {
-    console.debug("userindex.js: loadClientDetails called.");
-
-    const table = document.querySelector('table tbody');
-
-    if (data.length === 0) {
-        table.innerHTML = "<tr><td class='no-data' colspan='20'>No Data</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(function ({
-        clientID, email, firstName, lastName, phoneNumber, homeAddress, registerDate, loginTime, activeStatus,
-        quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote,
-        image1, image2, image3, image4, image5,
-        responseID, responsePrice, startDate, endDate, responseNote, quoteStatus, responseDate,
-        workOrderID, workDateRange, workStatus,
-        invoiceID, amountDue, invoiceDateCreated, invoiceDatePaid,
-        invoiceResponseNote, invoiceResponseDate
-    }) {
-        tableHtml += "<tr>";
-        tableHtml += `<td>${clientID}</td>`;
-        tableHtml += `<td>${email}</td>`;
-        tableHtml += `<td>${firstName}</td>`;
-        tableHtml += `<td>${lastName}</td>`;
-        tableHtml += `<td>${phoneNumber}</td>`;
-        tableHtml += `<td>${homeAddress}</td>`;
-        tableHtml += `<td>${registerDate}</td>`;
-        tableHtml += `<td>${loginTime}</td>`;
-        tableHtml += `<td>${activeStatus}</td>`;
-        tableHtml += `<td>${quoteID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${propertyAddress ?? 'N/A'}</td>`;
-        tableHtml += `<td>${drivewaySqft ?? 'N/A'}</td>`;
-        tableHtml += `<td>${requestedPrice ?? 'N/A'}</td>`;
-        tableHtml += `<td>${clientNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image1 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image2 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image3 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image4 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image5 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responsePrice ?? 'N/A'}</td>`;
-        tableHtml += `<td>${startDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${endDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${quoteStatus ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workOrderID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workDateRange ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workStatus ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${amountDue ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceDateCreated ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceDatePaid ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceResponseNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceResponseDate ?? 'N/A'}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}
