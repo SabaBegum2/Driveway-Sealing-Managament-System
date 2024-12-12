@@ -58,7 +58,6 @@ CREATE TABLE QuoteHistory (
 );
 
 
-
 -- ---------------- 1. INSERT TRIGGER FOR QUOTEHISTORY TO WORKORDER: ------------------
 DELIMITER //
 
@@ -77,7 +76,6 @@ DELIMITER ;
 -- -------------------------------------------------------------------------------------
 
 
-
 CREATE TABLE WorkOrder (
     workOrderID INT PRIMARY KEY AUTO_INCREMENT,
     clientID VARCHAR(20),
@@ -93,6 +91,8 @@ CREATE TABLE WorkOrder (
 
 
 -- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATEINVOICE: ------------------
+-- The trigger is named "createInvoice"
+
 DELIMITER //
 
 CREATE TRIGGER `createInvoice` AFTER UPDATE ON `WorkOrder`
