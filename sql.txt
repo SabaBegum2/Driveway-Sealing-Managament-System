@@ -22,7 +22,7 @@ CREATE TABLE QuoteRequest (
     propertyAddress TEXT NOT NULL,
     drivewaySqft INT,
     proposedPrice DECIMAL(10, 2) NOT NULL,
-    addNote VARCHAR(500),
+    addNote VARCHAR(300),
     PRIMARY KEY (quoteID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
@@ -36,24 +36,6 @@ CREATE TABLE QuoteRequestImage (
     image5 VARCHAR(255) NOT NULL,
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID)
 );
-
--- ---------------- TRIGGER: ------------------
-
-DELIMITER //
-
-CREATE TRIGGER addToQuoteHistory
-AFTER INSERT ON QuoteRequest
-FOR EACH ROW
-BEGIN
-    INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, addNote, status)
-    VALUES (NEW.clientID, NEW.quoteID, NEW.proposedPrice, NEW.addNote, 'Pending');
-END;
-//
-
-DELIMITER ;
-
--- ----------------------------------------------
-
 
 
 -- clientID is already stored in the QuoteRequest table and 
@@ -75,29 +57,13 @@ CREATE TABLE QuoteHistory (
     FOREIGN KEY (clientID) REFERENCES QuoteRequest(clientID)
 );
 
--- ---------------- OLD TRIGGER: ------------------
-THIS WAS THE PREVIOUS TRIGGER (keeping in case new one messes up):
+
+
+-- ---------------- 1. INSERT TRIGGER FOR QUOTEHISTORY TO WORKORDER: ------------------
 DELIMITER //
 
 CREATE TRIGGER createWorkOrder
 AFTER UPDATE ON QuoteHistory
-FOR EACH ROW
-BEGIN
-    IF NEW.status = 'Accepted' THEN
-        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
-        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
-        FROM QuoteRequest qr
-        WHERE qr.quoteID = NEW.quoteID;
-    END IF;
-END;
-//
-
-DELIMITER ;
--- ---------------- NEW TRIGGER: ------------------
-DELIMITER //
-
-CREATE DEFINER=`root`@`localhost` TRIGGER `createWorkOrder`
-AFTER UPDATE ON `QuoteHistory`
 FOR EACH ROW
 BEGIN
     IF NEW.status = 'Accepted' THEN
@@ -108,7 +74,9 @@ END;
 //
 
 DELIMITER ;
--- ------------------------------------------------
+-- -------------------------------------------------------------------------------------
+
+
 
 CREATE TABLE WorkOrder (
     workOrderID INT PRIMARY KEY AUTO_INCREMENT,
@@ -123,13 +91,11 @@ CREATE TABLE WorkOrder (
 );
 
 
--- Written in a way to immediately insert into phpmyadmin 
--- (refer to previous trigger for how it should look without all 
--- the extra declarations for phpmyadmin)
+
+-- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATEINVOICE: ------------------
 DELIMITER //
 
-CREATE DEFINER=`root`@`localhost` TRIGGER `createInvoice`
-AFTER UPDATE ON `WorkOrder`
+CREATE TRIGGER `createInvoice` AFTER UPDATE ON `WorkOrder`
 FOR EACH ROW
 BEGIN
     IF NEW.status = 'Completed' THEN
@@ -140,10 +106,10 @@ BEGIN
                  WHERE qh.responseID = NEW.responseID), 
                 NOW());
     END IF;
-END;
+END
 //
-
 DELIMITER ;
+-- -------------------------------------------------------------------------------------
 
 
 CREATE TABLE Invoice (
@@ -161,7 +127,7 @@ CREATE TABLE InvoiceResponses (
     responseID INT PRIMARY KEY AUTO_INCREMENT,
     invoiceID INT NOT NULL,
     responseNote VARCHAR(500),
-    responseDate DATE DEFAULT CURRENT_DATE,
+    responseDate DATETIME DEFAULT CURRENT_DATETIME,
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
 
@@ -459,7 +425,6 @@ FROM ClientDB c
 JOIN Invoice i ON c.clientID = i.clientID
 WHERE i.datePaid IS NULL
   AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
-
 
 -- good clients 
 
