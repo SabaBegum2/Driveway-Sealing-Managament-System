@@ -37,26 +37,6 @@ CREATE TABLE QuoteRequestImage (
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID)
 );
 
--- -------------- 1. WILL DELETE THIS WHEN WE TEST TOGETHER!!! ----------------------------
--- This is bc I don't have a function to accept in my DB yet, but don't want to go back and forth to do it
--- ----------------- INSERT TRIGGER FOR QUOTEREQUEST TO QUOTEHISTORY : --------------------
-
-DELIMITER //
-
-CREATE TRIGGER addToQuoteHistory
-AFTER INSERT ON QuoteRequest
-FOR EACH ROW
-BEGIN
-    INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, addNote, status)
-    VALUES (NEW.clientID, NEW.quoteID, NEW.proposedPrice, NEW.addNote, 'Pending');
-END;
-//
-
-DELIMITER ;
-
--- ----------------------------------------------------------------------------------------
-
-
 
 -- clientID is already stored in the QuoteRequest table and 
 -- can be retrieved through quoteID using a JOIN method to 
@@ -78,7 +58,7 @@ CREATE TABLE QuoteHistory (
 );
 
 
--- ---------------- 2. INSERT TRIGGER FOR QUOTEHISTORY TO WORKORDER: ------------------
+-- ---------------- 1. INSERT TRIGGER FOR QUOTEHISTORY TO WORKORDER: ------------------
 DELIMITER //
 
 CREATE TRIGGER createWorkOrder
@@ -93,7 +73,7 @@ END;
 //
 
 DELIMITER ;
--- -----------------------------------------------------------------------------------
+-- -------------------------------------------------------------------------------------
 
 
 CREATE TABLE WorkOrder (
@@ -109,7 +89,8 @@ CREATE TABLE WorkOrder (
 );
 
 
--- ---------------- 3. INSERT TRIGGER FOR WORKORDER TO CREATE A NEW INVOICE: ------------------
+
+-- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATEINVOICE: ------------------
 -- The trigger is named "createInvoice"
 
 DELIMITER //
@@ -146,7 +127,7 @@ CREATE TABLE InvoiceResponses (
     responseID INT PRIMARY KEY AUTO_INCREMENT,
     invoiceID INT NOT NULL,
     responseNote VARCHAR(500),
-    responseDate DATE DEFAULT CURRENT_DATE,
+    responseDate DATETIME DEFAULT CURRENT_DATETIME,
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
 
@@ -444,7 +425,6 @@ FROM ClientDB c
 JOIN Invoice i ON c.clientID = i.clientID
 WHERE i.datePaid IS NULL
   AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
-
 
 -- good clients 
 
