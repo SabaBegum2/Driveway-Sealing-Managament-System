@@ -1,67 +1,36 @@
 // Server: application services, accessible by URIs
 
-const mysql = require('mysql');
 const express = require('express')
-//const router = express.Router();
 const cors = require('cors')
 const dotenv = require('dotenv')
 dotenv.config()
 const bodyParser = require('body-parser'); // Import body-parser
 
 const app = express();
+
 const userDbService = require('./userDbService');
 
-
 app.use(cors());
-app.use(express.json())//middleware
+
+app.use(express.json())
 app.use(express.urlencoded({extended: false}));
+let activeClient;
 
-const quotesRouter = require('./Quotes'); // ../ to access DavidSmith folder
-const workOrdersRoutes = require('../DavidSmith/Orders'); // Corrected relative path
-const invoicesRoutes = require('../DavidSmith/invoices'); // Corrected relative path
+const fileUpload = require('express-fileupload');
 
-// Use routes
-//app.use('/clientIndex', clientIndex);
-app.use('/quotes', quotesRouter);
-app.use('/Orders', workOrdersRoutes);
-app.use('/invoices', invoicesRoutes);
+// Enable file upload middleware
+app.use(fileUpload());
 
 
-
-// // Read all client data
-app.get('/getClientData', (request, response) => {
-    
-    const db = userDbService.getUserDbServiceInstance();
-    
-    const result =  db.getAllClientData(); // call a DB function
-
-    result
-    .then(data => response.json({ data: data }))
-    .catch(err => console.log(err));
-});
-
-//Read all data
-app.get('/getAll', (request, response) => {
-    
-    const db = userDbService.getUserDbServiceInstance();
-    
-    const result =  db.getAllData(); // call a DB function
-
-    result
-    .then(data => response.json({ data: data }))
-    .catch(err => console.log(err));
-});
-
-
-// Create new Client
+/* REGISTER NEW CLIENT */
 app.post('/register', async(request, response) => {
     console.log("userApp: insert a row.");
     try {
         const {clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress} = request.body;
 
-        // Check for missing fields
+        // Check for missing fields during page switches
         if (!clientID || !email || !password || !firstName || !lastName || !phoneNumber || !homeAddress) {
-            return response.status(400).json({ message: "All required fields must be filled." });
+            return response.status(400).json({ message: "Error obtaining some fields." });
         }
 
         const db = userDbService.getUserDbServiceInstance();
@@ -77,8 +46,8 @@ app.post('/register', async(request, response) => {
 });
 
 
+/* NEW LOGIN */
 app.post('/login', async (request, response) => {
-
     app.use(bodyParser.json());
 
     const { clientID, password } = request.body;
@@ -98,14 +67,234 @@ app.post('/login', async (request, response) => {
         }
 
         // Successful login
+        activeClient = result.clientID;
         response.json({ success: true });
-        // activeUser = clientID;
-        // console.log("Active user: ", activeUser);
+
     } catch (err) {
         console.error(err);
         response.status(500).json({ error: "An error occurred while logging in." });
     }
 });
+
+
+/* GET ALL CLIENTID INFO */
+app.get('/ClientDB/:clientID', (request, response) => {
+    const { clientID } = request.params;
+    console.log(clientID);  // Debugging
+
+    const db = userDbService.getUserDbServiceInstance();
+    const result =  db.getAllClientData(clientID); // call a DB function
+
+    result
+    .then(data => response.json({ data: data }))
+    .catch(err => console.log('Error: ', err));
+});
+
+
+/* UPDATE CLIENT ACTIVE STATUS TO OFFLINE */
+app.post('/logout/:clientID', async (request, response) => {
+    const{ clientID, activeStatus } = request.body;
+    console.log("Logging ", clientID, " out of app...");
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.logoutClient(clientID);
+
+        response.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to log out." });
+    }
+});
+
+
+/* CREATE NEW QUOTE REQUEST */
+const imagePath = require('path'); // For handling file paths
+app.post('/newQuoteRequest', async (req, res) => {
+    console.log("Received new quote request:", req.body);
+
+    try {
+        const { clientID, propertyAddress, drivewaySqft, proposedPrice, addNotes } = req.body;
+
+        // Validate required fields
+        if (!clientID || !propertyAddress || !drivewaySqft || !proposedPrice) {
+            return res.status(400).json({ error: "All required fields must be filled." });
+        }
+
+        if (!req.files || Object.keys(req.files).length < 5) {
+            return res.status(400).json({ error: "Please upload all 5 images." });
+        }
+
+        // Extract uploaded files
+        const uploadedFiles = req.files;
+        const filePaths = {
+            fileInput1: saveFile(uploadedFiles.fileInput1),
+            fileInput2: saveFile(uploadedFiles.fileInput2),
+            fileInput3: saveFile(uploadedFiles.fileInput3),
+            fileInput4: saveFile(uploadedFiles.fileInput4),
+            fileInput5: saveFile(uploadedFiles.fileInput5),
+        };
+
+        console.log("Saved file paths:", filePaths);
+
+        // Call database function to save the quote request and images
+        const db = userDbService.getUserDbServiceInstance();
+        const result = await db.createQuoteRequest(clientID, propertyAddress, drivewaySqft, proposedPrice, addNotes, filePaths);
+
+        res.status(201).json({ success: true, data: result });
+    } catch (error) {
+        console.error("Error processing new quote request:", error);
+        res.status(500).json({ error: "An error occurred while processing the quote request." });
+    }
+});
+
+function saveFile(file) {
+    //const path = require('path'); // Import locally within the function
+    const baseFolder = 'Driveway-Sealing-Management-System';
+
+    // Construct the relative path dynamically
+    const projectBasePath = imagePath.join(__dirname.split(baseFolder)[0], baseFolder);
+    console.log("Project base path:", projectBasePath);
+    const uploadPath = imagePath.join(projectBasePath, 'Server/uploads', file.name);
+    console.log("Upload path:", uploadPath);
+
+    try {
+        file.mv(uploadPath, (err) => {
+            if (err) {
+                console.error("Error saving file:", err);
+                throw new Error("Failed to save file");
+            }
+        });
+        // Return a relative URL for database storage
+        return `/uploads/${file.name}`;
+    } catch (error) {
+        console.error("Failed to save file:", error);
+        throw error;
+    }
+}
+
+
+/* GET CLIENT QUOTE HISTORY */
+app.get('/Client/QuoteHistory/:clientID', async (request, response) => {
+    const { clientID } = request.params;
+    console.log("Getting quote history for ", clientID ,"...");
+
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const data = await db.getQuoteHistoryTable(clientID); // Fetch quote history
+        response.json({ data: data }); // Return the fetched data
+    } catch (err) {
+        console.error('Error in userApp fetching quote history: ', err);
+        response.status(500).json({ error: "Failed to fetch quote history." });
+    }
+    
+});
+
+
+/* QUOTE RESPONSE */
+app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) => {
+    const { responseID } = request.params;
+    const { proposedPrice, startDate, endDate, addNote } = request.body;
+
+    console.log(`Inserting new response for: ${responseID}`); //quoteID: ${quoteID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.insertQuoteResponse(responseID, proposedPrice, startDate, endDate, addNote);
+        response.json({ success: true, message: "Response inserted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to insert quote response." });
+    }
+});
+
+
+/* QUOTE ACCEPTED */
+app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => {
+    const { responseID } = request.params;
+
+    console.log(`Accepting quote with responseID: ${responseID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.acceptQuoteResonse(responseID);
+        response.json({ success: true, message: "Quote accepted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to accept quote." });
+    }
+});
+
+
+/* GET CLIENT WORK ORDER HISTORY */
+app.get('/Client/WorkOrderHistory/:clientID', async (request, response) => {
+    const { clientID } = request.params;
+    console.log("Getting work order history for ", clientID ,"...");
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const data = await db.getWorkOrderHistory(clientID);
+        response.json({ data: data});
+    } catch (err) {
+        console.error('Error in userApp fetching work order history: ', err);
+        response.status(500).json({ error: 'Failed to retrieve quote history in app.' });
+    }
+});
+
+
+app.get('/Client/Invoices/:clientID', async (request, response) => {
+    const { clientID } = request.params;
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const data = await db.getInvoiceHistory(clientID);
+        response.json({ data: data});
+    } catch (err) {
+        console.error('Error in userApp fetching invoice history: ', err);
+        response.status(500).json({ error: 'Failed to retrieve invoice history in app.' });
+    }
+});
+
+
+/* INVOICE RESPONSE */
+app.post('/Client/Invoices/Response/:invoiceID', async (request, response) => {
+    const { invoiceID } = request.params;
+    const { responseID, amountDue, responseNote } = request.body;
+
+    console.log(`Inserting new response for: ${invoiceID}`);
+    // console.log(`response ID: ${responseID}`);
+    console.log(`Amount Due: ${amountDue}`);
+    console.log(`Response Note: ${responseNote}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
+        response.json({ success: true, message: "Response inserted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to insert quote response." });
+    }
+});
+
+
+/* INVOICE ACCEPTED AND PAID */
+app.put('/Client/Invoices/Accept/:invoiceID', async (request, response) => {
+    const { invoiceID } = request.params;
+
+    console.log(`Accepting quote with responseID: ${invoiceID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.acceptInvoiceResonse(invoiceID);
+        response.json({ success: true, message: "Quote accepted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to accept quote." });
+    }
+});
+
+
 
 
 app.get('/search/:firstName', (request, response) => { // we can debug by URL
@@ -287,193 +476,6 @@ app.get('/search/RegisteredToday', async (request, response) => {
         console.error(err);
         response.status(500).json({ error: "An error occurred while searching ClientDB." });
     }
-});
-
-// Route to fetch all quotes for david 
-app.get('/quotes', (req, res) => {
-    db.query('SELECT * FROM quotes', (err, results) => {
-        if (err) {
-            console.error('Error fetching quotes:', err);
-            res.status(500).json({ error: 'Database query failed' });
-        } else {
-            res.json(results); // Send the quotes back to the client
-        }
-    });
-});
-
-//counter proposal for david
-app.post('/quotes/counter/:quoteID', async (req, res) => {
-    const { quoteID } = req.params;
-    const { counterPrice, startDate, endDate, addNote, clientID } = req.body;
-
-    if (!counterPrice || !startDate || !endDate || !clientID) {
-        res.status(400).json({ error: 'All fields are required.' });
-        return;
-    }
-
-    const sql = `
-        INSERT INTO QuoteHistory (quoteID, clientID, proposedPrice, startDate, endDate, addNote, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'Pending')
-    `;
-
-    try {
-        const result = await userDbService.query(sql, [quoteID, clientID, counterPrice, startDate, endDate, addNote]);
-        res.json({ message: `Counter proposal for Quote ${quoteID} has been submitted.`, responseID: result.insertId });
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ error: 'Failed to insert counter proposal into QuoteHistory.' });
-    }
-});
-
-//rejecting the proposal request for david
-app.post('/quotes/reject/:quoteID', async (req, res) => {
-    const { quoteID } = req.params;
-    const { rejectionNote, clientID } = req.body;
-
-    console.log('Rejecting quote:', { quoteID, rejectionNote, clientID });
-
-    if (!rejectionNote || !clientID) {
-        return res.status(400).json({ error: 'Rejection note and client ID are required.' });
-    }
-
-    const sql = `
-        INSERT INTO QuoteHistory (quoteID, clientID, addNote, status)
-        VALUES (?, ?, ?, 'Rejected')
-    `;
-
-    try {
-        const result = await userDbService.query(sql, [quoteID, clientID, rejectionNote]);
-        res.json({ message: `Quote ${quoteID} has been rejected.`, responseID: result.insertId });
-    } catch (err) {
-        console.error('Error rejecting quote:', err);
-        res.status(500).json({ error: 'Failed to reject the quote.' });
-    }
-});
-
-//invoices
-app.post('/invoices', (req, res) => {
-    console.log('Request body:', req.body); // Log incoming request data
-
-    const { workOrderID, clientID, amountDue } = req.body;
-
-    if (!workOrderID || !clientID || !amountDue) {
-        console.error('Missing required fields:', { workOrderID, clientID, amountDue });
-        res.status(400).json({ success: false, error: 'Missing required fields.' });
-        return;
-    }
-
-    const sql = `
-        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-        VALUES (?, ?, ?, NOW())
-    `;
-
-    db.query(sql, [workOrderID, clientID, amountDue], (err, result) => {
-        if (err) {
-            console.error('Database error:', err);
-            res.status(500).json({ success: false, error: 'Database error.' });
-            return;
-        }
-
-        console.log('Invoice created successfully:', result.insertId); // Log successful creation
-        res.json({
-            success: true,
-            message: 'Invoice created successfully.',
-            invoiceID: result.insertId,
-        });
-    });
-});
-
-
-//All quotes and bills
-app.get("/quotehistory", (req, res) => {
-    console.log("Fetching quote history...");
-    const query = "SELECT * FROM QuoteHistory";
-    userDbService.query(query, (err, results) => {
-        if (err) {
-            console.error("Database query error:", err);
-            res.status(500).send("Server error");
-        } else {
-            console.log("Query results:", results);
-            res.json(results);
-        }
-    });
-});
-
-
-app.put("/workorders/:workOrderID", (req, res) => {
-    const { workOrderID } = req.params;
-    const { status } = req.body;
-
-    // Validate the status
-    if (!["Scheduled", "Completed", "Cancelled"].includes(status)) {
-        return res.status(400).json({ error: "Invalid status value." });
-    }
-
-    const query = `
-        UPDATE WorkOrder
-        SET status = ?
-        WHERE workOrderID = ?;
-    `;
-
-    userDbService.query(query, [status, workOrderID], (err, result) => {
-        if (err) {
-            console.error("Error updating work order status:", err);
-            res.status(500).send("Server error");
-        } else {
-            res.json({ message: `Work order #${workOrderID} updated to ${status}` });
-        }
-    });
-});
-
-app.get("/workorders", (req, res) => {
-    const query = "SELECT workOrderID, clientID, dateRange, status FROM WorkOrder";
-
-    userDbService.query(query, (err, results) => {
-        if (err) {
-            console.error("Error fetching work orders:", err);
-            res.status(500).send("Server error");
-        } else {
-            res.json(results); // Send work orders as JSON
-        }
-    });
-});
-
-//revenue
-app.get('/revenue', (req, res) => {
-    const { startDate, endDate } = req.query;
-
-    console.log("Received query parameters:", startDate, endDate);
-
-    if (!startDate || !endDate) {
-        return res.status(400).json({ error: "Start date and end date are required." });
-    }
-
-    const query = `
-        SELECT 
-            SUM(i.amountDue) AS totalRevenue
-        FROM 
-            WorkOrder w
-        JOIN 
-            Invoice i
-        ON 
-            w.workOrderID = i.workOrderID
-        WHERE 
-            w.status = 'Completed'
-        AND 
-            SUBSTRING_INDEX(w.dateRange, ' to ', 1) >= ?
-        AND 
-            SUBSTRING_INDEX(w.dateRange, ' to ', 2) <= ?;
-    `;
-
-    userDbService.query(query, [startDate, endDate], (err, results) => {
-        if (err) {
-            console.error("Error calculating revenue:", err);
-            res.status(500).send("Failed to calculate revenue");
-        } else {
-            const totalRevenue = results[0]?.totalRevenue || 0;
-            res.json({ totalRevenue });
-        }
-    });
 });
 
 

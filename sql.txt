@@ -22,7 +22,7 @@ CREATE TABLE QuoteRequest (
     propertyAddress TEXT NOT NULL,
     drivewaySqft INT,
     proposedPrice DECIMAL(10, 2) NOT NULL,
-    addNote VARCHAR(500),
+    addNote VARCHAR(300),
     PRIMARY KEY (quoteID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
@@ -50,12 +50,30 @@ CREATE TABLE QuoteHistory (
     startDate DATE,
     endDate DATE,
     addNote VARCHAR(300),
-    responseDATE DATE DEFAULT CURRENT_DATE,
+    responseDate DATE DEFAULT CURRENT_DATE,
     status ENUM('Pending', 'Rejected', 'Accepted', 'Cancelled') DEFAULT 'Pending',
     PRIMARY KEY (responseID),
     FOREIGN KEY (quoteID) REFERENCES QuoteRequest(quoteID),
     FOREIGN KEY (clientID) REFERENCES QuoteRequest(clientID)
 );
+
+
+-- ---------------- 1. INSERT TRIGGER FOR QUOTEHISTORY TO WORKORDER: ------------------
+DELIMITER //
+
+CREATE TRIGGER createWorkOrder
+AFTER UPDATE ON QuoteHistory
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Accepted' THEN
+        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+        VALUES (NEW.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate));
+    END IF;
+END;
+//
+
+DELIMITER ;
+-- -------------------------------------------------------------------------------------
 
 
 CREATE TABLE WorkOrder (
@@ -71,22 +89,32 @@ CREATE TABLE WorkOrder (
 );
 
 
-DELIMITER //
 
-CREATE TRIGGER createWorkOrder
-AFTER UPDATE ON QuoteHistory
-FOR EACH ROW
-BEGIN
-    IF NEW.status = 'Accepted' THEN
-        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
-        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
-        FROM QuoteRequest qr
-        WHERE qr.quoteID = NEW.quoteID;
+-- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATE INVOICE & INVOICE RESPONSE: ------------------
+CREATE TRIGGER `afterWorkOrderCompleted` AFTER UPDATE ON `WorkOrder`
+ FOR EACH ROW BEGIN
+    IF NEW.status = 'Completed' THEN
+        -- Insert into Invoice
+        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+        VALUES (NEW.workOrderID, NEW.clientID, 
+                COALESCE(
+                    (SELECT qh.proposedPrice 
+                     FROM QuoteHistory qh
+                     WHERE qh.responseID = NEW.responseID), 
+                    0), -- Default to 0 if no match is found
+                NOW());
+
+        -- Insert into InvoiceResponses
+        INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate)
+        VALUES (
+            LAST_INSERT_ID(),            -- Use the last auto-incremented invoiceID
+            '',  -- Default response note
+            NOW()                        -- Current timestamp for responseDate
+        );
     END IF;
-END;
-//
+END
 
-DELIMITER ;
+-- ------------------------------------------------------------------------------------------------------------
 
 
 CREATE TABLE Invoice (
@@ -94,7 +122,7 @@ CREATE TABLE Invoice (
     workOrderID INT,
     clientID VARCHAR(20),
     amountDue DECIMAL(10, 2),
-    dateCreated DATETIME,
+    dateCreated DATETIME DEFAULT current_timestamp(),
     datePaid DATETIME DEFAULT NULL,
     FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
@@ -104,9 +132,12 @@ CREATE TABLE InvoiceResponses (
     responseID INT PRIMARY KEY AUTO_INCREMENT,
     invoiceID INT NOT NULL,
     responseNote VARCHAR(500),
-    responseDate DATE DEFAULT CURRENT_DATE,
+    responseDate DATETIME DEFAULT CURRENT_DATETIME,
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
+
+-- Adding amount due to responses so it can be adjusted.
+ALTER TABLE Invoice ADD COLUMN amountDue DECIMAL(10, 2);
 
 
 
@@ -142,6 +173,133 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
     (2, "I need an explanation for the additional charges.", "2024-12-08");
 
 
+
+-- -------------------- CLIENT SPECIFIC QUERIES --------------------
+
+CREATE VIEW ClientDetails AS
+SELECT 
+    c.clientID,
+    c.email,
+    c.firstName,
+    c.lastName,
+    c.phoneNumber,
+    c.homeAddress,
+    c.registerDate,
+    c.loginTime,
+    c.activeStatus,
+    
+    qr.quoteID,
+    qr.propertyAddress,
+    qr.drivewaySqft,
+    qr.proposedPrice AS requestedPrice,
+    qr.addNote AS clientNote,
+
+    qri.image1,
+    qri.image2,
+    qri.image3,
+    qri.image4,
+    qri.image5,
+
+    qh.responseID,
+    qh.proposedPrice AS responsePrice,
+    qh.startDate,
+    qh.endDate,
+    qh.addNote AS responseNote,
+    qh.status AS quoteStatus,
+    qh.responseDATE AS responseDate,
+
+    wo.workOrderID,
+    wo.dateRange AS workDateRange,
+    wo.status AS workStatus,
+
+    i.invoiceID,
+    i.amountDue,
+    i.dateCreated AS invoiceDateCreated,
+    i.datePaid AS invoiceDatePaid,
+
+    ir.responseNote AS invoiceResponseNote,
+    ir.responseDate AS invoiceResponseDate
+
+FROM ClientDB c
+LEFT JOIN QuoteRequest qr ON c.clientID = qr.clientID
+LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+LEFT JOIN QuoteHistory qh ON qr.quoteID = qh.quoteID
+LEFT JOIN WorkOrder wo ON qh.responseID = wo.responseID
+LEFT JOIN Invoice i ON wo.workOrderID = i.workOrderID
+LEFT JOIN InvoiceResponses ir ON i.invoiceID = ir.invoiceID;
+
+-- Grabs info for quotes
+CREATE VIEW QuoteRequestsHistory AS
+SELECT 
+    quoteID,
+    clientID,
+    firstName,
+    lastName,
+    email,
+
+    propertyAddress,
+    drivewaySqft,
+    requestedPrice AS proposedPrice,
+    clientNote,
+    image1,
+    image2,
+    image3,
+    image4,
+    image5
+FROM ClientDetails
+WHERE quoteID IS NOT NULL;
+
+
+-- Grabs info for working orders
+CREATE VIEW WorkOrderHistory AS
+SELECT 
+    wo.workOrderID,
+    wo.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    qr.quoteID,
+    qr.propertyAddress,
+    qr.proposedPrice AS originalQuotePrice,
+    qh.responseID,
+    qh.proposedPrice AS finalQuotePrice,
+    qh.startDate,
+    qh.endDate,
+    qh.status AS quoteStatus,
+    wo.dateRange,
+    wo.status AS workOrderStatus
+FROM WorkOrder wo
+LEFT JOIN ClientDB c ON wo.clientID = c.clientID
+LEFT JOIN QuoteHistory qh ON wo.responseID = qh.responseID
+LEFT JOIN QuoteRequest qr ON wo.quoteID = qr.quoteID
+WHERE qh.status = 'Accepted';
+
+-- 
+CREATE VIEW InvoiceHistory AS
+SELECT 
+    i.invoiceID,
+    i.workOrderID,
+    wo.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    c.creditCardNum,
+    c.creditCardCVV,
+    c.creditCardExp,
+    i.amountDue,
+    i.dateCreated AS invoiceDate,
+    i.datePaid,
+    wo.dateRange AS workOrderDateRange,
+    wo.status AS workOrderStatus,
+    ir.responseNote AS invoiceResponseNote,
+    ir.responseDate AS invoiceResponseDate
+FROM Invoice i
+LEFT JOIN WorkOrder wo ON i.workOrderID = wo.workOrderID
+LEFT JOIN ClientDB c ON wo.clientID = c.clientID
+LEFT JOIN InvoiceResponses ir ON i.invoiceID = ir.invoiceID
+WHERE wo.status = 'Completed';
+
+
 -- Use JOIN for ClientDB and QuoteRequest:
 SELECT c.clientID, c.firstName, c.lastName, qr.propertyAddress, qr.proposedPrice
 FROM ClientDB c
@@ -151,7 +309,7 @@ JOIN QuoteRequest qr ON c.clientID = qr.clientID;
 -- List all QuoteHistory records for a specified client (C001 used here for example):
 SELECT qh.responseID, qh.proposedPrice, qh.startDate, qh.endDate, qh.status
 FROM QuoteHistory qh
-WHERE qh.clientID = "C001";
+WHERE qh.clientID LIKE ?;
 
 
 -- Show unpaid invoices:
@@ -164,6 +322,46 @@ WHERE i.datePaid IS NULL;
 SELECT ir.responseID, ir.responseNote, ir.responseDate
 FROM InvoiceResponses ir
 WHERE ir.invoiceID = 1;
+
+SELECT 
+    QH.responseID,
+    QH.clientID,
+    QH.quoteID,
+    QH.proposedPrice,
+    QH.startDate,
+    QH.endDate,
+    QH.addNote,
+    QH.responseDate,
+    QH.status,
+    QR.propertyAddress,
+    QR.drivewaySqft
+FROM QuoteHistory QH
+JOIN QuoteRequest QR
+ON QH.quoteID = QR.quoteID
+WHERE QR.clientID LIKE ?;
+
+SELECT 
+    qr.quoteID,
+    qr.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    qr.propertyAddress,
+    qr.drivewaySqft,
+    qr.proposedPrice AS requestedPrice,
+    qr.addNote AS clientNote,
+    qri.image1,
+    qri.image2,
+    qri.image3,
+    qri.image4,
+    qri.image5
+FROM QuoteRequest qr
+LEFT JOIN ClientDB c ON qr.clientID = c.clientID
+LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID;
+
+
+
+----------------------------------------------------------------------
 
 
 -- for david database 
@@ -243,7 +441,6 @@ FROM ClientDB c
 JOIN Invoice i ON c.clientID = i.clientID
 WHERE i.datePaid IS NULL
   AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
-
 
 -- good clients 
 

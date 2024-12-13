@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="clientstylesheet.css">
+    <title>Client Orders</title>
+</head>
+<body data-page="ClientWorkOrderPage">
+<!-- <body> -->
+    <div class ="side-bar">
+        <nav class="client-nav">
+            <ul class="nav-bar">
+                <!-- class tab-links and data-tab="" are previous properties -->
+                <li><a href="ClientDashboard.html" id="Client-Dashboard-Page">Home</a></li>
+                <li><a href="ClientQuoteHistory.html" id="Quote-History-Page">Quotes</a></li>
+                <li class="active"><a href="ClientOrders.html" id="Work-Order-History-Page">Orders</a></li>
+                <li><a href="ClientBills.html" id="Bills-Page">Bills</a></li>
+            </ul>
+            <ul class="nav-bar-bottom">
+                <li><button id="logout-btn">Sign Out</button></li>
+                <li><p class="side-bar-footer">Created by:<br>Saba Begum and Violet Yousif </p></li>
+            </ul>
+        </nav> 
+    </div>
+    <div class="clientContainer">
+        <main>
+        <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
+            <h1>Order History</h1>
+            <div id="Home" class="clientContent">
+                <form id="clientHomeTab">
+                    <h2>Work orders were created for your accepted requests. </h2>
+                    <div>
+                        <table id="workOrderHistoryTable">
+                            <!-- <caption>Work Order History for </caption> -->
+                            <caption> </caption>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Quote ID</th>
+                                    <th>Client ID</th>
+                                    <th>Property Address</th>
+                                    <th>Date Range</th>
+                                    <th>Price</th>
+                                    <th>status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    <script src="clientindex.js"></script>
+</body>
+
+</html>

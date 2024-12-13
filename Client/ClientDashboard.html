@@ -3,85 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="userstylesheet.css">
+    <link rel="stylesheet" href="clientstylesheet.css">
     <title>Client Dashboard</title>
 </head>
-<body data-page="ClientPage">
+<body data-page="ClientDashboardPage">
 <!-- <body> -->
+    <div class ="side-bar">
+        <nav class="client-nav">
+            <ul class="nav-bar">
+                <li class="active"><a href="ClientDashboard.html" id="Client-Dashboard-Page">Home</a></li>
+                <li><a href="ClientQuoteHistory.html" id="Quote-History-Page">Quotes</a></li>
+                <li><a href="ClientOrders.html" id="Work-Order-History-Page">Orders</a></li>
+                <li><a href="ClientBills.html" id="Bills-Page">Bills</a></li>
+            </ul>
+            <ul class="nav-bar-bottom">
+                <li><button id="logout-btn">Sign Out</button></li>
+                <li><p class="side-bar-footer">Created by:<br>Saba Begum and Violet Yousif </p></li>
+            </ul>
+        </nav> 
+    </div>
     <div class="clientContainer">
-        <h1 style="text-align: center;">Client Dashboard</h1>
-        <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
-    <main>
-        <div class="toggleTabs">
-            <a class="tabLinks" href="./ClientDashboard.html#Home" data-tab="Home">Home</a>
-            <a class="tabLinks" href="./ClientDashboard.html#NewQuote" data-tab="NewQuote">New Quote</a>
-            <a class="tabLinks" href="./ClientDashboard.html#Orders" data-tab="Orders">Orders</a>
-            <a class="tabLinks" href="./ClientDashboard.html#Bills" data-tab="Bills">Bills</a>
-        </div>
-    
-        <div id="Home" class="clientContent">
-            <h1>Home</h1>
-            <p>Welcome to the Home tab!</p>
-        </div>
-    
-        <div id="NewQuote" class="clientContent">
-            <form id="quoteForm">
-            <h1>New Quote</h1>
-            <h3>Username:</h3>
-            <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter User ID" id="clientID-input" required>
-            <h3>Password:</h3>
-            <input class="fillInputWidth" type="password" style="margin-left: 25px; width:90%" placeholder="Enter Password" id="password-input" required><br>
-            <button id="search-clientID-btn" style="margin-left: 35%">Sign In</button>
-            </form>
-        </div>
-    
-        <div id="Orders" class="clientContent">
-            <h1>Orders</h1>
-            <p>Manage your orders here!</p>
-        </div>
-    
-        <div id="Bills" class="clientContent">
-            <h1>Bills</h1>
-            <p>View your bills here!</p>
-        </div>
+        <main>
+            <h1>Client Dashboard</h1>
+            <div id="Home" class="clientDashContent">
+                <form id="clientHomeTab">
+                    <h2>Welcome valued customer!</h2>
+                    <p>Use the sidebar to review pending requests, order history, and billing.<br>
+                    Looking to get a new quote request?</p>
+                    <button id="new-quote-page"><a href="ClientNewQuote.html">Request New Quote</a></button>
+                </form>
 
-
-        <!-- <div class="toggleTabs">
-            <button class="tabLinks" data-tab="Home">Home</button>
-            <button class="tabLinks" data-tab="NewQuote">New Quote</button>
-            <button class="tabLinks" data-tab="Orders">Orders</button>
-            <button class="tabLinks" data-tab="Bills">Bills</button>
-        </div> -->
-        <!-- Tab content -->
-        <!-- <div id="Home" class="clientContent">
-            <h1>Home</h1>
-            <h3>Username:</h3>
-            <input class="fillInputWidth" style="margin-left: 8px" placeholder="Enter User ID" id="clientID-input" required>
-            <h3>Password:</h3>
-            <input class="fillInputWidth" type="password" style="margin-left: 8px" placeholder="Enter Password" id="password-input" required><br>
-        </div>
-        
-        <div id="NewQuote" class="clientContent">
-            <h3>Paris</h3>
-            <p>Paris is the capital of France.</p>
-        </div>
-        
-        <div id="Orders" class="clientContent">
-            <h3>Tokyo</h3>
-            <p>Tokyo is the capital of Japan.</p>
-        </div>
-
-        <div id="Bills" class="clientContent">
-            <h3>Tokyo</h3>
-            <p>Tokyo is the capital of Japan.</p>
-        </div> -->
-
-    </main>
-    </form>
+                <!-- <h2>Client's Information:</h2> -->
+                <table id="clientInfoTable">
+                    <caption>Registration Information for </caption>
+                    <thead>
+                        <tr>
+                            <th>Client ID</th>
+                            <th>Email</th>
+                            <th>Password</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Phone Number</th>
+                            <th>CC Number</th>
+                            <th>CC CVV</th>
+                            <th>CC Exp</th>
+                            <th>Home Address</th>
+                            <th>Register Date</th>
+                            <th>Login Time</th>
+                            <th>Active Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be dynamically added here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
     </div>
     <script src="clientindex.js"></script>
 </body>
-<footer>
-    <p>Created by: Saba Begum and Violet Yousif</p>
-</footer>
+
 </html>

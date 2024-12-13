@@ -73,3 +73,40 @@ DAVID SMITH DASHBOARD:
     3. Check all bills (content and status)
             Respond to most recent response of quote and bill
 
+
+
+
+Client should be able to:
+    - Create a new quote request + images
+    - View their quote history
+        ** Note that replies should only be from most recent responses
+        - see requests
+        - accept quote with David's added start/end (triggers work order)
+        - counter the new price or counter the dates + new note
+        - reject quote
+    - View work orders
+    - View invoices
+        - Pay with CC on file (return with a date of payment)
+        - Dispute bill with a note complaint
+
+
+David should be able to:
+    - Preview all clients in DB
+        + Preview those who registered but never requested a quote
+    - New or client revised quotes:
+        - Resend new quote with start + end dates
+            - counter initial price proposal or keep it
+        - Reject it + note with reason
+        + Clients with 3+ requests to David but no follow-up
+    - See work orders
+        - Change work order status to "completed" (triggers an invoice)
+        + "List all the AGREED quotes in this month" (trigger was used for this; this whole table is "accepted")
+        + List largest driveway(s) (only on 'completed' orders? "...that David ever worked")
+    - See bills
+        - view all
+        - reply  (if generated 7 days ago)
+        + search: client with most orders completed (show more if there's a tie)
+        + search: list all unpaid bills after 7 days of dateCreated
+        + search: list all overdue bills (after 7 days) for clients who never paid their bill(s)
+        + search: list all clients who paid their bills within 24 hrs of being created
+

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="clientstylesheet.css">
+    <title>Client Quote History</title>
+</head>
+<body data-page="QuoteHistoryPage">
+<!-- <body> -->
+    <div class ="side-bar">
+        <nav class="client-nav">
+            <ul class="nav-bar">
+                <!-- class tab-links and data-tab="" are previous properties -->
+                <li><a href="ClientDashboard.html" id="Client-Dashboard-Page">Home</a></li>
+                <li class="active"><a href="ClientQuoteHistory.html"  id="Quote-History-Page">Quotes</a></li>
+                <li id="Quote-History-Page"><a href="ClientOrders.html" id="Work-Order-History-Page">Orders</a></li>
+                <li><a href="ClientBills.html" id="Bills-Page">Bills</a></li>
+            </ul>
+            <ul class="nav-bar-bottom">
+                <li><button id="logout-btn">Sign Out</button></li>
+                <li><p class="side-bar-footer">Created by:<br>Saba Begum and Violet Yousif </p></li>
+            </ul>
+        </nav> 
+    </div>
+    <div class="clientContainer">
+        <main>
+        <!-- <h2>Don't have a login? <a href="/Client/RegistrationPage.html">Sign up</a></h2> -->
+            <h1>Quote History</h1>
+            <div id="Home" class="clientContent">
+                <form id="clientQuotesPage">
+                    <!-- <div> -->
+                        <!-- <h2>Quote History</h2> -->
+                        <table id="quoteHistoryTable">
+                            <!-- <caption>Quote History for </caption> -->
+                             <caption> </caption>
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Resp ID</th>
+                                    <th>Quote ID</th>
+                                    <th>Property Address</th>
+                                    <th>Sqft</th>
+                                    <th>Prpsd Price</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Notes</th>
+                                    <th>Resp Date</th>
+                                    <th>status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated here -->
+                            </tbody>
+                        </table>
+                        <section id="update-quote">
+                            <button type="button" id="quote-rspnd-btn">Respond</button>
+                            <button type="button" id="quote-accept-btn">Accept</button>
+
+                    <!-- Hidden form for responding to a quote -->
+                    <!-- <div class="rspnForm" style="display: none;"></div> -->
+                        <div id="responseForm" style="display:none">
+                            <form id="rspnForm">
+                            <h3>Respond to Quote</h3>
+                            <p>Propose any adjustments here and add a message.</p>
+                            <label for="newPrice">Propose New Price:</label>
+                            <input type="number" id="newPrice" name="newPrice" step="1.00" placeholder="Enter new price"><br>
+                            <label for="newStartDate">Propose New Start Date:</label>
+                            <input type="date" id="newStartDate" name="newStartDate"><br>
+                            <label for="newEndDate">Propose New End Date:</label>
+                            <input type="date" id="newEndDate" name="newEndDate"><br>
+                            <label for="addNewNote">Add Note:</label><br>
+                            <textarea id="addNewNote" name="addNote" rows="4" cols="50" class="txtbx" placeholder="Enter additional notes..."></textarea>
+
+                            <button type="button" id="submitResponse">Submit Response</button>
+                        </form>
+                        </div>
+                    </section>
+
+                </form>
+            </div>
+        </main>
+    </div>
+    <script src="clientindex.js"></script>
+</body>
+
+</html>
