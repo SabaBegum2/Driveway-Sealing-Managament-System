@@ -1,4 +1,50 @@
 
+// document.addEventListener('DOMContentLoaded', function () {
+//     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
+//     console.log(`Current page: ${currentPage}`);
+
+
+//     if (currentPage === 'ClientDashboardPage') {
+//         //const clientForm = document.getElementById('clientForm');
+//         document.addEventListener("click", setClientDashboard);
+//         // toggleOptions(clickedTab);
+//         //setClientPage() 
+//     }
+//     else if (currentPage === 'ClientWorkOrderPage') {
+//         document.addEventListener("click", setWorkOrderPage);
+//         //setWorkOrderPage();
+//     }
+//     else {
+//         const logoutBtn = document.querySelector('#logout-btn');
+//         logoutBtn.addEventListener('click', logout);
+
+//         // fetch('http://localhost:5050/getall')     
+//         // .then(response => response.json())
+//         // .then(data => loadHTMLTable(data['data']));
+//     }
+// });
+
+// document.addEventListener('DOMContentLoaded', function() {
+//     // one can point your browser to http://localhost:5050/getAll to check what it returns first.
+//     fetch('http://localhost:5050/Client/getall')
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// });
+
+// const searchRegAfterUserBtn = document.querySelector('#search-reg-after-btn');
+// searchRegAfterUserBtn.onclick = function () {
+//     const ClientIDInput = document.querySelector('#after-reg-input');
+//     const clientID = ClientIDInput.value;
+//     ClientIDInput.value = "";
+
+//     //console.log("Search value: ", searchValue);
+//     //searchInput.value = "";
+
+//     fetch(`http://localhost:5050/Client/ClientOrders/${clientID}`)
+//     .then(response => response.json())
+//     .then(data => loadWorkOrderHistory(data['data']));
+//     console.log("Successfully retrieved `${clientID}`'s data");
+// });
 
 let activeClient;
 
@@ -32,29 +78,42 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => loadClientHTMLTable(data['data']))
             .catch(error => console.error("Error fetching client data: ", error));
+
+        // console.log('Setting up ClientPage');
+        // const clientDbPage = document.querySelector('Client-Dashboard-Page');
+        // clientDbPage.document.addEventListener('click', setClientDashboard);
     }
     else if (currentPage === "QuoteHistoryPage") {
         fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
             .then(response => response.json())
-            .then(data => {
-                loadQuoteHistoryTable(data['data']);
-                setupQuoteResponseListener();
-                quoteAccept();
-            })
+            .then(data => loadQuoteHistoryTable(data['data']))
             .catch(error => console.error("Error fetching quote history: ", error));
+        //quoteHistoryResponse();
 
+        // console.log('Setting up QuoteHistoryPage');
+        // const quoteHistoryPage = document.querySelector('Quote-History-Page');
+        // quoteHistoryPage.document.addEventListener('click', setQuoteHistoryPage);
     }
     else if (currentPage === 'ClientWorkOrderPage') {
         fetch(`http://localhost:5050/Client/WorkOrderHistory/${clientID}`)
             .then(response => response.json())
             .then(data => loadWorkOrderHistoryTable(data['data']))
             .catch(error => console.error("Error fetching quote history: ", error));
+
+        // console.log('Setting up WorkOrderPage');
+        // const workOrderHistoryPage = document.getElementById('Work-Order-History-Page');
+        // workOrderHistoryPage.document.addEventListener('click', setworkOrderHistoryPage);
+        // document.addEventListener("click", setWorkOrderPage);
     }
     else if (currentPage === 'ClientBillsPage') {
         fetch(`http://localhost:5050/Client/Invoices/${clientID}`)
             .then(response => response.json())
             .then(data => loadInvoiceTable(data['data']))
             .catch(error => console.error("Error fetching quote history: ", error));
+
+        // console.log('Setting up BillsPage');
+        // const billsPage = document.getElementById('Bills-Page');
+        // billsPage.document.addEventListener('click', setInvoicePage);
     }
     else if (currentPage === 'ClientNewQuotePage') {
         console.log('Setting up new quote request page');
@@ -74,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // logout button
 const logoutBtn = document.querySelector('#logout-btn');
 logoutBtn.onclick = function () {
-
+    // logoutBtn.addEventListener('click', logout);
     console.log('Logging ' + activeClient + ' out...');
     fetch(`http://localhost:5050/logout/${activeClient}/`, {
         headers: {
@@ -96,6 +155,17 @@ logoutBtn.onclick = function () {
     })
     .catch(error => console.error("Error: ", error));
 }
+
+
+// // fetch call is to call the backend
+// document.addEventListener('DOMContentLoaded', function() {
+//     // one can point your browser to http://localhost:5050/getAll to check what it returns first.
+//     fetch('http://localhost:5050/getAll')     
+//     .then(response => response.json())
+//     .then(data => loadHTMLTable(data['data']));
+// });
+
+
 
 
 /* ----------------------------------------------- */
@@ -130,18 +200,6 @@ function setClientDashboard(event) {
         submitNewQuoteRequest(event);
     }
 }
-
-// function setQuoteHistory() {
-//     event.preventDefault();
-//     //event.stopEventPropagation();
-//     const target = event.target;
-//     if (document.querySelector("#quote-rspnd-btn") === target) {
-//         quoteResponse(event);
-//     }
-//     else if (document.querySelector("#quote-accept-btn") === target) {
-//         quoteAccept(event);
-//     }
-// }
 
 
 function submitNewQuoteRequest(event) {
@@ -230,210 +288,25 @@ function submitNewQuoteRequest(event) {
 }
 
 
-// function quoteResponse(event) {
-//     event.preventDefault();
+quoteHistoryResponse = function() {
+    // when the respond btn is clicked
+    const addBtn = document.querySelector('#rspnd-quote-btn');
+    addBtn.onclick = function (){
+        const nameInput = document.querySelector('#name-input');
+        const name = nameInput.value;
+        nameInput.value = "";
 
-//     //const respondBtn = document.querySelector('#quote-rspnd-btn');
-//     //respondBtn.onclick = function () {
-//         const clientID = activeClient;
-//         const selectQuote = document.querySelector('input[type="radio"]:checked');
-//         if (!selectQuote) {
-//             alert("Please select a quote to respond to.");
-//             return;
-//         }
-//         console.log("Selected Quote:", selectQuote);
-
-//         const quoteID = selectQuote.dataset.quoteID; // Get the selected quoteID
-//         console.log(`Preparing to respond to quote with quoteID: ${workOrderID}`);
-//         const responseID = selectQuote.dataset.responseID; // Get the selected responseID
-//         console.log(`Preparing to respond to quote with responseID: ${responseID}`);
-
-//         // Show response form (inline form in the UI)
-//         const formHtml = `
-//             <div id="responseForm">
-//                 <label for="newPrice">Propose New Price:</label>
-//                 <input type="text" id="newPrice" name="newPrice" placeholder="Enter new price">
-
-//                 <label for="newStartDate">Propose New Start Date:</label>
-//                 <input type="date" id="newStartDate" name="newStartDate">
-
-//                 <label for="newEndDate">Propose New End Date:</label>
-//                 <input type="date" id="newEndDate" name="newEndDate">
-
-//                 <label for="addNewNote">Add Note:</label>
-//                 <textarea id="addNewNote" name="note" rows="4" placeholder="Enter any additional notes"></textarea>
-
-//                 <button id="submit-quote-rsp-btn">Submit Response</button>
-//             </div>
-//         `;
-
-//         document.querySelector('#update-quote').insertAdjacentHTML('beforeend', formHtml);
-
-//         document.querySelector('#submit-quote-rsp-btn').onclick = function () {
-//             const proposedPrice = document.getElementById('newPrice').value || selectQuote.dataset.proposedPrice;
-//             console.log("Proposed Price:", proposedPrice);
-//             const startDate = document.getElementById('newStartDate').value || selectQuote.dataset.startDate;
-//             console.log("Start Date:", startDate);
-//             const endDate = document.getElementById('newEndDate').value || selectQuote.dataset.endDate;
-//             console.log("End Date:", endDate);
-//             const addNote = document.getElementById('addNewNote').value || "";
-//             console.log("Additional Note:", addNote);
-
-//             console.log(`${clientID} is submitting response for quoteID: ${quoteID},responseID: ${responseID} New Price: ${proposedPrice},
-//                 New Start Date: ${startDate},  New End Date: ${endDate}, Note: ${addNote}`);
-
-//             fetch(`http://localhost:5050/Client/QuoteHistory/Response/${responseID}`, {
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },           
-//                 method: 'POST',
-//                 body: JSON.stringify({ responseID, clientID, quoteID, proposedPrice, startDate, endDate, addNote })
-//             })
-//             .then(response => response.json())
-//             .then(data => {
-//                 alert("Response submitted successfully!");
-//                 console.log(data);
-//                 document.getElementById('responseForm').remove(); // Remove the form after submission
-//                 // Optionally refresh the table
-//             })
-//             .catch(error => console.error("Error submitting response: ", error));
-//         };
-//     //};
-// }
-
-function setupQuoteResponseListener() {
-    const respondBtn = document.querySelector('#quote-rspnd-btn');
-    const submitResponseBtn = document.querySelector('#submitResponse');
-    const responseForm = document.getElementById('responseForm');
-
-    // Initially hide the form
-    responseForm.style.display = 'none';
-
-    respondBtn.onclick = function () {
-        const selectedOrder = document.querySelector('input[type="radio"]:checked');
-        if (!selectedOrder) {
-            alert("Please select a quote to respond to.");
-            return;
-        }
-
-        // Fetch dataset properties from the selected radio button
-        const responseID = selectedOrder.value; // Response ID
-        const proposedPrice = selectedOrder.dataset.proposedPrice;
-        const startDate = selectedOrder.dataset.startDate;
-        const endDate = selectedOrder.dataset.endDate;
-        const addNote = selectedOrder.dataset.addNote;
-
-        console.log("Selected Response ID:", responseID);
-        console.log("Proposed Price:", proposedPrice);
-        console.log("Start Date:", startDate);
-        console.log("End Date:", endDate);
-        console.log("Note:", addNote);
-
-        // Show and populate the response form
-        responseForm.style.display = 'block';
-        document.getElementById('newPrice').value = proposedPrice || "";
-        document.getElementById('newStartDate').value = new Date(startDate) || "";
-        document.getElementById('newEndDate').value = new Date(endDate) || "";
-        document.getElementById('addNewNote').value;
-
-        // Attach responseID to the submit button
-        submitResponseBtn.dataset.responseID = responseID;
-    };
-
-    submitResponseBtn.onclick = function () {
-        const responseID = submitResponseBtn.dataset.responseID;
-        const newPrice = document.getElementById('newPrice').value;
-        const newStartDate = document.getElementById('newStartDate').value;
-        const newEndDate = document.getElementById('newEndDate').value;
-        const addNote = document.getElementById('addNewNote').value;
-
-        console.log(`Submitting new response for responseID: ${responseID}`);
-        console.log(`New Price: ${newPrice}, Start Date: ${newStartDate}, End Date: ${newEndDate}, Note: ${addNote}`);
-
-        fetch(`http://localhost:5050/Client/QuoteHistory/Response/${responseID}`, {
+        fetch('http://localhost:5050/insert', {
+            headers: {
+                'Content-type': 'application/json'
+            },
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                proposedPrice: newPrice,
-                startDate: newStartDate,
-                endDate: newEndDate,
-                addNote,
-            }),
+            body: JSON.stringify({name: name})
         })
-            .then((response) => response.json())
-            .then((data) => {
-                alert("Response submitted successfully!");
-                console.log(data);
-
-                responseForm.reset();
-                responseForm.style.display = 'none';
-            })
-            .catch((error) => console.error("Error submitting response:", error));
-    };
+        .then(response => response.json())
+        .then(data => insertRowIntoTable(data['data']));
+    }
 }
-
-
-
-
-// Accept button
-function quoteAccept() {
-    const acceptBtn = document.querySelector('#quote-accept-btn');
-    acceptBtn.onclick = function () {
-        const selectedOrder = document.querySelector('input[type="radio"]:checked');
-        if (!selectedOrder) {
-            alert("Please select a quote to accept.");
-            return;
-        }
-
-        const responseID = selectedOrder.value; // Get the selected responseID
-        console.log(`Accepting quote with responseID: ${responseID}`);
-
-        fetch(`http://localhost:5050/Client/QuoteHistory/Accept/${responseID}`, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            method: 'PUT',
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            alert("Quote accepted successfully!");
-            console.log(data);
-            window.location.reload()
-        })
-        .catch(error => console.error("Error accepting quote: ", error));
-    };
-}
-
-
-
-
-
-// quoteHistoryResponse = function() {
-//     // when the respond btn is clicked
-//     const addBtn = document.querySelector('#rspnd-quote-btn');
-//     addBtn.onclick = function (){
-//         const nameInput = document.querySelector('#name-input');
-//         const name = nameInput.value;
-//         nameInput.value = "";
-
-//         fetch('http://localhost:5050/insert', {
-//             headers: {
-//                 'Content-type': 'application/json'
-//             },
-//             method: 'POST',
-//             body: JSON.stringify({name: name})
-//         })
-//         .then(response => response.json())
-//         .then(data => insertRowIntoTable(data['data']));
-//     }
-// }
 
 
 // function setQuoteHistoryPage(event) {
@@ -550,12 +423,9 @@ function loadQuoteHistoryTable(data) {
     let tableHtml = "";
     //data.forEach(({ responseID, clientID, quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote, responseDate, status, image1, image2, image3, image4, image5 }) => {
     data.forEach(({ responseID, quoteID, propertyAddress, drivewaySqft, proposedPrice, startDate, endDate, addNote, responseDate, status, isMostRecentPending }) => {
+        // const isMostRecentPending = status === "Pending"; // Show selection only for the first pending order
         tableHtml += "<tr>";
-        tableHtml +=`<td>${isMostRecentPending ? `<input type="radio" name="selectedOrder" value="${responseID}" 
-                        data-proposed-price="${proposedPrice}" 
-                        data-start-date="${startDate}" 
-                        data-end-date="${endDate}" 
-                        data-add-note="${addNote}" />` : ""}</td>`;
+        tableHtml +=`<td>${isMostRecentPending ? `<input type="radio" name="selectedOrder" value="${isMostRecentPending}" />` : ""}</td>`;
         tableHtml += `<td>${responseID}</td>`;
         tableHtml += `<td>${quoteID}</td>`;
         tableHtml += `<td>${propertyAddress}</td>`;
@@ -566,10 +436,20 @@ function loadQuoteHistoryTable(data) {
         tableHtml += `<td>${addNote}</td>`;
         tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
         tableHtml += `<td>${status}</td>`;
+
+        // tableHtml += `<td><img src="/uploads/${image1.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image2.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image3.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image4.split('/').pop()}" width="50"></td>`;
+        // tableHtml += `<td><img src="/uploads/${image5.split('/').pop()}" width="50"></td>`;
         tableHtml += "</tr>";
     });
 
     table.innerHTML = tableHtml;
+
+    // Attach event listener for submission
+    document.getElementById('quote-rspnd-btn').addEventListener('click', handleResponse);
+    document.getElementById('quote-accept-btn').addEventListener('click', handleAccept);
 }
 
 
@@ -600,6 +480,7 @@ function loadWorkOrderHistoryTable(data){
     let tableHtml = "";
     data.forEach(function ({ workOrderID, quoteID, clientID, propertyAddress, dateRange, price, status }){
         tableHtml += "<tr>";
+        tableHtml +=`<td>${isPending ? `<input type="radio" name="selectedOrder" value="${responseID}" />` : ""}</td>`;
         tableHtml +=`<td>${workOrderID}</td>`;
         tableHtml +=`<td>${quoteID}</td>`;
         tableHtml +=`<td>${clientID}</td>`;
@@ -658,106 +539,58 @@ loadInvoiceTable = function(data){
     table.innerHTML = tableHtml;
 }
 
-// insert into your_table (c1, c2, ...)
-// select c1, c2, ...
-// from your_table
-// where id = 1
-
-
 
 // function handleResponse() {
-//     const selectedOrders = document.querySelectorAll('input[type="radio"]:checked');
-//     if (selectedOrders.length === 0) {
-//         alert("Please select at least one pending order to respond to.");
+//     const selectedOrder = document.querySelector('input[name="selectedOrder"]:checked');
+//     if (!selectedOrder) {
+//         alert("Please select a pending order to respond to.");
 //         return;
 //     }
 
-//     selectedOrders.forEach(selectedOrder => {
-//         const responseID = selectedOrder.value;
-//         console.log(`Responding to quote with responseID: ${responseID}`);
-//         // Add logic for response submission (e.g., show a form or make an API call)
-//     });
-// }
-
-// function handleResponse() {
-//     const selectedRow = document.querySelector('input[type="radio"]:checked'); // Get selected row
-//     if (!selectedRow) {
-//         alert("Please select a quote to respond to.");
-//         return;
-//     }
-
-//     const responseID = selectedRow.value; // Get the selected responseID
-//     console.log(`Responding to quote with responseID: ${responseID}`);
-
-//     // Show form for new price, date, and note
-//     showResponseForm(responseID);
+//     const responseID = selectedOrder.value;
+//     console.log(`Responding to quote with ID: ${responseID}`);
+//     // Add logic to handle response submission (e.g., show a form or make an API call)
 // }
 
 // function handleAccept() {
-//     const selectedOrders = document.querySelectorAll('input[type="radio"]:checked');
-//     if (selectedOrders.length === 0) {
-//         alert("Please select at least one pending order to accept.");
+//     const selectedOrder = document.querySelector('input[name="selectedOrder"]:checked');
+//     if (!selectedOrder) {
+//         alert("Please select a pending order to accept.");
 //         return;
 //     }
 
-//     selectedOrders.forEach(selectedOrder => {
-//         const responseID = selectedOrder.value;
-//         console.log(`Accepting quote with responseID: ${responseID}`);
-//         // Add logic for acceptance (e.g., make an API call)
-//     });
+//     const responseID = selectedOrder.value;
+//     console.log(`Accepting quote with ID: ${responseID}`);
+//     // Add logic to handle acceptance (e.g., make an API call)
 // }
 
+function handleResponse() {
+    const selectedOrders = document.querySelectorAll('input[type="radio"]:checked');
+    if (selectedOrders.length === 0) {
+        alert("Please select at least one pending order to respond to.");
+        return;
+    }
 
-// function showResponseForm(responseID) {
-//     // Create a modal or form dynamically
-//     const formHtml = `
-//         <div id="responseFormModal" class="modal">
-//             <div class="modal-content">
-//                 <span class="close-btn" onclick="closeModal()">&times;</span>
-//                 <h2>Respond to Quote</h2>
-//                 <form id="responseForm">
-//                     <label for="newPrice">Propose New Price:</label>
-//                     <input type="number" id="newPrice" name="newPrice" step="0.01" placeholder="Enter new price" required>
+    selectedOrders.forEach(selectedOrder => {
+        const responseID = selectedOrder.value;
+        console.log(`Responding to quote with responseID: ${responseID}`);
+        // Add logic for response submission (e.g., show a form or make an API call)
+    });
+}
 
-//                     <label for="newDate">Propose New Date:</label>
-//                     <input type="date" id="newDate" name="newDate" required>
+function handleAccept() {
+    const selectedOrders = document.querySelectorAll('input[type="radio"]:checked');
+    if (selectedOrders.length === 0) {
+        alert("Please select at least one pending order to accept.");
+        return;
+    }
 
-//                     <label for="note">Add Note:</label>
-//                     <textarea id="note" name="note" rows="4" placeholder="Enter any additional notes"></textarea>
-
-//                     <button type="submit">Submit Response</button>
-//                 </form>
-//             </div>
-//         </div>
-//     `;
-
-//     // Append the form to the body
-//     document.body.insertAdjacentHTML('beforeend', formHtml);
-
-//     // Add submit event listener to the form
-//     document.getElementById('responseForm').addEventListener('submit', function (event) {
-//         event.preventDefault();
-//         const newPrice = document.getElementById('newPrice').value;
-//         const newDate = document.getElementById('newDate').value;
-//         const note = document.getElementById('note').value;
-
-//         console.log(`Response submitted for responseID: ${responseID}`);
-//         console.log(`New Price: ${newPrice}, New Date: ${newDate}, Note: ${note}`);
-
-//         // Send the response data to the server
-//         sendResponse(responseID, newPrice, newDate, note);
-
-//         // Close the modal
-//         closeModal();
-//     });
-// }
-
-// function closeModal() {
-//     const modal = document.getElementById('responseFormModal');
-//     if (modal) modal.remove();
-// }
-
-
+    selectedOrders.forEach(selectedOrder => {
+        const responseID = selectedOrder.value;
+        console.log(`Accepting quote with responseID: ${responseID}`);
+        // Add logic for acceptance (e.g., make an API call)
+    });
+}
 
 // function loadClientDetails(data) {
 //     const clientID = data[0]?.clientID || activeClient;

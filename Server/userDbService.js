@@ -228,21 +228,29 @@ class userDbService {
       try {
             const response = await new Promise((resolve, reject) => {
                const query = `SELECT 
-                        QH.responseID,
-                        QH.clientID,
-                        QH.quoteID,
-                        QR.propertyAddress,
-                        QR.drivewaySqft,
-                        QH.proposedPrice,
-                        QH.startDate,
-                        QH.endDate,
-                        QH.addNote,
-                        QH.responseDate,
-                        QH.status
-                  FROM QuoteHistory QH
-                  JOIN QuoteRequest QR
-                  ON QH.quoteID = QR.quoteID
-                  WHERE QR.clientID LIKE ?;`;
+               QH.responseID,
+               QH.quoteID,
+               QR.propertyAddress,
+               QR.drivewaySqft,
+               QH.proposedPrice,
+               QH.startDate,
+               QH.endDate,
+               QH.addNote,
+               QH.responseDate,
+               QH.status,
+               CASE 
+                  WHEN QH.responseID = (
+                     SELECT MAX(responseID)
+                     FROM QuoteHistory
+                     WHERE quoteID = QH.quoteID
+                  ) AND QH.status = 'Pending'
+                  THEN 1
+                  ELSE 0
+               END AS isMostRecentPending
+               FROM QuoteHistory QH
+               JOIN QuoteRequest QR ON QH.quoteID = QR.quoteID
+               WHERE QH.clientID = ?
+               ORDER BY  QH.quoteID, QH.responseID ASC;`;
 
                connection.query(query, [clientID], (err, results) => {
                   if (err) reject(new Error(err.message));
@@ -320,19 +328,88 @@ class userDbService {
             LEFT JOIN QuoteRequest qr ON wo.quoteID = qr.quoteID
             WHERE i.clientID LIKE ?;`;
 
-         connection.query(query, [clientID], (err, results) => {
-            if (err) reject(new Error(err.message));
-            else resolve(results);
+            connection.query(query, [clientID], (err, results) => {
+               if (err) reject(new Error(err.message));
+               else resolve(results);
+            });
          });
-      });
-      console.log("Invoice results from dbservice: ", response); // for debugging to see the result of select
-      return response;
-   } catch (error) {
-         console.error('Invoice History query error:', error);
-   }
+         console.log("Invoice results from dbservice: ", response); // for debugging to see the result of select
+         return response;
+      } catch (error) {
+            console.error('Invoice History query error:', error);
+      }
    
    }
 
+
+   async insertQuoteResponse(responseID, proposedPrice, startDate, endDate, addNote) {
+      const newStartDate = new Date(startDate);
+      const newEndDate = new Date(endDate);
+      const keepStatus = 'Pending';
+      let clientID;
+      let quoteID;
+      console.log(`Inserting response for responseID: ${responseID}`);
+      try {
+         const selection = await new Promise((resolve, reject) => {
+            const query = "SELECT * FROM QuoteHistory WHERE responseID = ?;";
+            connection.query(query, [responseID], (err, results) => {
+               if (err) reject(new Error(err.message));
+               else resolve(results);
+            });
+         });
+         // Return the responseID result and grab missing parameters from client response
+         if (selection.length > 0) {
+            const firstResult = selection[0];
+            clientID = firstResult.clientID;
+            quoteID = firstResult.quoteID;
+            console.log(`Client ID: ${clientID}, Quote ID: ${quoteID}`);
+            if (proposedPrice === null) proposedPrice = firstResult.proposedPrice;
+            if (startDate === null) newStartDate = firstResult.startDate;
+            if (endDate === null) newEndDate = firstResult.endDate;
+            if (addNote === null) addNote = '';
+         } else {
+            throw new Error("No response found with responseID: " + responseID);
+         }
+
+            const query = `INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?);
+            `;
+            const response = await new Promise((resolve, reject) => {
+               connection.query(
+                  query,
+                  [clientID, quoteID, proposedPrice, newStartDate, newEndDate, addNote, keepStatus],
+                  (err, results) => {
+                        if (err) reject(new Error(err.message));
+                        else resolve(results);
+                  }
+               );
+            });
+            return response;
+      } catch (error) {
+            console.error("Error inserting response:", error);
+            throw error;
+      }
+   }
+  
+   // Once accepted, phpmyadmin will trigger the update to populate to workOrder
+   acceptQuoteResonse(responseID) {
+      console.log(`Accepting quote response with responseID: ${responseID}`);
+      try {
+         const query = `UPDATE QuoteHistory SET status = 'Accepted' WHERE responseID = ?;`;
+         const response = new Promise((resolve, reject) => {
+            connection.query(query, [responseID], (err, results) => {
+               if (err) reject(new Error(err.message));
+               else resolve(results);
+            });
+         });
+         return response;
+      } catch (error) {
+         console.error("Error accepting quote response:", error);
+         throw error;
+      }
+   }
+
+   
    async searchByClientID(clientID) {
       try {
          // use await to call an asynchronous function

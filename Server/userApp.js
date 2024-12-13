@@ -245,6 +245,41 @@ app.get('/Client/QuoteHistory/:clientID', async (request, response) => {
 });
 
 
+/* QUOTE RESPONSE */
+app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) => {
+    const { responseID } = request.params;
+    const { proposedPrice, startDate, endDate, addNote } = request.body;
+
+    console.log(`Inserting new response for: ${responseID}`); //quoteID: ${quoteID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.insertQuoteResponse(responseID, proposedPrice, startDate, endDate, addNote);
+        response.json({ success: true, message: "Response inserted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to insert quote response." });
+    }
+});
+
+
+/* ACCEPT A QUOTE */
+app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => {
+    const { responseID } = request.params;
+
+    console.log(`Accepting quote with responseID: ${responseID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.acceptQuoteResonse(responseID);
+        response.json({ success: true, message: "Quote accepted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to accept quote." });
+    }
+});
+
+
 app.get('/Client/WorkOrderHistory/:clientID', async (request, response) => {
     const { clientID } = request.params;
     console.log("Getting work order history for ", clientID ,"...");

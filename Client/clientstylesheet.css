@@ -161,6 +161,25 @@ input[type="file"]:hover {
     width: 85%;
 }
 
+/* ------- Client Quote History properties ------- */
+#responseForm {
+    display: none;
+}
+
+/* .rspnForm {
+    display: none;
+    width:60%;
+    height: 400px;
+    padding: 1rem;
+    margin-left:20%;
+    font-size: 14px;
+    transition:cubic-bezier(0.175, 0.885, 0.32, 1.275);
+} 
+
+.txtbx {
+    max-width: fit-content;
+} */
+
 
 /* ------- Client Sidebar Nav properties ------- */
 
