@@ -90,26 +90,31 @@ CREATE TABLE WorkOrder (
 
 
 
--- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATEINVOICE: ------------------
--- The trigger is named "createInvoice"
-
-DELIMITER //
-
-CREATE TRIGGER `createInvoice` AFTER UPDATE ON `WorkOrder`
-FOR EACH ROW
-BEGIN
+-- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATE INVOICE & INVOICE RESPONSE: ------------------
+CREATE TRIGGER `afterWorkOrderCompleted` AFTER UPDATE ON `WorkOrder`
+ FOR EACH ROW BEGIN
     IF NEW.status = 'Completed' THEN
+        -- Insert into Invoice
         INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
         VALUES (NEW.workOrderID, NEW.clientID, 
-                (SELECT qh.proposedPrice 
-                 FROM QuoteHistory qh
-                 WHERE qh.responseID = NEW.responseID), 
+                COALESCE(
+                    (SELECT qh.proposedPrice 
+                     FROM QuoteHistory qh
+                     WHERE qh.responseID = NEW.responseID), 
+                    0), -- Default to 0 if no match is found
                 NOW());
+
+        -- Insert into InvoiceResponses
+        INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate)
+        VALUES (
+            LAST_INSERT_ID(),            -- Use the last auto-incremented invoiceID
+            '',  -- Default response note
+            NOW()                        -- Current timestamp for responseDate
+        );
     END IF;
 END
-//
-DELIMITER ;
--- -------------------------------------------------------------------------------------
+
+-- ------------------------------------------------------------------------------------------------------------
 
 
 CREATE TABLE Invoice (
@@ -131,7 +136,7 @@ CREATE TABLE InvoiceResponses (
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
 
--- Makes it easier to track changes in amount for history
+-- Adding amount due to responses so it can be adjusted.
 ALTER TABLE Invoice ADD COLUMN amountDue DECIMAL(10, 2);
 
 
