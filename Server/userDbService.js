@@ -539,27 +539,64 @@ async generateInvoice(workOrderID, clientID, amountDue, discount) {
    try {
        const response = await new Promise((resolve, reject) => {
            const query = `
-               INSERT INTO Invoice (workOrderID, clientID, amountDue, discount)
-               VALUES (?, ?, ?, ?)
+               INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+               VALUES (?, ?, ?, NOW())
            `;
-           const finalAmount = amountDue - discount; // Apply discount
-           console.log("Executing Query:", query); // Log the query
-           console.log("Query Values:", [workOrderID, clientID, finalAmount, discount]); // Log values
-           connection.query(query, [workOrderID, clientID, finalAmount, discount], (err, result) => {
+           const finalAmount = amountDue - discount; // Calculate final amount
+           console.log("Executing Query:", query);
+           console.log("With Values:", [workOrderID, clientID, finalAmount]);
+
+           connection.query(query, [workOrderID, clientID, finalAmount], (err, result) => {
                if (err) {
                    console.error("Database Error:", err.message); // Log database error
                    reject(err);
                } else {
+                   console.log("Query Successful:", result); // Log successful query
                    resolve(result);
                }
            });
        });
        return response;
    } catch (err) {
-       console.error("Error in generateInvoice:", err.message); // Log full error details
+       console.error("Error in generateInvoice:", err.message);
        throw err;
    }
 }
+
+
+
+async checkWorkOrder(workOrderID) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = "SELECT 1 FROM WorkOrder WHERE workOrderID = ? LIMIT 1";
+           connection.query(query, [workOrderID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result.length > 0);
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in checkWorkOrder:", err.message);
+       throw err;
+   }
+}
+async checkClient(clientID) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = "SELECT 1 FROM ClientDB WHERE clientID = ? LIMIT 1";
+           connection.query(query, [clientID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result.length > 0);
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in checkClient:", err.message);
+       throw err;
+   }
+}
+
+
 
    // // Search ClientDB by first name
    // async searchByFirstName(firstName) {

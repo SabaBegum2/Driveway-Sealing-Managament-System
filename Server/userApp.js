@@ -582,7 +582,7 @@ app.post('/quotes/accept', async (req, res) => {
 });
 
 app.get("/invoices/generate", async (req, res) => {
-    const { workOrderID, clientID, amountDue, discount = 0 } = req.query; // Extract query parameters
+    const { workOrderID, clientID, amountDue, discount = 0 } = req.query;
 
     if (!workOrderID || !clientID || !amountDue) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -590,6 +590,16 @@ app.get("/invoices/generate", async (req, res) => {
 
     try {
         const db = userDbService.getUserDbServiceInstance();
+
+        // Check if workOrderID and clientID exist
+        const isValidWorkOrder = await db.checkWorkOrder(workOrderID);
+        const isValidClient = await db.checkClient(clientID);
+
+        if (!isValidWorkOrder || !isValidClient) {
+            return res.status(400).json({ error: "Invalid workOrderID or clientID" });
+        }
+
+        // Generate the invoice
         const result = await db.generateInvoice(workOrderID, clientID, amountDue, discount);
 
         res.json({
@@ -597,10 +607,11 @@ app.get("/invoices/generate", async (req, res) => {
             invoiceID: result.insertId,
         });
     } catch (err) {
-        console.error("Error generating invoice:", err);
+        console.error("Error generating invoice:", err.message);
         res.status(500).json({ error: "Failed to generate invoice", details: err.message });
     }
 });
+
 
 
 
