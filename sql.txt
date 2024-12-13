@@ -122,8 +122,8 @@ CREATE TABLE Invoice (
     workOrderID INT,
     clientID VARCHAR(20),
     amountDue DECIMAL(10, 2),
-    dateCreated DATE DEFAULT current_timestamp(),
-    datePaid DATE DEFAULT NULL,
+    dateCreated DATETIME DEFAULT current_timestamp(),
+    datePaid DATETIME DEFAULT NULL,
     FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
