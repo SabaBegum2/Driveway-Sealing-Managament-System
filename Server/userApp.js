@@ -6,17 +6,11 @@ const dotenv = require('dotenv')
 dotenv.config()
 const bodyParser = require('body-parser'); // Import body-parser
 
-// Import the express-session library to manage user sessions
-//const session = require('express-session');
 const app = express();
 
 const userDbService = require('./userDbService');
 
 app.use(cors());
-// app.use(cors({
-//     origin: 'http://127.0.0.1:5500', // Replace with your frontend origin
-//     credentials: true // Allow cookies and session credentials
-// }));
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}));
@@ -26,20 +20,6 @@ const fileUpload = require('express-fileupload');
 
 // Enable file upload middleware
 app.use(fileUpload());
-
-
-// multer = require('multer');
-
-//Function to serve static files from the uploads folder
-// app.use('/uploads', (req, res, next) => {
-//     const path = require('path'); // Import locally
-//     const baseFolder = 'Driveway-Sealing-Management-System';
-//     const projectBasePath = path.join(__dirname.split(baseFolder)[0], baseFolder);
-//     const uploadsPath = path.join(projectBasePath, 'Server/uploads');
-
-//     express.static(uploadsPath)(req, res, next); // Serve static files
-// });
-
 
 
 /* REGISTER NEW CLIENT */
@@ -167,6 +147,7 @@ app.post('/newQuoteRequest', async (req, res) => {
         res.status(500).json({ error: "An error occurred while processing the quote request." });
     }
 });
+
 function saveFile(file) {
     //const path = require('path'); // Import locally within the function
     const baseFolder = 'Driveway-Sealing-Management-System';
@@ -191,40 +172,6 @@ function saveFile(file) {
         throw error;
     }
 }
-
-
-
-// // Helper function to save uploaded files
-// function saveFile(file) {
-//     const uploadPath = path.join(__dirname, 'uploads', file.name);
-
-//     try {
-//         file.mv(uploadPath, (err) => {
-//             if (err) {
-//                 console.error("Error saving file:", err);
-//                 throw new Error("Failed to save file");
-//             }
-//         });
-//         return uploadPath; // Return the saved file path for database storage
-//     } catch (error) {
-//         console.error("Failed to save file:", error);
-//         throw error;
-//     }
-// }
-
-
-
-// // Read all data
-// app.get('/getAll', (request, response) => {
-    
-//     const db = userDbService.getUserDbServiceInstance();
-    
-//     const result = db.getAllClientData(); // call a DB function
-
-//     result
-//     .then(data => response.json({ data: data }))
-//     .catch(err => console.log(err));
-// });
 
 
 /* GET CLIENT QUOTE HISTORY */
