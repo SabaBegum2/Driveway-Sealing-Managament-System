@@ -21,6 +21,17 @@ const fileUpload = require('express-fileupload');
 // Enable file upload middleware
 app.use(fileUpload());
 
+app.use((req, res, next) => {
+    res.setHeader("Content-Type", "application/json");
+    next();
+});
+
+app.use(cors({
+    origin: "http://127.0.0.1:5500", // Allow requests from your frontend
+    credentials: true, // Include credentials if needed
+}));
+
+
 
 /* REGISTER NEW CLIENT */
 app.post('/register', async(request, response) => {
@@ -491,6 +502,113 @@ app.get('/quotes', (req, res) => {
             res.status(500).json({ error: 'Database query failed', details: err.message });
         });
 });
+
+// app.post('/quotes/reject', (req, res) => {
+//     const { clientID, quoteID, addNote } = req.body;
+
+//     if (!addNote || !quoteID || !clientID) {
+//         return res.status(400).json({ error: 'Missing required fields: addNote, quoteID, clientID' });
+//     }
+
+//     const query = `
+//         INSERT INTO QuoteHistory (clientID, quoteID, addNote, status)
+//         VALUES (?, ?, ?, 'Rejected')
+//     `;
+
+//     connection.query(query, [clientID, quoteID, addNote], (err, result) => {
+//         if (err) {
+//             console.error('Error rejecting quote:', err.message);
+//             return res.status(500).json({ error: 'Failed to reject quote' });
+//         }
+//         res.json({ message: 'Quote rejected successfully' });
+//     });
+// });
+
+// app.post('/quotes/accept', (req, res) => {
+//     const { clientID, quoteID, proposedPrice, startDate, endDate, addNote } = req.body;
+
+//     if (!proposedPrice || !startDate || !endDate || !addNote || !quoteID || !clientID) {
+//         return res.status(400).json({ error: 'Missing required fields' });
+//     }
+
+//     const query = `
+//         INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
+//         VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
+//     `;
+
+//     connection.query(query, [clientID, quoteID, proposedPrice, startDate, endDate, addNote], (err, result) => {
+//         if (err) {
+//             console.error('Error accepting quote:', err.message);
+//             return res.status(500).json({ error: 'Failed to accept quote' });
+//         }
+//         res.json({ message: 'Quote accepted successfully' });
+//     });
+// });
+
+// const userDbService = require('./userDbService');
+// const db = userDbService.getUserDbServiceInstance();
+
+app.post('/quotes/reject', async (req, res) => {
+    const { clientID, quoteID, addNote } = req.body;
+
+    if (!clientID || !quoteID || !addNote) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await db.rejectQuote(clientID, quoteID, addNote);
+        res.json({ message: 'Quote rejected successfully' });
+    } catch (err) {
+        console.error('Error rejecting quote:', err.message);
+        res.status(500).json({ error: 'Failed to reject quote' });
+    }
+});
+
+
+app.post('/quotes/accept', async (req, res) => {
+    const { clientID, quoteID, proposedPrice, startDate, endDate, addNote } = req.body;
+
+    if (!clientID || !quoteID || !proposedPrice || !startDate || !endDate || !addNote) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await db.acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote);
+        res.json({ message: 'Quote accepted successfully' });
+    } catch (err) {
+        console.error('Error accepting quote:', err.message);
+        res.status(500).json({ error: 'Failed to accept quote' });
+    }
+});
+
+app.get("/invoices/generate", async (req, res) => {
+    const { workOrderID, clientID, amountDue, discount = 0 } = req.query; // Extract query parameters
+
+    if (!workOrderID || !clientID || !amountDue) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        const result = await db.generateInvoice(workOrderID, clientID, amountDue, discount);
+
+        res.json({
+            message: "Invoice generated successfully",
+            invoiceID: result.insertId,
+        });
+    } catch (err) {
+        console.error("Error generating invoice:", err);
+        res.status(500).json({ error: "Failed to generate invoice", details: err.message });
+    }
+});
+
+
+
+
+
+
+
+
 
 
 /////////////////////// David Dashboard ////////////////////////////

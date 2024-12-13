@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     
+    ////////works 
     // Fetch and display quotes
     function loadQuotes() {
         fetch("http://localhost:5050/quotes")
@@ -72,10 +73,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
                         </div>
                         <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
-                        <input type="date" id="start-date-${quote.quoteID}" placeholder="Start Date">
-                        <input type="date" id="end-date-${quote.quoteID}" placeholder="End Date">
-                        <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter a Comment"></textarea>
-                        <button onclick="respondWithCounter(${quote.quoteID})">Submit Counter Proposal</button>
+                        <input type="date" id="start-date-${quote.quoteID}">
+                        <input type="date" id="end-date-${quote.quoteID}">
+                        <textarea id="accept-note-${quote.quoteID}" placeholder="Enter a Comment"></textarea>
+                        <button onclick="respondWithCounter(${quote.quoteID}, '${quote.clientID}')">Submit Counter Proposal</button>
                         <button onclick="rejectRequest(${quote.quoteID}, '${quote.clientID}')">Reject Request</button>
                     `;
                     quoteList.appendChild(listItem);
@@ -88,6 +89,57 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchWorkOrders();
     loadQuotes();
 });
+
+
+
+// //new function
+// function respondWithCounter(quoteID) {
+//     const clientID = ...; // Get client ID from the quote
+//     const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
+//     const startDate = document.getElementById(`start-date-${quoteID}`).value;
+//     const endDate = document.getElementById(`end-date-${quoteID}`).value;
+//     const addNote = document.getElementById(`accept-note-${quoteID}`).value;
+
+//     if (!counterPrice || !startDate || !endDate || !addNote) {
+//         alert('Please fill out all fields to accept the quote.');
+//         return;
+//     }
+
+//     fetch('/quotes/accept', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ clientID, quoteID, proposedPrice: counterPrice, startDate, endDate, addNote }),
+//     })
+//         .then((response) => response.json())
+//         .then((data) => {
+//             alert(data.message);
+//             // Optionally refresh the quotes list
+//         })
+//         .catch((error) => console.error('Error accepting quote:', error));
+// }
+
+// function rejectRequest(quoteID, clientID) {
+//     const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
+
+//     if (!addNote) {
+//         alert('Please enter a rejection note.');
+//         return;
+//     }
+
+//     fetch('/quotes/reject', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ clientID, quoteID, addNote }),
+//     })
+//         .then((response) => response.json())
+//         .then((data) => {
+//             alert(data.message);
+//             // Optionally refresh the quotes list
+//         })
+//         .catch((error) => console.error('Error rejecting quote:', error));
+// }
+
+
 
 
 // // Load quotes on page load
@@ -156,52 +208,83 @@ document.addEventListener("DOMContentLoaded", () => {
 //         });
 // }
 
-// Respond with Counter Proposal
+//Respond with Counter Proposal
+function respondWithCounter(quoteID, clientID) {
+    const proposedPrice = document.getElementById(`counter-price-${quoteID}`).value;
+    const startDate = document.getElementById(`start-date-${quoteID}`).value;
+    const endDate = document.getElementById(`end-date-${quoteID}`).value;
+    const addNote = document.getElementById(`accept-note-${quoteID}`).value;
 
-        
+    if (!proposedPrice || !startDate || !endDate || !addNote) {
+        alert('Please fill out all fields to accept the quote.');
+        return;
+    }
+
+    fetch('/quotes/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientID, quoteID, proposedPrice, startDate, endDate, addNote }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            alert(data.message);
+            // Optionally refresh the quotes list
+        })
+        .catch((error) => console.error('Error accepting quote:', error));
+}
+
+
+function rejectRequest(quoteID, clientID) {
+    const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
+
+    if (!addNote) {
+        alert('Please enter a rejection note.');
+        return;
+    }
+
+    fetch('/quotes/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientID, quoteID, addNote }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            alert(data.message);
+            // Optionally refresh the quotes list
+        })
+        .catch((error) => console.error('Error rejecting quote:', error));
+}
+
+
+     
 
 
     
-    document.getElementById('invoice-form').addEventListener('submit', function (event) {
-        event.preventDefault(); // Prevent default form submission
+document.getElementById("invoice-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-        const workOrderID = document.getElementById('workOrderID').value;
-        const clientID = document.getElementById('clientID').value;
-        const amountDue = document.getElementById('amountDue').value;
+    const workOrderID = document.getElementById("workOrderID").value;
+    const clientID = document.getElementById("clientID").value;
+    const amountDue = document.getElementById("amountDue").value;
+    const discount = document.getElementById("discount").value || 0;
 
-        console.log('Collected data:', { workOrderID, clientID, amountDue }); // Debug log
+    try {
+        const response = await fetch(`http://127.0.0.1:5050/invoices/generate?workOrderID=${workOrderID}&clientID=${clientID}&amountDue=${amountDue}&discount=${discount}`, {
+            method: "GET"
+        });
 
-        fetch('http://localhost:5050/invoices', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ workOrderID, clientID, amountDue }),
-        })
-            .then(response => {
-                console.log('Response received:', response); // Log raw response
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Response data:', data); // Log parsed response
-                const messageDiv = document.getElementById('response-message');
-                if (data.success) {
-                    messageDiv.style.color = 'green';
-                    messageDiv.innerText = 'Invoice created successfully!';
-                } else {
-                    messageDiv.style.color = 'red';
-                    messageDiv.innerText = `Error: ${data.error || 'Failed to create invoice.'}`;
-                }
-            })
-            .catch(error => {
-                console.error('Error caught in frontend:', error); // Log error for debugging
-                const messageDiv = document.getElementById('response-message');
-                messageDiv.style.color = 'red';
-                messageDiv.innerText = 'Failed to create invoice due to a server error.';
-            });
-        
-    });
+        const data = await response.json();
+        console.log("Response Data:", data);
+        document.getElementById("response-message").innerText = data.message;
+        document.getElementById("response-message").style.color = "green";
+    } catch (error) {
+        console.error("Error Generating Invoice:", error);
+        document.getElementById("response-message").innerText = "An unexpected error occurred.";
+        document.getElementById("response-message").style.color = "red";
+    }
+});
+
+
 
 //fetching quotes history and bills
 async function fetchQuoteHistory() {
@@ -379,4 +462,3 @@ function fetchRevenueReport() {
     });
 
 }
-

@@ -494,6 +494,73 @@ class userDbService {
       }
   }
 
+  //rejecting a quote
+
+  async rejectQuote(clientID, quoteID, addNote) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO QuoteHistory (clientID, quoteID, addNote, status)
+               VALUES (?, ?, ?, 'Rejected')
+           `;
+           connection.query(query, [clientID, quoteID, addNote], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error('Error in rejectQuote:', err);
+       throw err;
+   }
+}
+
+//accepting a quote 
+async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
+               VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
+           `;
+           connection.query(query, [clientID, quoteID, proposedPrice, startDate, endDate, addNote], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error('Error in acceptQuote:', err);
+       throw err;
+   }
+}
+
+async generateInvoice(workOrderID, clientID, amountDue, discount) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO Invoice (workOrderID, clientID, amountDue, discount)
+               VALUES (?, ?, ?, ?)
+           `;
+           const finalAmount = amountDue - discount; // Apply discount
+           console.log("Executing Query:", query); // Log the query
+           console.log("Query Values:", [workOrderID, clientID, finalAmount, discount]); // Log values
+           connection.query(query, [workOrderID, clientID, finalAmount, discount], (err, result) => {
+               if (err) {
+                   console.error("Database Error:", err.message); // Log database error
+                   reject(err);
+               } else {
+                   resolve(result);
+               }
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in generateInvoice:", err.message); // Log full error details
+       throw err;
+   }
+}
+
    // // Search ClientDB by first name
    // async searchByFirstName(firstName) {
    //    try {
