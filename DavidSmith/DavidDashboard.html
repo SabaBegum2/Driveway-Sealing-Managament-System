@@ -17,6 +17,7 @@
                 <a class="tabLinks" href="#Quotes" data-tab="Quotes">Quotes</a>
                 <a class="tabLinks" href="#WorkOrders" data-tab="WorkOrders">Work Orders</a>
                 <a class="tabLinks" href="#Bills" data-tab="Bills">Bills</a>
+                <a class="tabLinks" href="#ViewQuotes" data-tab="ViewQuotes">View Quotes</a> <!-- New tab for viewing quotes -->
             </div>
         
             <!-- Home Tab -->
@@ -24,64 +25,49 @@
                 <h1>Home</h1>
                 <p>Welcome to the David Smith Dashboard!</p>
             </div>
-        
-            <!-- Quotes Tab -->
-            <div id="Quotes" class="DavidContent">
-                <h1>Manage Quotes</h1>
-                <form id="quoteForm">
-                    <h3>Client Name:</h3>
-                    <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter Client Name" id="client-name" required>
-                    <h3>Requested Service:</h3>
-                    <input class="fillInputWidth" style="margin-left: 25px; width:90%" placeholder="Enter Service Details" id="service-details" required>
-                    <h3>Requested Time Window:</h3>
-                    <input class="fillInputWidth" type="date" style="margin-left: 25px; width:90%" id="time-start" required>
-                    <input class="fillInputWidth" type="date" style="margin-left: 25px; width:90%" id="time-end" required>
-                    <h3>Quote Price:</h3>
-                    <input class="fillInputWidth" type="number" style="margin-left: 25px; width:90%" id="quote-price" required>
-                    <!--<button id="submit-quote" style="margin-left: 35%">Submit Quote</button-->
-                    <button class="submitQuote">Submit Quote</button>
-                </form>
-            </div>
-        
-            <!-- Work Orders Tab -->
-            <div id="WorkOrders" class="DavidContent">
-                <h1>Manage Work Orders</h1>
-                <p>Check your work orders and their status.</p>
-                <div class="order-list">
-                    <h3>Work Orders</h3>
-                    <ul id="work-orders">
-                        <li>
-                            <p><strong>Order ID:</strong> #001</p>
-                            <p><strong>Status:</strong> Completed</p>
-                            <button class="generate-bill-btn">Generate Bill</button>
-                        </li>
-                        <li>
-                            <p><strong>Order ID:</strong> #002</p>
-                            <p><strong>Status:</strong> In Progress</p>
-                        </li>
+
+        <!-- View Quotes Tab (New) -->
+            <div id="ViewQuotes" class="DavidContent">
+                <h1>All Submitted Quotes</h1>
+                <p>Here are all the quotes submitted to you:</p>
+                <div class="quote-list">
+                    <h3>Quotes</h3>
+                    <ul id="quote-list">
+                        <!-- Additional quote items will be dynamically generated here -->
                     </ul>
+
                 </div>
             </div>
-        
-            <!-- Bill Generation Form -->
-            <div id="GenerateBill" class="DavidContent">
-                <h1>Generate Bill</h1>
-                <form id="generate-bill-form">
-                    <h3>State of Work Done:</h3>
-                    <textarea id="work-done" rows="4" required placeholder="Describe the work completed"></textarea>
 
-                    <h3>Cost:</h3>
-                    <input type="number" id="cost" placeholder="Enter the cost" required>
-
-                    <h3>Optional Discount:</h3>
-                    <input type="number" id="discount" placeholder="Enter discount if any">
-
-                    <h3>Optional Note:</h3>
-                    <textarea id="bill-note" rows="4" placeholder="Enter any additional notes"></textarea>
-
-                    <button id="submit-bill">Submit Bill</button>
-                </form>
+            <!-- Work Orders Tab -->
+            <div id="work-orders">
+                <h1>Manage Work Orders</h1>
+                <p>Check your work orders and their status.</p>
+                <div id="orders-list">
+                    <!-- Work orders will be dynamically added here -->
+                </div>
             </div>
+            
+            
+            
+            <!-- generating invoices -->
+            <div id="GenerateInvoice">
+                <h1>Generate Invoice</h1>
+                <form id="invoice-form">
+                    <label for="workOrderID">Work Order ID:</label>
+                    <input type="number" id="workOrderID" name="workOrderID" required><br><br>
+            
+                    <label for="clientID">Client ID:</label>
+                    <input type="text" id="clientID" name="clientID" required><br><br>
+            
+                    <label for="amountDue">Amount Due:</label>
+                    <input type="number" step="0.01" id="amountDue" name="amountDue" required><br><br>
+            
+                    <button type="submit">Generate Invoice</button>
+                </form>
+                <div id="response-message" style="margin-top: 20px; color: green;"></div>
+            </div>
+            
         
             <!-- Bills Tab -->
             <div id="Bills" class="DavidContent">
@@ -90,16 +76,22 @@
                 <div class="bill-list">
                     <h3>All Bills</h3>
                     <ul id="bill-list">
-                        <li>
-                            <p><strong>Bill ID:</strong> #101</p>
-                            <p><strong>Status:</strong> Pending Payment</p>
-                            <button class="respond-bill-btn">Respond</button>
-                        </li>
-                        <li>
-                            <p><strong>Bill ID:</strong> #102</p>
-                            <p><strong>Status:</strong> Paid</p>
-                        </li>
+                        <!-- Dynamically populated by JavaScript -->
                     </ul>
+                </div>
+            </div>
+            
+
+            <!-- View Quotes Tab (New) -->
+            <div id="ViewQuotes" class="DavidContent">
+                <h1>All Submitted Quotes</h1>
+                <p>Here are all the quotes submitted to you:</p>
+                <div class="quote-list">
+                    <h3>Quotes</h3>
+                    <ul id="quote-list">
+                        <!-- Additional quote items will be dynamically generated here -->
+                    </ul>
+
                 </div>
             </div>
 
@@ -118,6 +110,25 @@
                     <button id="submit-response">Submit Response</button>
                 </form>
             </div>
+
+            <div id="RevenueReport" class="RevenueContent">
+                <h1>Generate Revenue Report</h1>
+                <p>Enter the date range to calculate the total revenue for completed work orders:</p>
+                <form id="revenue-form">
+                    <label for="start-date">Start Date:</label>
+                    <input type="date" id="start-date" required>
+                    <br><br>
+                    <label for="end-date">End Date:</label>
+                    <input type="date" id="end-date" required>
+                    <br><br>
+                    <button type="button" onclick="fetchRevenueReport()">Generate Report</button>
+                </form>
+                <br>
+                <div id="revenue-result">
+                    <!-- The result will be displayed here -->
+                </div>
+            </div>
+            
 
         </main>
     </div>

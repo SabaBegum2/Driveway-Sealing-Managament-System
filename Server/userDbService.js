@@ -457,6 +457,43 @@ class userDbService {
       }
    }
 
+
+   //david
+   async getAllQuotes() {
+      try {
+          const response = await new Promise((resolve, reject) => {
+              const query = `
+                  SELECT 
+                      QR.quoteID,
+                      QR.clientID,
+                      QR.propertyAddress,
+                      QR.drivewaySqft,
+                      QR.proposedPrice,
+                      QR.addNote,
+                      QRI.image1,
+                      QRI.image2,
+                      QRI.image3,
+                      QRI.image4,
+                      QRI.image5
+                  FROM 
+                      QuoteRequest QR
+                  LEFT JOIN 
+                      QuoteRequestImage QRI
+                  ON 
+                      QR.quoteID = QRI.quoteID;
+              `;
+              connection.query(query, (err, results) => {
+                  if (err) reject(err);
+                  else resolve(results);
+              });
+          });
+          return response;
+      } catch (err) {
+          console.error('Error in getAllQuotes:', err);
+          throw err;
+      }
+  }
+
    // // Search ClientDB by first name
    // async searchByFirstName(firstName) {
    //    try {

@@ -478,6 +478,23 @@ app.get('/search/RegisteredToday', async (request, response) => {
     }
 });
 
+/////////////////////// David Dashboard ////////////////////////////
+
+//works
+app.get('/quotes', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+
+    db.getAllQuotes()
+        .then((data) => res.json(data))
+        .catch((err) => {
+            console.error('Error fetching quotes:', err.message);
+            res.status(500).json({ error: 'Database query failed', details: err.message });
+        });
+});
+
+
+/////////////////////// David Dashboard ////////////////////////////
+
 
 
 // debug function, will be deleted later
