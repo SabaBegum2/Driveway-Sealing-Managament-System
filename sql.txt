@@ -117,8 +117,8 @@ CREATE TABLE Invoice (
     workOrderID INT,
     clientID VARCHAR(20),
     amountDue DECIMAL(10, 2),
-    dateCreated DATETIME,
-    datePaid DATETIME DEFAULT NULL,
+    dateCreated DATE DEFAULT current_timestamp(),
+    datePaid DATE DEFAULT NULL,
     FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
@@ -130,6 +130,9 @@ CREATE TABLE InvoiceResponses (
     responseDate DATETIME DEFAULT CURRENT_DATETIME,
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
+
+-- Makes it easier to track changes in amount for history
+ALTER TABLE Invoice ADD COLUMN amountDue DECIMAL(10, 2);
 
 
 

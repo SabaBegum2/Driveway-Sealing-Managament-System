@@ -263,7 +263,7 @@ app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) 
 });
 
 
-/* ACCEPT A QUOTE */
+/* QUOTE ACCEPTED */
 app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => {
     const { responseID } = request.params;
 
@@ -280,6 +280,7 @@ app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => 
 });
 
 
+/* GET CLIENT WORK ORDER HISTORY */
 app.get('/Client/WorkOrderHistory/:clientID', async (request, response) => {
     const { clientID } = request.params;
     console.log("Getting work order history for ", clientID ,"...");
@@ -305,6 +306,44 @@ app.get('/Client/Invoices/:clientID', async (request, response) => {
     } catch (err) {
         console.error('Error in userApp fetching invoice history: ', err);
         response.status(500).json({ error: 'Failed to retrieve invoice history in app.' });
+    }
+});
+
+
+/* INVOICE RESPONSE */
+app.post('/Client/Invoices/Response/:invoiceID', async (request, response) => {
+    const { invoiceID } = request.params;
+    const { responseID, amountDue, responseNote } = request.body;
+
+    console.log(`Inserting new response for: ${invoiceID}`);
+    // console.log(`response ID: ${responseID}`);
+    console.log(`Amount Due: ${amountDue}`);
+    console.log(`Response Note: ${responseNote}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
+        response.json({ success: true, message: "Response inserted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to insert quote response." });
+    }
+});
+
+
+/* INVOICE ACCEPTED AND PAID */
+app.put('/Client/Invoices/Accept/:invoiceID', async (request, response) => {
+    const { invoiceID } = request.params;
+
+    console.log(`Accepting quote with responseID: ${invoiceID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.acceptInvoiceResonse(invoiceID);
+        response.json({ success: true, message: "Quote accepted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to accept quote." });
     }
 });
 

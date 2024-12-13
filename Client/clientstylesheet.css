@@ -165,7 +165,9 @@ input[type="file"]:hover {
 #responseForm {
     display: none;
 }
-
+#billing-Form {
+    display: none;
+}
 /* .rspnForm {
     display: none;
     width:60%;
