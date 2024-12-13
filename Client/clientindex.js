@@ -1,70 +1,16 @@
 
-// document.addEventListener('DOMContentLoaded', function () {
-//     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
-//     console.log(`Current page: ${currentPage}`);
-
-//     if (currentPage === 'ClientDashboardPage') {
-//         //const clientForm = document.getElementById('clientForm');
-//         document.addEventListener("click", setClientDashboard);
-//         // toggleOptions(clickedTab);
-//         //setClientPage() 
-//     }
-//     else if (currentPage === 'ClientWorkOrderPage') {
-//         document.addEventListener("click", setWorkOrderPage);
-//         //setWorkOrderPage();
-//     }
-//     else {
-//         const logoutBtn = document.querySelector('#logout-btn');
-//         logoutBtn.addEventListener('click', logout);
-
-//         // fetch('http://localhost:5050/getall')     
-//         // .then(response => response.json())
-//         // .then(data => loadHTMLTable(data['data']));
-//     }
-// });
-
-// document.addEventListener('DOMContentLoaded', function() {
-//     // one can point your browser to http://localhost:5050/getAll to check what it returns first.
-//     fetch('http://localhost:5050/Client/getall')
-//     .then(response => response.json())
-//     .then(data => loadHTMLTable(data['data']));
-// });
-
-// const searchRegAfterUserBtn = document.querySelector('#search-reg-after-btn');
-// searchRegAfterUserBtn.onclick = function () {
-//     const ClientIDInput = document.querySelector('#after-reg-input');
-//     const clientID = ClientIDInput.value;
-//     ClientIDInput.value = "";
-
-//     //console.log("Search value: ", searchValue);
-//     //searchInput.value = "";
-
-//     fetch(`http://localhost:5050/Client/ClientOrders/${clientID}`)
-//     .then(response => response.json())
-//     .then(data => loadWorkOrderHistory(data['data']));
-//     console.log("Successfully retrieved `${clientID}`'s data");
-// });
 
 let activeClient;
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Client DOM loaded.");
 
-    // const clientID = sessionStorage.getItem('clientID'); // Retrieve clientID from sessionStorage
-    // console.log("Client ID:", clientID); // Use this value as needed
-
-    // const urlParams = new URLSearchParams(window.location.search);
-    // const clientID = urlParams.get('clientID'); // Retrieve the clientID from the query parameter
-    // activeClient = clientID;
-    // console.log("Client ID:", clientID); // Use this value as needed
-    // console.log("Active ID:", activeClient); // Use this value as needed
-
-    // Retrieve clientID from URL query parameters (if available)
     const urlParams = new URLSearchParams(window.location.search);
     let clientID = urlParams.get('clientID');
 
     // If no clientID in the URL, try to retrieve it from sessionStorage
     if (!clientID) {
+        console.log("No clientID found in URL. Checking sessionStorage...");
         clientID = sessionStorage.getItem('clientID');
     }
 
@@ -80,23 +26,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const currentPage = document.body.getAttribute('data-page');  // Identify the current page
     console.log(`Current page: ${currentPage}`);
-
-    if (currentPage === "QuoteHistoryPage") {
-        console.log('Setting up QuoteHistoryPage');
-        getQuoteHistory(); // Automatically fetch quote history on page load
-    }
     
     if (currentPage === 'ClientDashboardPage') {
-        console.log('Setting up ClientPage');
-        document.addEventListener("click", setClientDashboard);
+        fetch(`http://localhost:5050/ClientDB/${clientID}`)
+            .then(response => response.json())
+            .then(data => loadClientHTMLTable(data['data']))
+            .catch(error => console.error("Error fetching client data: ", error));
     }
     else if (currentPage === "QuoteHistoryPage") {
-        console.log('Setting up QuoteHistoryPage');
-        document.addEventListener("click", setQuoteHistoryPage);
+        fetch(`http://localhost:5050/Client/QuoteHistory/${clientID}`)
+            .then(response => response.json())
+            .then(data => {
+                loadQuoteHistoryTable(data['data']);
+                quoteResponse();
+                quoteAccept();
+            })
+            .catch(error => console.error("Error fetching quote history: ", error));
+
     }
     else if (currentPage === 'ClientWorkOrderPage') {
-        console.log('Setting up WorkOrderPage');
-        document.addEventListener("click", setWorkOrderPage);
+        fetch(`http://localhost:5050/Client/WorkOrderHistory/${clientID}`)
+            .then(response => response.json())
+            .then(data => loadWorkOrderHistoryTable(data['data']))
+            .catch(error => console.error("Error fetching quote history: ", error));
+    }
+    else if (currentPage === 'ClientBillsPage') {
+        fetch(`http://localhost:5050/Client/Invoices/${clientID}`)
+            .then(response => response.json())
+            .then(data => {
+                loadInvoiceTable(data['data']);
+                invoiceResponse();
+                invoiceAccept();
+            })
+            .catch(error => console.error("Error fetching quote history: ", error));
     }
     else if (currentPage === 'ClientNewQuotePage') {
         console.log('Setting up new quote request page');
@@ -104,17 +66,19 @@ document.addEventListener('DOMContentLoaded', function () {
         newQuoteForm.addEventListener('submit', submitNewQuoteRequest); 
     }
     else {
-        fetch(`http://localhost:5050/ClientDB/${clientID}`)     
-        .then(response => response.json())
-        .then(data => loadClientHTMLTable(data['data']));
-        }
+        console.error("No page-specific setup function found.");
+    }
 });
 
 
+/* ----------------------------------------------- */
+/* -------------- ALL PAGE FUNCTIONS ------------- */
+/* ----------------------------------------------- */
 
+// logout button
 const logoutBtn = document.querySelector('#logout-btn');
 logoutBtn.onclick = function () {
-    // logoutBtn.addEventListener('click', logout);
+
     console.log('Logging ' + activeClient + ' out...');
     fetch(`http://localhost:5050/logout/${activeClient}/`, {
         headers: {
@@ -125,8 +89,9 @@ logoutBtn.onclick = function () {
     })
     .then(response => response.json())
     .then(data => {
-        alert("User successfully logged out!");
-        console.log(data);  // debugging
+        alert(activeClient + " successfully logged out!");
+        console.log(activeClient + "successfully logged out.");  // debugging
+        activeClient = null;
 
         const newUrl = new URL(window.location.href);
         newUrl.pathname = '/Client/LoginPage.html';
@@ -135,17 +100,6 @@ logoutBtn.onclick = function () {
     })
     .catch(error => console.error("Error: ", error));
 }
-
-
-// // fetch call is to call the backend
-// document.addEventListener('DOMContentLoaded', function() {
-//     // one can point your browser to http://localhost:5050/getAll to check what it returns first.
-//     fetch('http://localhost:5050/getAll')     
-//     .then(response => response.json())
-//     .then(data => loadHTMLTable(data['data']));
-// });
-
-
 
 
 /* ----------------------------------------------- */
@@ -172,7 +126,8 @@ logoutBtn.onclick = function () {
 
 
 function setClientDashboard(event) {
-    event.preventDefault();
+    //event.preventDefault();
+    //event.stopEventPropagation();
     const target = event.target;
 
     if (document.querySelector("#new-quote-page") === target) {
@@ -180,10 +135,22 @@ function setClientDashboard(event) {
     }
 }
 
+// function setQuoteHistory() {
+//     event.preventDefault();
+//     //event.stopEventPropagation();
+//     const target = event.target;
+//     if (document.querySelector("#quote-rspnd-btn") === target) {
+//         quoteResponse(event);
+//     }
+//     else if (document.querySelector("#quote-accept-btn") === target) {
+//         quoteAccept(event);
+//     }
+// }
+
 
 function submitNewQuoteRequest(event) {
     event.preventDefault();
-
+    //event.stopPropagation();
     const clientID = activeClient;
 
     // Get the address fields and concatenate them into a single string
@@ -267,6 +234,648 @@ function submitNewQuoteRequest(event) {
 }
 
 
+// function quoteResponse(event) {
+//     event.preventDefault();
+
+//     //const respondBtn = document.querySelector('#quote-rspnd-btn');
+//     //respondBtn.onclick = function () {
+//         const clientID = activeClient;
+//         const selectQuote = document.querySelector('input[type="radio"]:checked');
+//         if (!selectQuote) {
+//             alert("Please select a quote to respond to.");
+//             return;
+//         }
+//         console.log("Selected Quote:", selectQuote);
+
+//         const quoteID = selectQuote.dataset.quoteID; // Get the selected quoteID
+//         console.log(`Preparing to respond to quote with quoteID: ${workOrderID}`);
+//         const responseID = selectQuote.dataset.responseID; // Get the selected responseID
+//         console.log(`Preparing to respond to quote with responseID: ${responseID}`);
+
+//         // Show response form (inline form in the UI)
+//         const formHtml = `
+//             <div id="responseForm">
+//                 <label for="newPrice">Propose New Price:</label>
+//                 <input type="text" id="newPrice" name="newPrice" placeholder="Enter new price">
+
+//                 <label for="newStartDate">Propose New Start Date:</label>
+//                 <input type="date" id="newStartDate" name="newStartDate">
+
+//                 <label for="newEndDate">Propose New End Date:</label>
+//                 <input type="date" id="newEndDate" name="newEndDate">
+
+//                 <label for="addNewNote">Add Note:</label>
+//                 <textarea id="addNewNote" name="note" rows="4" placeholder="Enter any additional notes"></textarea>
+
+//                 <button id="submit-quote-rsp-btn">Submit Response</button>
+//             </div>
+//         `;
+
+//         document.querySelector('#update-quote').insertAdjacentHTML('beforeend', formHtml);
+
+//         document.querySelector('#submit-quote-rsp-btn').onclick = function () {
+//             const proposedPrice = document.getElementById('newPrice').value || selectQuote.dataset.proposedPrice;
+//             console.log("Proposed Price:", proposedPrice);
+//             const startDate = document.getElementById('newStartDate').value || selectQuote.dataset.startDate;
+//             console.log("Start Date:", startDate);
+//             const endDate = document.getElementById('newEndDate').value || selectQuote.dataset.endDate;
+//             console.log("End Date:", endDate);
+//             const addNote = document.getElementById('addNewNote').value || "";
+//             console.log("Additional Note:", addNote);
+
+//             console.log(`${clientID} is submitting response for quoteID: ${quoteID},responseID: ${responseID} New Price: ${proposedPrice},
+//                 New Start Date: ${startDate},  New End Date: ${endDate}, Note: ${addNote}`);
+
+//             fetch(`http://localhost:5050/Client/QuoteHistory/Response/${responseID}`, {
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                 },           
+//                 method: 'POST',
+//                 body: JSON.stringify({ responseID, clientID, quoteID, proposedPrice, startDate, endDate, addNote })
+//             })
+//             .then(response => response.json())
+//             .then(data => {
+//                 alert("Response submitted successfully!");
+//                 console.log(data);
+//                 document.getElementById('responseForm').remove(); // Remove the form after submission
+//                 // Optionally refresh the table
+//             })
+//             .catch(error => console.error("Error submitting response: ", error));
+//         };
+//     //};
+// }
+
+
+/* ------------------- QUOTE RESPONSE-------------------- */
+function quoteResponse() {
+    const respondBtn = document.querySelector('#quote-rspnd-btn');
+    const submitResponseBtn = document.querySelector('#submitResponse');
+    const responseForm = document.getElementById('responseForm');
+
+    // Initially hide the form
+    responseForm.style.display = 'none';
+
+    respondBtn.onclick = function () {
+        const selectedOrder = document.querySelector('input[type="radio"]:checked');
+        if (!selectedOrder) {
+            alert("Please select a quote to respond to.");
+            return;
+        }
+
+        // Fetch dataset properties from the selected radio button
+        const responseID = selectedOrder.value; // Response ID
+        const proposedPrice = selectedOrder.dataset.proposedPrice;
+        const startDate = selectedOrder.dataset.startDate;
+        const endDate = selectedOrder.dataset.endDate;
+        const addNote = selectedOrder.dataset.addNote;
+
+        console.log("Selected Response ID:", responseID);
+        console.log("Proposed Price:", proposedPrice);
+        console.log("Start Date:", startDate);
+        console.log("End Date:", endDate);
+        console.log("Note:", addNote);
+
+        // Show and populate the response form
+        responseForm.style.display = 'block';
+        document.getElementById('newPrice').value = proposedPrice || "";
+        document.getElementById('newStartDate').value = new Date(startDate) || "";
+        document.getElementById('newEndDate').value = new Date(endDate) || "";
+        document.getElementById('addNewNote').value;
+
+        // Attach responseID to the submit button
+        submitResponseBtn.dataset.responseID = responseID;
+    };
+
+    submitResponseBtn.onclick = function () {
+        const responseID = submitResponseBtn.dataset.responseID;
+        const newPrice = document.getElementById('newPrice').value;
+        const newStartDate = document.getElementById('newStartDate').value;
+        const newEndDate = document.getElementById('newEndDate').value;
+        const addNote = document.getElementById('addNewNote').value;
+
+        console.log(`Submitting new response for responseID: ${responseID}`);
+        console.log(`New Price: ${newPrice}, Start Date: ${newStartDate}, End Date: ${newEndDate}, Note: ${addNote}`);
+
+        fetch(`http://localhost:5050/Client/QuoteHistory/Response/${responseID}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                proposedPrice: newPrice,
+                startDate: newStartDate,
+                endDate: newEndDate,
+                addNote,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                alert("Response submitted successfully!");
+                console.log(data);
+
+                responseForm.reset();
+                responseForm.style.display = 'none';
+            })
+            .catch((error) => console.error("Error submitting response:", error));
+    };
+}
+
+
+/* ------------------- QUOTE ACCEPT-------------------- */
+function quoteAccept() {
+    const acceptBtn = document.querySelector('#quote-accept-btn');
+    acceptBtn.onclick = function () {
+        const selectedOrder = document.querySelector('input[type="radio"]:checked');
+        if (!selectedOrder) {
+            alert("Please select a quote to accept.");
+            return;
+        }
+
+        const responseID = selectedOrder.value; // Get the selected responseID
+        console.log(`Accepting quote with responseID: ${responseID}`);
+
+        fetch(`http://localhost:5050/Client/QuoteHistory/Accept/${responseID}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'PUT',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert("Quote accepted successfully!");
+            console.log(data);
+            window.location.reload()
+        })
+        .catch(error => console.error("Error accepting quote: ", error));
+    };
+}
+
+
+
+
+
+
+
+/* ------------------- INVOICE RESPONSE-------------------- */
+function invoiceResponse() {
+    const billingBtn = document.querySelector('#invoice-rspnd-btn');
+    const submitBillingResponseBtn = document.querySelector('#submitBillingResponse');
+    const billingForm = document.getElementById('billing-Form');
+    // let rspnsID;
+    // Initially hide the form
+    billingForm.style.display = 'none';
+
+    billingBtn.onclick = function () {
+        const selectedOrder = document.querySelector('input[type="radio"]:checked');
+        if (!selectedOrder) {
+            alert("Please select a quote to respond to.");
+            return;
+        }
+
+        // Fetch dataset properties from the selected radio button
+        const invoiceID = selectedOrder.value; // Response ID
+        // const rspnsID = selectedOrder.dataset.responseID;
+        const amountDue = selectedOrder.dataset.amountDue;
+        const responseNote = selectedOrder.dataset.responseNote;
+
+        console.log("Selected quote ID:", invoiceID);
+        // console.log("Selected response ID:", rspnsID);
+        console.log("Amount Due:", amountDue);
+        console.log("Note:", responseNote);
+
+        // Show and populate the response form
+        billingForm.style.display = 'block';
+        document.getElementById('amountDue').value = amountDue || "";
+        document.getElementById('addNewNote').value;
+
+        // Attach invoiceID to the submit button
+        submitBillingResponseBtn.dataset.invoiceID = invoiceID;
+    };
+
+    submitBillingResponseBtn.onclick = function () {
+        const invoiceID = submitBillingResponseBtn.dataset.invoiceID;
+        // const responseID = rspnsID;
+        const amountDue = document.getElementById('amountDue').value;
+        const responseNote = document.getElementById('addNewNote').value;
+
+        console.log(`Submitting new response for responseID: ${invoiceID}`);
+        console.log(`New Price: ${amountDue}, Note: ${responseNote}`);
+
+        fetch(`http://localhost:5050/Client/Invoices/Response/${invoiceID}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                // responseID,
+                amountDue,
+                responseNote,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                alert("Response submitted successfully!");
+                console.log(data);
+
+                billingForm.reset();
+                billingForm.style.display = 'none';
+            })
+            .catch((error) => console.error("Error submitting response:", error));
+    };
+}
+
+
+/* ------------------- INVOICE RESPONSE-------------------- */
+function invoiceAccept() {
+    const acceptBtn = document.querySelector('#invoice-accept-btn');
+    acceptBtn.onclick = function () {
+        const selectedOrder = document.querySelector('input[type="radio"]:checked');
+        if (!selectedOrder) {
+            alert("Please select a quote to accept.");
+            return;
+        }
+
+        const responseID = selectedOrder.value; // Get the selected responseID
+        console.log(`Accepting quote with responseID: ${responseID}`);
+
+        fetch(`http://localhost:5050/Client/Invoices/Accept/${responseID}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'PUT',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert("Quote accepted successfully!");
+            console.log(data);
+            window.location.reload()
+        })
+        .catch(error => console.error("Error accepting quote: ", error));
+    };
+}
+
+
+
+
+function loadClientHTMLTable(data) {
+    console.debug("loadHTMLTable called.");
+    const clientID = data[0]?.clientID || activeClient;
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#clientInfoTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record or active client variable
+    if (caption) {
+        caption.textContent = `Registration Information for ` + clientID;
+    } 
+    else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Registration Information for ` + clientID;
+        document.querySelector('table').prepend(newCaption);
+    }
+
+    let tableHtml = "";
+    data.forEach(function ({ clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, 
+        creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime, activeStatus
+    }) {
+        tableHtml += "<tr>";
+        tableHtml += `<td>${clientID}</td>`;
+        tableHtml += `<td>${email}</td>`;
+        tableHtml += `<td>${password}</td>`;
+        tableHtml += `<td>${firstName}</td>`;
+        tableHtml += `<td>${lastName}</td>`;
+        tableHtml += `<td>${phoneNumber || '--'}</td>`;
+        tableHtml += `<td>${creditCardNum || '--'}</td>`;
+        tableHtml += `<td>${creditCardCVV || '--'}</td>`;
+        tableHtml += `<td>${creditCardExp || '--'}</td>`;
+        tableHtml += `<td>${homeAddress}</td>`;
+        tableHtml += `<td>${new Date(registerDate).toISOString().split('T')[0]}</td>`;
+        tableHtml += `<td>${loginTime ? new Date(loginTime).toLocaleString() : '--'}</td>`;
+        tableHtml += `<td>${activeStatus}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+function loadQuoteHistoryTable(data) {
+    const clientID = data[0]?.clientID || activeClient;
+    console.log("loadQuoteHistoryTable called for ", clientID);
+
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#quoteHistoryTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record or active client variable
+    if (caption) {
+        caption.textContent = `Quote History for ` + clientID;
+    } 
+    else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Quote History for ` + clientID;
+        document.querySelector('table').prepend(newCaption);
+    }
+    
+    let tableHtml = "";
+    //data.forEach(({ responseID, clientID, quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote, responseDate, status, image1, image2, image3, image4, image5 }) => {
+    data.forEach(({ responseID, quoteID, propertyAddress, drivewaySqft, proposedPrice, startDate, endDate, addNote, responseDate, status, isMostRecentPending }) => {
+        tableHtml += "<tr>";
+        tableHtml +=`<td>${isMostRecentPending ? `<input type="radio" name="selectedOrder" value="${responseID}" 
+                        data-proposed-price="${proposedPrice}" 
+                        data-start-date="${startDate}" 
+                        data-end-date="${endDate}" 
+                        data-add-note="${addNote}" />` : ""}</td>`;
+        tableHtml += `<td>${responseID}</td>`;
+        tableHtml += `<td>${quoteID}</td>`;
+        tableHtml += `<td>${propertyAddress}</td>`;
+        tableHtml += `<td>${drivewaySqft}</td>`;
+        tableHtml += `<td>$${proposedPrice}</td>`;
+        tableHtml += `<td>${startDate ? new Date(startDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml += `<td>${endDate ? new Date(endDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml += `<td>${addNote}</td>`;
+        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml += `<td>${status}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+// For each function that loads the client data into a table
+function loadWorkOrderHistoryTable(data){
+    const clientID = data[0]?.clientID || activeClient;
+    console.log("clientindex.js: loadWorkOrderHistory called for ", clientID);
+
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#workOrderHistoryTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record or active client variable
+    if (caption) {
+        caption.textContent = `Work Order History for ` + clientID;
+    } 
+    else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Work Order History for ` + clientID;
+        document.querySelector('table').prepend(newCaption);
+    }
+
+    let tableHtml = "";
+    data.forEach(function ({ workOrderID, quoteID, clientID, propertyAddress, dateRange, price, status }){
+        tableHtml += "<tr>";
+        tableHtml +=`<td>${workOrderID}</td>`;
+        tableHtml +=`<td>${quoteID}</td>`;
+        tableHtml +=`<td>${clientID}</td>`;
+        tableHtml +=`<td>${propertyAddress}</td>`;
+        tableHtml +=`<td>${dateRange}</td>`;
+        tableHtml +=`<td>$${price}</td>`;
+        tableHtml +=`<td>${status}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+
+
+loadInvoiceTable = function(data){
+    const clientID = data[0]?.clientID || activeClient;
+    console.log("clientindex.js: loadInvoiceTable called for ", clientID);
+    console.log("Client ID:", clientID);
+
+    const table = document.querySelector('table tbody');
+    let caption = document.querySelector('#invoiceTable caption'); // Locate the caption
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td colspan='13'>No data available</td></tr>";
+        return;
+    }
+
+    // Set the table caption to the clientID from the first record or active client variable
+    if (caption) {
+        caption.textContent = `Invoice History for ${clientID}`;
+    } 
+    else {
+        const newCaption = document.createElement('caption');
+        newCaption.textContent = `Invoice History for ${clientID}`;
+        document.querySelector('table').prepend(newCaption);
+    }    
+
+    let tableHtml = "";
+    // workOrderID, clientID
+    data.forEach(function ({ status, invoiceID, isMostRecentPaid, responseID, workOrderID, amountDue, propertyAddress, dateCreated, responseNote, responseDate, datePaid }){
+        tableHtml += "<tr>";
+        tableHtml +=`<td>${isMostRecentPaid ? `<input type="radio" name="selectedOrder" value="${invoiceID}" 
+            data-responseID="${responseID}" 
+            data-amount-due="${amountDue}" 
+            data-add-note="${responseNote}" />` : ""}</td>`;
+        tableHtml +=`<td>${status}</td>`;
+        tableHtml +=`<td>${invoiceID}</td>`;
+        tableHtml +=`<td>${responseID || '--'}</td>`;
+        tableHtml +=`<td>${workOrderID}</td>`;
+        tableHtml +=`<td>$${amountDue}</td>`;
+        tableHtml +=`<td>${propertyAddress}</td>`;
+        tableHtml += `<td>${dateCreated ? new Date(dateCreated).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml +=`<td>${responseNote || '--'}</td>`;
+        tableHtml += `<td>${responseDate ? new Date(responseDate).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml +=`<td>${datePaid ? new Date(datePaid).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : "--"}</td>`;
+        tableHtml += "</tr>";
+    });
+
+    table.innerHTML = tableHtml;
+}
+
+// insert into your_table (c1, c2, ...)
+// select c1, c2, ...
+// from your_table
+// where id = 1
+
+
+
+// function handleResponse() {
+//     const selectedOrders = document.querySelectorAll('input[type="radio"]:checked');
+//     if (selectedOrders.length === 0) {
+//         alert("Please select at least one pending order to respond to.");
+//         return;
+//     }
+
+//     selectedOrders.forEach(selectedOrder => {
+//         const responseID = selectedOrder.value;
+//         console.log(`Responding to quote with responseID: ${responseID}`);
+//         // Add logic for response submission (e.g., show a form or make an API call)
+//     });
+// }
+
+// function handleResponse() {
+//     const selectedRow = document.querySelector('input[type="radio"]:checked'); // Get selected row
+//     if (!selectedRow) {
+//         alert("Please select a quote to respond to.");
+//         return;
+//     }
+
+//     const responseID = selectedRow.value; // Get the selected responseID
+//     console.log(`Responding to quote with responseID: ${responseID}`);
+
+//     // Show form for new price, date, and note
+//     showResponseForm(responseID);
+// }
+
+// function handleAccept() {
+//     const selectedOrders = document.querySelectorAll('input[type="radio"]:checked');
+//     if (selectedOrders.length === 0) {
+//         alert("Please select at least one pending order to accept.");
+//         return;
+//     }
+
+//     selectedOrders.forEach(selectedOrder => {
+//         const responseID = selectedOrder.value;
+//         console.log(`Accepting quote with responseID: ${responseID}`);
+//         // Add logic for acceptance (e.g., make an API call)
+//     });
+// }
+
+
+// function showResponseForm(responseID) {
+//     // Create a modal or form dynamically
+//     const formHtml = `
+//         <div id="responseFormModal" class="modal">
+//             <div class="modal-content">
+//                 <span class="close-btn" onclick="closeModal()">&times;</span>
+//                 <h2>Respond to Quote</h2>
+//                 <form id="responseForm">
+//                     <label for="newPrice">Propose New Price:</label>
+//                     <input type="number" id="newPrice" name="newPrice" step="0.01" placeholder="Enter new price" required>
+
+//                     <label for="newDate">Propose New Date:</label>
+//                     <input type="date" id="newDate" name="newDate" required>
+
+//                     <label for="note">Add Note:</label>
+//                     <textarea id="note" name="note" rows="4" placeholder="Enter any additional notes"></textarea>
+
+//                     <button type="submit">Submit Response</button>
+//                 </form>
+//             </div>
+//         </div>
+//     `;
+
+//     // Append the form to the body
+//     document.body.insertAdjacentHTML('beforeend', formHtml);
+
+//     // Add submit event listener to the form
+//     document.getElementById('responseForm').addEventListener('submit', function (event) {
+//         event.preventDefault();
+//         const newPrice = document.getElementById('newPrice').value;
+//         const newDate = document.getElementById('newDate').value;
+//         const note = document.getElementById('note').value;
+
+//         console.log(`Response submitted for responseID: ${responseID}`);
+//         console.log(`New Price: ${newPrice}, New Date: ${newDate}, Note: ${note}`);
+
+//         // Send the response data to the server
+//         sendResponse(responseID, newPrice, newDate, note);
+
+//         // Close the modal
+//         closeModal();
+//     });
+// }
+
+// function closeModal() {
+//     const modal = document.getElementById('responseFormModal');
+//     if (modal) modal.remove();
+// }
+
+
+
+// function loadClientDetails(data) {
+//     const clientID = data[0]?.clientID || activeClient;
+//     console.log("clientindex.js: loadClientDetails called for ", clientID);
+//     const table = document.querySelector('table tbody');
+
+//     if (data.length === 0) {
+//         table.innerHTML = "<tr><td class='no-data' colspan='20'>No Data</td></tr>";
+//         return;
+//     }
+
+//     let tableHtml = "";
+//     data.forEach(function ({
+//         clientID, email, firstName, lastName, phoneNumber, homeAddress, registerDate, loginTime, activeStatus,
+//         quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote,
+//         image1, image2, image3, image4, image5,
+//         responseID, responsePrice, startDate, endDate, responseNote, quoteStatus, responseDate,
+//         workOrderID, workDateRange, workStatus,
+//         invoiceID, amountDue, invoiceDateCreated, invoiceDatePaid,
+//         invoiceResponseNote, invoiceResponseDate
+//     }) {
+//         tableHtml += "<tr>";
+//         tableHtml += `<td>${clientID}</td>`;
+//         tableHtml += `<td>${email}</td>`;
+//         tableHtml += `<td>${firstName}</td>`;
+//         tableHtml += `<td>${lastName}</td>`;
+//         tableHtml += `<td>${phoneNumber}</td>`;
+//         tableHtml += `<td>${homeAddress}</td>`;
+//         tableHtml += `<td>${registerDate}</td>`;
+//         tableHtml += `<td>${loginTime}</td>`;
+//         tableHtml += `<td>${activeStatus}</td>`;
+//         tableHtml += `<td>${quoteID ?? '--'}</td>`;
+//         tableHtml += `<td>${propertyAddress ?? '--'}</td>`;
+//         tableHtml += `<td>${drivewaySqft ?? '--'}</td>`;
+//         tableHtml += `<td>${requestedPrice ?? '--'}</td>`;
+//         tableHtml += `<td>${clientNote ?? '--'}</td>`;
+//         tableHtml += `<td>${image1 ?? '--'}</td>`;
+//         tableHtml += `<td>${image2 ?? '--'}</td>`;
+//         tableHtml += `<td>${image3 ?? '--'}</td>`;
+//         tableHtml += `<td>${image4 ?? '--'}</td>`;
+//         tableHtml += `<td>${image5 ?? '--'}</td>`;
+//         tableHtml += `<td>${responseID ?? '--'}</td>`;
+//         tableHtml += `<td>${responsePrice ?? '--'}</td>`;
+//         tableHtml += `<td>${startDate ?? '--'}</td>`;
+//         tableHtml += `<td>${endDate ?? '--'}</td>`;
+//         tableHtml += `<td>${responseNote ?? '--'}</td>`;
+//         tableHtml += `<td>${quoteStatus ?? '--'}</td>`;
+//         tableHtml += `<td>${responseDate ?? '--'}</td>`;
+//         tableHtml += `<td>${workOrderID ?? '--'}</td>`;
+//         tableHtml += `<td>${workDateRange ?? '--'}</td>`;
+//         tableHtml += `<td>${workStatus ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceID ?? '--'}</td>`;
+//         tableHtml += `<td>${amountDue ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceDateCreated ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceDatePaid ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceResponseNote ?? '--'}</td>`;
+//         tableHtml += `<td>${invoiceResponseDate ?? '--'}</td>`;
+//         tableHtml += "</tr>";
+//     });
+
+//     table.innerHTML = tableHtml;
+// }
+
+
+
 // function submitNewQuoteRequest(event) {
 //     // Prevent the default form submission behavior
 //     event.preventDefault();
@@ -343,242 +952,3 @@ function submitNewQuoteRequest(event) {
 //     .then(data => loadHTMLTable(data['data']));
 //     console.log("Search button clicked for first name");
 // }
-
-
-
-
-
-function setQuoteHistoryPage(event) {
-    event.preventDefault();
-    const target = event.target;
-
-    if (document.querySelector("#quote-history-page") === target) {
-        getQuoteHistory(event);
-    }
-}
-
-function getQuoteHistory(event) {
-    event.preventDefault();
-    console.log("Fetching quote history for client:", activeClient);
-    fetch(`http://localhost:5050/Client/QuoteHistory?clientID=${activeClient}`)
-        .then((response) => response.json())
-        .then((data) => {
-            console.log("Quote History Data:", data);
-            loadQuoteHistoryTable(data.data); // Populate the table
-        })
-        .catch((error) => console.error("Error fetching quote history:", error));
-}
-
-
-// function getQuoteHistory() {
-//     signInForm.onclick = function (event) {
-//         event.preventDefault(); // Prevent default form submission
-
-//         const clientID = document.getElementById("clientID-input").value;
-//         const password = document.getElementById("password-input").value;
-
-//         console.log("clientID:", clientID); // debugging
-//         console.log("password:", password); // debugging
-
-//         // Send the login data to the server
-//         fetch('http://localhost:5050/login', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({ clientID, password }),
-//         })
-//         .then(response => response.json())
-//         .then(data => {
-//             if (data.success) {
-//                 alert('Login successful');
-//                 const newUrl = new URL(window.location.href);
-//                 newUrl.pathname = '/Client/ClientDashboard.html';
-//                 newUrl.protocol = 'http:';
-//                 window.location.href = newUrl.toString(); // Redirect after successful login
-//                 } else {
-//                 alert(data.error); // Show error message from the server
-//             }
-//         })
-//         .catch(error => {
-//             console.error('Error:', error);
-//             alert('An error occurred during login. Please try again.');
-//         });
-//     }
-// }
-
-function handleNewQuoteTab() {
-    console.log("New Quote tab clicked");
-    // Add your New Quote tab-specific functionality here
-    submitNewQuote();
-}
-
-function handleOrdersTab(event) {
-    console.log("Orders tab clicked");
-    // Add your Orders tab-specific functionality here
-}
-
-function handleBillsTab(event) {
-    console.log("Bills tab clicked");
-    // Add your Bills tab-specific functionality here
-}
-
-
-
-
-function loadClientHTMLTable(data) {
-    console.debug("loadHTMLTable called.");
-
-    const table = document.querySelector('table tbody');
-
-    if (!data || data.length === 0) {
-        table.innerHTML = "<tr><td class='no-data' colspan='12'>No Data</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(function ({ clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, 
-        creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime, activeStatus
-    }) {
-        tableHtml += "<tr>";
-        tableHtml += `<td>${clientID}</td>`;
-        tableHtml += `<td>${email}</td>`;
-        tableHtml += `<td>${password}</td>`;
-        tableHtml += `<td>${firstName}</td>`;
-        tableHtml += `<td>${lastName}</td>`;
-        tableHtml += `<td>${phoneNumber || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardNum || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardCVV || 'N/A'}</td>`;
-        tableHtml += `<td>${creditCardExp || 'N/A'}</td>`;
-        tableHtml += `<td>${homeAddress}</td>`;
-        tableHtml += `<td>${new Date(registerDate).toISOString().split('T')[0]}</td>`;
-        tableHtml += `<td>${loginTime ? new Date(loginTime).toLocaleString() : 'N/A'}</td>`;
-        tableHtml += `<td>${activeStatus}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}
-
-function loadQuoteHistoryTable(data) {
-    const table = document.querySelector("#quoteHistoryTable tbody");
-
-    if (!data || data.length === 0) {
-        table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(({ responseDate, responseID, quoteID, clientID, propertyAddress, drivewaySqft, requestedPrice, clientNote, image1, image2, image3, image4, image5 }) => {
-        tableHtml += `
-            <tr>
-                <td>${responseDate}</td>
-                <td>${responseID}</td>
-                <td>${quoteID}</td>
-                <td>${clientID}</td>
-                <td>${propertyAddress}</td>
-                <td>${drivewaySqft}</td>
-                <td>${requestedPrice}</td>
-                <td>${clientNote}</td>
-                <td><img src="${image1}" alt="Image 1" width="50"></td>
-                <td><img src="${image2}" alt="Image 2" width="50"></td>
-                <td><img src="${image3}" alt="Image 3" width="50"></td>
-                <td><img src="${image4}" alt="Image 4" width="50"></td>
-                <td><img src="${image5}" alt="Image 5" width="50"></td>
-            </tr>
-        `;
-    });
-
-    table.innerHTML = tableHtml;
-}
-
-
-
-// For each function that loads the client data into a table
-function loadWorkOrderHistory(data){
-    debug("userindex.js: loadHTMLTable called.");
-
-    const table = document.querySelector('table tbody'); 
-    
-    if(data.length === 0){
-        table.innerHTML = "<tr><td class='no-data' colspan='10'>No Data</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(function ({workOrderID, clientID, quoteID, responseID, dateRange, status}){
-        tableHtml += "<tr>";
-        tableHtml +=`<td>${workOrderID}</td>`;
-        tableHtml +=`<td>${clientID}</td>`;
-        tableHtml +=`<td>${quoteID}</td>`;
-        tableHtml +=`<td>${responseID}</td>`;
-        tableHtml +=`<td>${dateRange}</td>`;
-        tableHtml +=`<td>${status}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}
-
-
-function loadClientDetails(data) {
-    console.debug("userindex.js: loadClientDetails called.");
-
-    const table = document.querySelector('table tbody');
-
-    if (data.length === 0) {
-        table.innerHTML = "<tr><td class='no-data' colspan='20'>No Data</td></tr>";
-        return;
-    }
-
-    let tableHtml = "";
-    data.forEach(function ({
-        clientID, email, firstName, lastName, phoneNumber, homeAddress, registerDate, loginTime, activeStatus,
-        quoteID, propertyAddress, drivewaySqft, requestedPrice, clientNote,
-        image1, image2, image3, image4, image5,
-        responseID, responsePrice, startDate, endDate, responseNote, quoteStatus, responseDate,
-        workOrderID, workDateRange, workStatus,
-        invoiceID, amountDue, invoiceDateCreated, invoiceDatePaid,
-        invoiceResponseNote, invoiceResponseDate
-    }) {
-        tableHtml += "<tr>";
-        tableHtml += `<td>${clientID}</td>`;
-        tableHtml += `<td>${email}</td>`;
-        tableHtml += `<td>${firstName}</td>`;
-        tableHtml += `<td>${lastName}</td>`;
-        tableHtml += `<td>${phoneNumber}</td>`;
-        tableHtml += `<td>${homeAddress}</td>`;
-        tableHtml += `<td>${registerDate}</td>`;
-        tableHtml += `<td>${loginTime}</td>`;
-        tableHtml += `<td>${activeStatus}</td>`;
-        tableHtml += `<td>${quoteID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${propertyAddress ?? 'N/A'}</td>`;
-        tableHtml += `<td>${drivewaySqft ?? 'N/A'}</td>`;
-        tableHtml += `<td>${requestedPrice ?? 'N/A'}</td>`;
-        tableHtml += `<td>${clientNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image1 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image2 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image3 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image4 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${image5 ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responsePrice ?? 'N/A'}</td>`;
-        tableHtml += `<td>${startDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${endDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${quoteStatus ?? 'N/A'}</td>`;
-        tableHtml += `<td>${responseDate ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workOrderID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workDateRange ?? 'N/A'}</td>`;
-        tableHtml += `<td>${workStatus ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceID ?? 'N/A'}</td>`;
-        tableHtml += `<td>${amountDue ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceDateCreated ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceDatePaid ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceResponseNote ?? 'N/A'}</td>`;
-        tableHtml += `<td>${invoiceResponseDate ?? 'N/A'}</td>`;
-        tableHtml += "</tr>";
-    });
-
-    table.innerHTML = tableHtml;
-}

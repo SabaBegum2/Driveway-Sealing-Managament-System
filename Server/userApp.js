@@ -28,6 +28,19 @@ const fileUpload = require('express-fileupload');
 app.use(fileUpload());
 
 
+// multer = require('multer');
+
+//Function to serve static files from the uploads folder
+// app.use('/uploads', (req, res, next) => {
+//     const path = require('path'); // Import locally
+//     const baseFolder = 'Driveway-Sealing-Management-System';
+//     const projectBasePath = path.join(__dirname.split(baseFolder)[0], baseFolder);
+//     const uploadsPath = path.join(projectBasePath, 'Server/uploads');
+
+//     express.static(uploadsPath)(req, res, next); // Serve static files
+// });
+
+
 
 /* REGISTER NEW CLIENT */
 app.post('/register', async(request, response) => {
@@ -35,9 +48,9 @@ app.post('/register', async(request, response) => {
     try {
         const {clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress} = request.body;
 
-        // Check for missing fields
+        // Check for missing fields during page switches
         if (!clientID || !email || !password || !firstName || !lastName || !phoneNumber || !homeAddress) {
-            return response.status(400).json({ message: "All required fields must be filled." });
+            return response.status(400).json({ message: "Error obtaining some fields." });
         }
 
         const db = userDbService.getUserDbServiceInstance();
@@ -51,6 +64,7 @@ app.post('/register', async(request, response) => {
         response.status(500).json({ error: "An error occurred while registering user." });
     }
 });
+
 
 /* NEW LOGIN */
 app.post('/login', async (request, response) => {
@@ -83,7 +97,7 @@ app.post('/login', async (request, response) => {
 });
 
 
-// read 
+/* GET ALL CLIENTID INFO */
 app.get('/ClientDB/:clientID', (request, response) => {
     const { clientID } = request.params;
     console.log(clientID);  // Debugging
@@ -97,6 +111,7 @@ app.get('/ClientDB/:clientID', (request, response) => {
 });
 
 
+/* UPDATE CLIENT ACTIVE STATUS TO OFFLINE */
 app.post('/logout/:clientID', async (request, response) => {
     const{ clientID, activeStatus } = request.body;
     console.log("Logging ", clientID, " out of app...");
@@ -113,8 +128,8 @@ app.post('/logout/:clientID', async (request, response) => {
 });
 
 
-const path = require('path'); // For handling file paths
-
+/* CREATE NEW QUOTE REQUEST */
+const imagePath = require('path'); // For handling file paths
 app.post('/newQuoteRequest', async (req, res) => {
     console.log("Received new quote request:", req.body);
 
@@ -152,10 +167,15 @@ app.post('/newQuoteRequest', async (req, res) => {
         res.status(500).json({ error: "An error occurred while processing the quote request." });
     }
 });
-
-// Helper function to save uploaded files
 function saveFile(file) {
-    const uploadPath = path.join(__dirname, 'uploads', file.name);
+    //const path = require('path'); // Import locally within the function
+    const baseFolder = 'Driveway-Sealing-Management-System';
+
+    // Construct the relative path dynamically
+    const projectBasePath = imagePath.join(__dirname.split(baseFolder)[0], baseFolder);
+    console.log("Project base path:", projectBasePath);
+    const uploadPath = imagePath.join(projectBasePath, 'Server/uploads', file.name);
+    console.log("Upload path:", uploadPath);
 
     try {
         file.mv(uploadPath, (err) => {
@@ -164,7 +184,8 @@ function saveFile(file) {
                 throw new Error("Failed to save file");
             }
         });
-        return uploadPath; // Return the saved file path for database storage
+        // Return a relative URL for database storage
+        return `/uploads/${file.name}`;
     } catch (error) {
         console.error("Failed to save file:", error);
         throw error;
@@ -172,6 +193,24 @@ function saveFile(file) {
 }
 
 
+
+// // Helper function to save uploaded files
+// function saveFile(file) {
+//     const uploadPath = path.join(__dirname, 'uploads', file.name);
+
+//     try {
+//         file.mv(uploadPath, (err) => {
+//             if (err) {
+//                 console.error("Error saving file:", err);
+//                 throw new Error("Failed to save file");
+//             }
+//         });
+//         return uploadPath; // Return the saved file path for database storage
+//     } catch (error) {
+//         console.error("Failed to save file:", error);
+//         throw error;
+//     }
+// }
 
 
 
@@ -188,65 +227,125 @@ function saveFile(file) {
 // });
 
 
-
-// Read all client data
-app.get('/Cient/QuoteHistory', async (request, response) => {
-    console.log("Getting quote history for client...");
-
-    const { clientID } = request.query; 
-    const db = userDbService.getUserDbServiceInstance();
-    
-    const result = await db.getQuoteHistoryTable(clientID); // call a DB function
-
-    result
-    .then(data => response.json({ data: data }))
-    .catch(err => console.log(err));
-});
-
-
-app.get('/getWorkOrderHistory', async (request, response) => {
-    if (!request.session || !request.session.loggedIn) {
-        return response.status(401).json({ error: 'Unauthorized. Please log in.' });
-    }
+/* GET CLIENT QUOTE HISTORY */
+app.get('/Client/QuoteHistory/:clientID', async (request, response) => {
+    const { clientID } = request.params;
+    console.log("Getting quote history for ", clientID ,"...");
 
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const clientID = request.session.clientID;
+        const data = await db.getQuoteHistoryTable(clientID); // Fetch quote history
+        response.json({ data: data }); // Return the fetched data
+    } catch (err) {
+        console.error('Error in userApp fetching quote history: ', err);
+        response.status(500).json({ error: "Failed to fetch quote history." });
+    }
+    
+});
 
-        // Query the database for the client's order history
-        const workOrderHistory = await db.getWorkOrderHistory(clientID);
 
-        response.json({ success: true,  workOrderHistory});
+/* QUOTE RESPONSE */
+app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) => {
+    const { responseID } = request.params;
+    const { proposedPrice, startDate, endDate, addNote } = request.body;
+
+    console.log(`Inserting new response for: ${responseID}`); //quoteID: ${quoteID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.insertQuoteResponse(responseID, proposedPrice, startDate, endDate, addNote);
+        response.json({ success: true, message: "Response inserted successfully." });
     } catch (err) {
         console.error(err);
+        response.status(500).json({ error: "Failed to insert quote response." });
+    }
+});
+
+
+/* QUOTE ACCEPTED */
+app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => {
+    const { responseID } = request.params;
+
+    console.log(`Accepting quote with responseID: ${responseID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.acceptQuoteResonse(responseID);
+        response.json({ success: true, message: "Quote accepted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to accept quote." });
+    }
+});
+
+
+/* GET CLIENT WORK ORDER HISTORY */
+app.get('/Client/WorkOrderHistory/:clientID', async (request, response) => {
+    const { clientID } = request.params;
+    console.log("Getting work order history for ", clientID ,"...");
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const data = await db.getWorkOrderHistory(clientID);
+        response.json({ data: data});
+    } catch (err) {
+        console.error('Error in userApp fetching work order history: ', err);
         response.status(500).json({ error: 'Failed to retrieve quote history in app.' });
     }
 });
 
-/* LOGOUT ROUTE */
-// app.post('/logout', async (request, response) => {
-//     console.log("Logging out...");
 
-//     const db = userDbService.getUserDbServiceInstance();
+app.get('/Client/Invoices/:clientID', async (request, response) => {
+    const { clientID } = request.params;
+    const db = userDbService.getUserDbServiceInstance();
 
-//     try {
-//         const clientID = request.session.clientID;
-//         await db.logoutClient(clientID);
+    try {
+        const data = await db.getInvoiceHistory(clientID);
+        response.json({ data: data});
+    } catch (err) {
+        console.error('Error in userApp fetching invoice history: ', err);
+        response.status(500).json({ error: 'Failed to retrieve invoice history in app.' });
+    }
+});
 
-//         request.session.destroy(err => {
-//             if (err) {
-//                 return response.status(500).json({ error: "Failed to log out." });
-//             }
 
-//             response.clearCookie('connect.sid'); // Clear the session cookie
-//             response.json({ success: true });
-//         });
-//     } catch (err) {
-//         console.error(err);
-//         response.status(500).json({ error: "An error occurred while logging out." });
-//     }
-// });
+/* INVOICE RESPONSE */
+app.post('/Client/Invoices/Response/:invoiceID', async (request, response) => {
+    const { invoiceID } = request.params;
+    const { responseID, amountDue, responseNote } = request.body;
+
+    console.log(`Inserting new response for: ${invoiceID}`);
+    // console.log(`response ID: ${responseID}`);
+    console.log(`Amount Due: ${amountDue}`);
+    console.log(`Response Note: ${responseNote}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
+        response.json({ success: true, message: "Response inserted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to insert quote response." });
+    }
+});
+
+
+/* INVOICE ACCEPTED AND PAID */
+app.put('/Client/Invoices/Accept/:invoiceID', async (request, response) => {
+    const { invoiceID } = request.params;
+
+    console.log(`Accepting quote with responseID: ${invoiceID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.acceptInvoiceResonse(invoiceID);
+        response.json({ success: true, message: "Quote accepted successfully." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to accept quote." });
+    }
+});
 
 
 

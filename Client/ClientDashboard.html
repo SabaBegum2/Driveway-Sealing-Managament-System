@@ -6,15 +6,15 @@
     <link rel="stylesheet" href="clientstylesheet.css">
     <title>Client Dashboard</title>
 </head>
-<body data-page="ClientHomePage">
+<body data-page="ClientDashboardPage">
 <!-- <body> -->
     <div class ="side-bar">
         <nav class="client-nav">
             <ul class="nav-bar">
-                <li class="active"><a href="ClientDashboard.html" >Home</a></li>
-                <li><a href="ClientQuoteHistory.html">Quotes</a></li>
-                <li><a href="ClientOrders.html">Orders</a></li>
-                <li><a href="ClientBills.html">Bills</a></li>
+                <li class="active"><a href="ClientDashboard.html" id="Client-Dashboard-Page">Home</a></li>
+                <li><a href="ClientQuoteHistory.html" id="Quote-History-Page">Quotes</a></li>
+                <li><a href="ClientOrders.html" id="Work-Order-History-Page">Orders</a></li>
+                <li><a href="ClientBills.html" id="Bills-Page">Bills</a></li>
             </ul>
             <ul class="nav-bar-bottom">
                 <li><button id="logout-btn">Sign Out</button></li>
@@ -33,8 +33,9 @@
                     <button id="new-quote-page"><a href="ClientNewQuote.html">Request New Quote</a></button>
                 </form>
 
-                <h2>Client's Information:</h2>
-                <table id="clientInfo">
+                <!-- <h2>Client's Information:</h2> -->
+                <table id="clientInfoTable">
+                    <caption>Registration Information for </caption>
                     <thead>
                         <tr>
                             <th>Client ID</th>
