@@ -21,6 +21,7 @@ const connection = mysql.createConnection({
    port: process.env.DB_PORT
 });
 
+
 // if you configure directly in this file, there is a security issue, but it will work
 // const connection = mysql.createConnection({
 //    host:"localhost",
@@ -43,6 +44,23 @@ class userDbService {
    static getUserDbServiceInstance() {
       return instance ? instance : new userDbService();
    }
+
+//    execute(sql, params = []) {
+//       if (!this.pool) {
+//           console.error('Database connection pool not initialized.');
+//           throw new Error('Database connection pool not initialized.');
+//       }
+
+//       return new Promise((resolve, reject) => {
+//           this.pool.query(sql, params, (error, results) => {
+//               if (error) {
+//                   return reject(error);
+//               }
+//               resolve(results);
+//           });
+//       });
+//   }
+  
 
    async getAllClientData(clientID) {
       try {
@@ -457,6 +475,336 @@ class userDbService {
       }
    }
 
+
+   //david
+   async getAllQuotes() {
+      try {
+          const response = await new Promise((resolve, reject) => {
+              const query = `
+                  SELECT 
+                      QR.quoteID,
+                      QR.clientID,
+                      QR.propertyAddress,
+                      QR.drivewaySqft,
+                      QR.proposedPrice,
+                      QR.addNote,
+                      QRI.image1,
+                      QRI.image2,
+                      QRI.image3,
+                      QRI.image4,
+                      QRI.image5
+                  FROM 
+                      QuoteRequest QR
+                  LEFT JOIN 
+                      QuoteRequestImage QRI
+                  ON 
+                      QR.quoteID = QRI.quoteID;
+              `;
+              connection.query(query, (err, results) => {
+                  if (err) reject(err);
+                  else resolve(results);
+              });
+          });
+          return response;
+      } catch (err) {
+          console.error('Error in getAllQuotes:', err);
+          throw err;
+      }
+  }
+
+  async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
+               VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
+           `;
+           connection.query(query, [clientID, quoteID, proposedPrice, startDate, endDate, addNote], (err, result) => {
+               if (err) reject(err);
+               else resolve(result.insertId); // Get the responseID
+           });
+       });
+       return response; // Return the responseID
+   } catch (err) {
+       console.error("Error in acceptQuote:", err);
+       throw err;
+   }
+}
+
+async getAcceptedQuotes() {
+   try {
+       const quotes = await new Promise((resolve, reject) => {
+           const query = `
+               SELECT qr.quoteID, qr.clientID, qr.propertyAddress, qr.drivewaySqft, qr.proposedPrice AS originalProposedPrice,
+                      qh.startDate, qh.endDate, qh.addNote, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5
+               FROM QuoteHistory qh
+               JOIN QuoteRequest qr ON qh.quoteID = qr.quoteID
+               LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+               WHERE qh.status = 'Accepted'
+           `;
+           connection.query(query, (err, results) => {
+               if (err) reject(err);
+               else resolve(results);
+           });
+       });
+       return quotes;
+   } catch (err) {
+       console.error("Error in getAcceptedQuotes:", err);
+       throw err;
+   }
+}
+
+
+
+
+async rejectQuote(clientID, quoteID, addNote) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               UPDATE QuoteHistory
+               SET status = 'Rejected', addNote = ?, responseDate = NOW()
+               WHERE quoteID = ? AND clientID = ?;
+           `;
+           connection.query(query, [addNote, quoteID, clientID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+       return response;
+   } catch (error) {
+       console.error("Error rejecting quote:", error.message);
+       throw error;
+   }
+}
+
+async getQuoteDetails(quoteID) {
+   return new Promise((resolve, reject) => {
+       const query = `
+           SELECT qr.*, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5
+           FROM QuoteRequest qr
+           LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+           WHERE qr.quoteID = ?;
+       `;
+       connection.query(query, [quoteID], (err, results) => {
+           if (err) reject(err);
+           else resolve(results[0]); // Return the first result
+       });
+   });
+}
+
+
+
+
+
+
+async createWorkOrder(clientID, quoteID, responseID, dateRange) {
+   try {
+       await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+               VALUES (?, ?, ?, ?)
+           `;
+           connection.query(query, [clientID, quoteID, responseID, dateRange], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+   } catch (err) {
+       console.error("Error in createWorkOrder:", err);
+       throw err;
+   }
+}
+
+
+
+
+
+
+
+
+
+
+async checkWorkOrder(workOrderID) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = "SELECT 1 FROM WorkOrder WHERE workOrderID = ? LIMIT 1";
+           connection.query(query, [workOrderID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result.length > 0);
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in checkWorkOrder:", err.message);
+       throw err;
+   }
+}
+async checkClient(clientID) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = "SELECT 1 FROM ClientDB WHERE clientID = ? LIMIT 1";
+           connection.query(query, [clientID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result.length > 0);
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in checkClient:", err.message);
+       throw err;
+   }
+}
+
+//david generating invoice for client
+async generateInvoice(workOrderID, clientID, amountDue, discount) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+               VALUES (?, ?, ?, NOW())
+           `;
+           const finalAmount = amountDue - discount; // Calculate final amount
+           console.log("Executing Query:", query);
+           console.log("With Values:", [workOrderID, clientID, finalAmount]);
+
+           connection.query(query, [workOrderID, clientID, finalAmount], (err, result) => {
+               if (err) {
+                   console.error("Database Error:", err.message); // Log database error
+                   reject(err);
+               } else {
+                   console.log("Query Successful:", result); // Log successful query
+                   resolve(result);
+               }
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in generateInvoice:", err.message);
+       throw err;
+   }
+}
+
+//david seeing all the invoice response 
+async getAllInvoiceResponses() {
+    try {
+      const response = await new Promise((resolve, reject) => {
+          const query = `
+             SELECT ir.responseID, ir.invoiceID, ir.responseNote, ir.responseDate, i.clientID, i.amountDue, qh.quoteID, qh.status
+                FROM InvoiceResponses ir
+                JOIN Invoice i ON ir.invoiceID = i.invoiceID
+                JOIN QuoteHistory qh ON i.workOrderID = qh.quoteID
+            `;
+          connection.query(query, (err, results) => {
+              if (err) reject(err);
+              else resolve(results);
+          });
+      });
+      return response;
+  } catch (err) {
+      console.error("Error in getAllInvoiceResponses:", err.message);
+      throw err;
+  }
+}
+
+//for david to respond to the invoices
+async updateInvoiceResponseStatus(responseID, status, note = null) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = note
+               ? `UPDATE InvoiceResponses SET responseNote = ?, responseDate = NOW() WHERE responseID = ?`
+               : `UPDATE InvoiceResponses SET responseDate = NOW() WHERE responseID = ?`;
+
+           const params = note ? [note, responseID] : [responseID];
+
+           connection.query(query, params, (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+       return response;
+   } catch (error) {
+       console.error("Error updating InvoiceResponses:", error.message);
+       throw error;
+   }
+}
+async updateQuoteHistoryStatus(quoteID, clientID, status, note) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               UPDATE QuoteHistory
+               SET status = ?, responseDate = NOW(), addNote = ?
+               WHERE quoteID = ? AND clientID = ?
+           `;
+
+           connection.query(query, [status, note, quoteID, clientID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+       return response;
+   } catch (error) {
+       console.error("Error updating QuoteHistory:", error.message);
+       throw error;
+   }
+}
+
+
+async getAllWorkOrders() {
+   return new Promise((resolve, reject) => {
+       const query = `
+           SELECT wo.workOrderID, wo.clientID, wo.quoteID, wo.responseID, wo.dateRange, wo.status,
+                  inv.dateCreated, inv.datePaid
+           FROM WorkOrder wo
+           LEFT JOIN Invoice inv ON wo.workOrderID = inv.workOrderID;
+       `;
+       connection.query(query, (err, results) => {
+           if (err) reject(err);
+           else resolve(results);
+       });
+   });
+}
+
+async completeWorkOrder(workOrderID) {
+   return new Promise((resolve, reject) => {
+       const query = `
+           UPDATE WorkOrder
+           SET status = 'Completed'
+           WHERE workOrderID = ?;
+       `;
+       connection.query(query, [workOrderID], (err, result) => {
+           if (err) reject(err);
+           else resolve(result);
+       });
+   });
+}
+
+
+// async updateInvoiceResponse(responseID, note) {
+//    try {
+//        const response = await new Promise((resolve, reject) => {
+//            const query = `
+//                UPDATE InvoiceResponses 
+//                SET responseNote = ?, responseDate = NOW() 
+//                WHERE responseID = ?
+//            `;
+//            connection.query(query, [note, responseID], (err, result) => {
+//                if (err) reject(err);
+//                else resolve(result);
+//            });
+//        });
+//        return response;
+//    } catch (err) {
+//        console.error("Error in updateInvoiceResponse:", err.message);
+//        throw err;
+//    }
+// }
+
+
+
+
+
+
+
    // // Search ClientDB by first name
    // async searchByFirstName(firstName) {
    //    try {
@@ -627,6 +975,7 @@ class userDbService {
    //       console.log(error);
    //    }
    // }
+   
 }
 
 module.exports = userDbService;

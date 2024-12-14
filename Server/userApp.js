@@ -21,6 +21,18 @@ const fileUpload = require('express-fileupload');
 // Enable file upload middleware
 app.use(fileUpload());
 
+app.use((req, res, next) => {
+    res.setHeader("Content-Type", "application/json");
+    next();
+});
+
+
+
+app.use(cors({
+    origin: "http://127.0.0.1:5500", // Allow requests from your frontend
+    credentials: true, // Include credentials if needed
+}));
+
 
 /* REGISTER NEW CLIENT */
 app.post('/register', async(request, response) => {
@@ -477,6 +489,273 @@ app.get('/search/RegisteredToday', async (request, response) => {
         response.status(500).json({ error: "An error occurred while searching ClientDB." });
     }
 });
+
+/////////////////////// David Dashboard ////////////////////////////
+
+//works
+app.get('/quotes', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+
+    db.getAllQuotes()
+        .then((data) => res.json(data))
+        .catch((err) => {
+            console.error('Error fetching quotes:', err.message);
+            res.status(500).json({ error: 'Database query failed', details: err.message });
+        });
+});
+
+
+app.post("/quotes/accept", async (req, res) => {
+    const { clientID, quoteID, proposedPrice, startDate, endDate, addNote } = req.body;
+
+    if (!clientID || !quoteID || !proposedPrice || !startDate || !endDate || !addNote) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        // 1. Insert into QuoteHistory and get responseID
+        const db = userDbService.getUserDbServiceInstance();
+        const responseID = await db.acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote);
+
+        // 2. Format date range for WorkOrder
+        const dateRange = `${startDate} to ${endDate}`;
+
+        // 3. Insert into WorkOrder table
+        await db.createWorkOrder(clientID, quoteID, responseID, dateRange);
+
+        // Fetch original quote details
+        const originalQuote = await db.getQuoteDetails(quoteID);
+
+        res.json({
+            message: "Quote accepted successfully and WorkOrder created.",
+            clientID: originalQuote.clientID,
+            propertyAddress: originalQuote.propertyAddress,
+            drivewaySqft: originalQuote.drivewaySqft,
+            originalProposedPrice: originalQuote.proposedPrice,
+            originalNote: originalQuote.addNote,
+        });
+    } catch (err) {
+        console.error("Error in /quotes/accept:", err.message);
+        res.status(500).json({ error: "Failed to accept quote and create WorkOrder." });
+    }
+});
+
+
+
+
+
+
+// Reject a Quote
+app.post("/quotes/reject", async (req, res) => {
+    const { clientID, quoteID, addNote } = req.body;
+
+    if (!clientID || !quoteID || !addNote) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        await db.rejectQuote(clientID, quoteID, addNote);
+        res.json({ message: "Quote rejected successfully" });
+    } catch (err) {
+        console.error("Error rejecting quote:", err.message);
+        res.status(500).json({ error: "Failed to reject quote" });
+    }
+});
+
+
+
+app.get("/invoices/generate", async (req, res) => {
+    const { workOrderID, clientID, amountDue, discount = 0 } = req.query;
+
+    if (!workOrderID || !clientID || !amountDue) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+
+        // Check if workOrderID and clientID exist
+        const isValidWorkOrder = await db.checkWorkOrder(workOrderID);
+        const isValidClient = await db.checkClient(clientID);
+
+        if (!isValidWorkOrder || !isValidClient) {
+            return res.status(400).json({ error: "Invalid workOrderID or clientID" });
+        }
+
+        // Generate the invoice
+        const result = await db.generateInvoice(workOrderID, clientID, amountDue, discount);
+
+        res.json({
+            message: "Invoice generated successfully",
+            invoiceID: result.insertId,
+        });
+    } catch (err) {
+        console.error("Error generating invoice:", err.message);
+        res.status(500).json({ error: "Failed to generate invoice", details: err.message });
+    }
+});
+
+//responses from clients on quotes
+app.get("/invoiceresponses", async (req, res) => {
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        const responses = await db.getAllInvoiceResponses();
+        res.json(responses);
+    } catch (error) {
+        console.error("Error fetching invoice responses:", error.message);
+        res.status(500).json({ error: "Failed to fetch invoice responses" });
+    }
+});
+
+
+//options for david to respond to the invoices
+app.post("/invoiceresponses/respond", async (req, res) => {
+    console.log("Request Body:", req.body);
+
+    const { responseID, action, note, quoteID, clientID } = req.body;
+
+    if (!responseID || !action || !quoteID || !clientID) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+
+        if (action === "accept") {
+            // Update InvoiceResponses
+            await db.updateInvoiceResponseStatus(responseID, "Accepted");
+            // Update QuoteHistory
+            await db.updateQuoteHistoryStatus(quoteID, clientID, "Accepted", "Invoice Accepted");
+
+            return res.json({ message: "Invoice accepted and QuoteHistory updated." });
+        }
+
+        if (action === "reject") {
+            if (!note) {
+                return res.status(400).json({ error: "Note is required for rejection." });
+            }
+            // Update InvoiceResponses
+            await db.updateInvoiceResponseStatus(responseID, "Rejected", note);
+            // Update QuoteHistory
+            await db.updateQuoteHistoryStatus(quoteID, clientID, "Rejected", note);
+
+            return res.json({ message: "Invoice rejected and QuoteHistory updated." });
+        }
+
+        if (action === "suggest") {
+            return res.json({ message: "Please create a new invoice for the suggested price." });
+        }
+
+        return res.status(400).json({ error: "Invalid action." });
+    } catch (error) {
+        console.error("Error responding to invoice:", error.message);
+        res.status(500).json({ error: "Failed to process invoice response." });
+    }
+});
+
+app.get("/workorders", async (req, res) => {
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        const workOrders = await db.getAllWorkOrders();
+        res.json({ workOrders });
+    } catch (err) {
+        console.error("Error fetching work orders:", err.message);
+        res.status(500).json({ error: "Failed to fetch work orders." });
+    }
+});
+
+app.post("/workorders/complete", async (req, res) => {
+    const { workOrderID } = req.body;
+
+    if (!workOrderID) {
+        return res.status(400).json({ error: "Missing workOrderID." });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        await db.completeWorkOrder(workOrderID);
+        res.json({ message: "Work order marked as completed." });
+    } catch (err) {
+        console.error("Error marking work order as completed:", err.message);
+        res.status(500).json({ error: "Failed to complete work order." });
+    }
+});
+
+// app.get('/getRevenueReport', async (req, res) => {
+//     console.log('Route /getRevenueReport hit');
+//     let db;
+
+//     try {
+//         db = userDbService.getUserDbServiceInstance();
+//         console.log('Database service initialized');
+//     } catch (error) {
+//         console.error('Failed to initialize database service:', error.message);
+//         return res.status(500).json({ error: 'Database service initialization failed' });
+//     }
+
+//     const { startDate, endDate } = req.query;
+//     console.log('Query parameters:', { startDate, endDate });
+
+//     if (!startDate || !endDate) {
+//         console.log('Invalid query parameters');
+//         return res.status(400).json({ error: "Start date and end date are required." });
+//     }
+
+//     const query = `
+//         SELECT COALESCE(SUM(I.amountDue), 0) AS totalRevenue
+//         FROM Invoice I
+//         INNER JOIN WorkOrder W ON I.workOrderID = W.workOrderID
+//         WHERE W.status = 'Completed'
+//           AND I.datePaid IS NOT NULL
+//           AND I.datePaid BETWEEN ? AND ?;
+//     `;
+
+//     try {
+//         console.log('Executing query:', query);
+//         const results = await db.execute(query, [startDate, endDate]);
+//         console.log('Query results:', results);
+//         res.json({ totalRevenue: results[0]?.totalRevenue || 0 });
+//     } catch (error) {
+//         console.error('Database query failed:', error.message);
+//         res.status(500).json({ error: "Database query failed: " + error.message });
+//     }
+// });
+
+// app.get('/getRevenueReport', async (req, res) => {
+//     console.log('Route /getRevenueReport hit');
+//     const db = UserDbService.getUserDbServiceInstance();
+//     const { startDate, endDate } = req.query;
+
+//     console.log('Query parameters:', { startDate, endDate });
+
+//     if (!startDate || !endDate) {
+//         console.log('Invalid query parameters');
+//         return res.status(400).json({ error: "Start date and end date are required." });
+//     }
+
+//     const query = `
+//         SELECT COALESCE(SUM(I.amountDue), 0) AS totalRevenue
+//         FROM Invoice I
+//         INNER JOIN WorkOrder W ON I.workOrderID = W.workOrderID
+//         WHERE W.status = 'Completed'
+//           AND I.datePaid IS NOT NULL
+//           AND I.datePaid BETWEEN ? AND ?;
+//     `;
+
+//     try {
+//         console.log('Executing query:', query);
+//         const results = await db.execute(query, [startDate, endDate]);
+//         console.log('Query results:', results);
+//         res.json({ totalRevenue: results[0].totalRevenue });
+//     } catch (error) {
+//         console.error('Database query failed:', error.message);
+//         res.status(500).json({ error: "Database query failed: " + error.message });
+//     }
+// });
+
+
+/////////////////////// David Dashboard ////////////////////////////
 
 
 
