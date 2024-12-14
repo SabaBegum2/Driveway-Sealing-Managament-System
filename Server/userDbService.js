@@ -21,6 +21,7 @@ const connection = mysql.createConnection({
    port: process.env.DB_PORT
 });
 
+
 // if you configure directly in this file, there is a security issue, but it will work
 // const connection = mysql.createConnection({
 //    host:"localhost",
@@ -43,6 +44,23 @@ class userDbService {
    static getUserDbServiceInstance() {
       return instance ? instance : new userDbService();
    }
+
+//    execute(sql, params = []) {
+//       if (!this.pool) {
+//           console.error('Database connection pool not initialized.');
+//           throw new Error('Database connection pool not initialized.');
+//       }
+
+//       return new Promise((resolve, reject) => {
+//           this.pool.query(sql, params, (error, results) => {
+//               if (error) {
+//                   return reject(error);
+//               }
+//               resolve(results);
+//           });
+//       });
+//   }
+  
 
    async getAllClientData(clientID) {
       try {
@@ -495,26 +513,45 @@ class userDbService {
   }
 
   async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote) {
-   return new Promise((resolve, reject) => {
-       const query = `
-           UPDATE QuoteHistory
-           SET status = 'Accepted',
-               proposedPrice = ?,
-               startDate = ?,
-               endDate = ?,
-               addNote = ?,
-               responseDate = NOW()
-           WHERE clientID = ? AND quoteID = ?;
-       `;
-       connection.query(
-           query,
-           [proposedPrice, startDate, endDate, addNote, clientID, quoteID],
-           (err, result) => {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
+               VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
+           `;
+           connection.query(query, [clientID, quoteID, proposedPrice, startDate, endDate, addNote], (err, result) => {
                if (err) reject(err);
-               else resolve(result);
-           }
-       );
-   });
+               else resolve(result.insertId); // Get the responseID
+           });
+       });
+       return response; // Return the responseID
+   } catch (err) {
+       console.error("Error in acceptQuote:", err);
+       throw err;
+   }
+}
+
+async getAcceptedQuotes() {
+   try {
+       const quotes = await new Promise((resolve, reject) => {
+           const query = `
+               SELECT qr.quoteID, qr.clientID, qr.propertyAddress, qr.drivewaySqft, qr.proposedPrice AS originalProposedPrice,
+                      qh.startDate, qh.endDate, qh.addNote, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5
+               FROM QuoteHistory qh
+               JOIN QuoteRequest qr ON qh.quoteID = qr.quoteID
+               LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+               WHERE qh.status = 'Accepted'
+           `;
+           connection.query(query, (err, results) => {
+               if (err) reject(err);
+               else resolve(results);
+           });
+       });
+       return quotes;
+   } catch (err) {
+       console.error("Error in getAcceptedQuotes:", err);
+       throw err;
+   }
 }
 
 
@@ -560,24 +597,24 @@ async getQuoteDetails(quoteID) {
 
 
 
-async createWorkOrder(clientID, quoteID, dateRange) {
+async createWorkOrder(clientID, quoteID, responseID, dateRange) {
    try {
-       const response = await new Promise((resolve, reject) => {
+       await new Promise((resolve, reject) => {
            const query = `
-               INSERT INTO WorkOrder (clientID, quoteID, dateRange, status)
-               VALUES (?, ?, ?, 'Scheduled');
+               INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+               VALUES (?, ?, ?, ?)
            `;
-           connection.query(query, [clientID, quoteID, dateRange], (err, result) => {
+           connection.query(query, [clientID, quoteID, responseID, dateRange], (err, result) => {
                if (err) reject(err);
                else resolve(result);
            });
        });
-       return response;
-   } catch (error) {
-       console.error("Error creating work order:", error.message);
-       throw error;
+   } catch (err) {
+       console.error("Error in createWorkOrder:", err);
+       throw err;
    }
 }
+
 
 
 
@@ -712,6 +749,34 @@ async updateQuoteHistoryStatus(quoteID, clientID, status, note) {
 }
 
 
+async getAllWorkOrders() {
+   return new Promise((resolve, reject) => {
+       const query = `
+           SELECT wo.workOrderID, wo.clientID, wo.quoteID, wo.responseID, wo.dateRange, wo.status,
+                  inv.dateCreated, inv.datePaid
+           FROM WorkOrder wo
+           LEFT JOIN Invoice inv ON wo.workOrderID = inv.workOrderID;
+       `;
+       connection.query(query, (err, results) => {
+           if (err) reject(err);
+           else resolve(results);
+       });
+   });
+}
+
+async completeWorkOrder(workOrderID) {
+   return new Promise((resolve, reject) => {
+       const query = `
+           UPDATE WorkOrder
+           SET status = 'Completed'
+           WHERE workOrderID = ?;
+       `;
+       connection.query(query, [workOrderID], (err, result) => {
+           if (err) reject(err);
+           else resolve(result);
+       });
+   });
+}
 
 
 // async updateInvoiceResponse(responseID, note) {
@@ -910,6 +975,7 @@ async updateQuoteHistoryStatus(quoteID, clientID, status, note) {
    //       console.log(error);
    //    }
    // }
+   
 }
 
 module.exports = userDbService;

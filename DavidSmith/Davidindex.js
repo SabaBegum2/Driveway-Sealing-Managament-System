@@ -47,6 +47,15 @@
     
     ////////works 
     // Fetch and display quotes
+    document.addEventListener("DOMContentLoaded", () => {
+        // Load quotes once the DOM is fully loaded
+        loadQuotes();
+        loadWorkOrders();
+        respondWithCounter();
+        rejectRequest();
+    });
+    
+    // Function to load quotes
     function loadQuotes() {
         fetch("http://localhost:5050/quotes")
             .then((response) => response.json())
@@ -56,7 +65,7 @@
                     console.error('Element with id "quote-list" not found.');
                     return;
                 }
-
+    
                 quotes.forEach((quote) => {
                     const listItem = document.createElement("li");
                     listItem.innerHTML = `
@@ -84,222 +93,101 @@
                             </div>
                         </div>
                     `;
-
-
-
-
-
                     quoteList.appendChild(listItem);
                 });
-            })
-            .catch((error) => console.error("Error fetching quotes:", error));
+                const acceptedQuotes = data.accepted;
+            acceptedQuotes.forEach((quote) => {
+                const listItem = document.createElement("li");
+                listItem.innerHTML = `
+                    <div class="quote-accepted-box" id="quote-${quote.quoteID}">
+                        <p style="color: green; font-weight: bold;">Quote Accepted</p>
+                        <p><strong>Timeline:</strong> ${quote.startDate} to ${quote.endDate}</p>
+                        <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
+                        <p><strong>Note:</strong> ${quote.addNote || "No notes"}</p>
+                        <p><strong>Client Name:</strong> ${quote.clientID}</p>
+                        <p><strong>Address:</strong> ${quote.propertyAddress}</p>
+                        <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
+                        <p><strong>Original Proposed Price:</strong> $${quote.originalProposedPrice}</p>
+                        <p><strong>Original Note:</strong> ${quote.addNote || "No notes"}</p>
+                    </div>
+                `;
+                quoteList.appendChild(listItem);
+            });
+        })
+        .catch((error) => console.error("Error fetching quotes:", error));
     }
-
-    // Call both functions to fetch and display data
-    //fetchWorkOrders();
-    loadQuotes();
-
-
-
-// //new function
-// function respondWithCounter(quoteID) {
-//     const clientID = ...; // Get client ID from the quote
-//     const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
-//     const startDate = document.getElementById(`start-date-${quoteID}`).value;
-//     const endDate = document.getElementById(`end-date-${quoteID}`).value;
-//     const addNote = document.getElementById(`accept-note-${quoteID}`).value;
-
-//     if (!counterPrice || !startDate || !endDate || !addNote) {
-//         alert('Please fill out all fields to accept the quote.');
-//         return;
-//     }
-
-//     fetch('/quotes/accept', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ clientID, quoteID, proposedPrice: counterPrice, startDate, endDate, addNote }),
-//     })
-//         .then((response) => response.json())
-//         .then((data) => {
-//             alert(data.message);
-//             // Optionally refresh the quotes list
-//         })
-//         .catch((error) => console.error('Error accepting quote:', error));
-// }
-
-// function rejectRequest(quoteID, clientID) {
-//     const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
-
-//     if (!addNote) {
-//         alert('Please enter a rejection note.');
-//         return;
-//     }
-
-//     fetch('/quotes/reject', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ clientID, quoteID, addNote }),
-//     })
-//         .then((response) => response.json())
-//         .then((data) => {
-//             alert(data.message);
-//             // Optionally refresh the quotes list
-//         })
-//         .catch((error) => console.error('Error rejecting quote:', error));
-// }
-
-
-
-
-// // Load quotes on page load
-// document.addEventListener('DOMContentLoaded', loadQuotes);
-// function respondWithCounter(quoteID) {
-//     console.log('respondWithCounter called for Quote ID:', quoteID);
-
-//     const counterPrice = document.getElementById(`counter-price-${quoteID}`).value;
-//     const startDate = document.getElementById(`start-date-${quoteID}`).value;
-//     const endDate = document.getElementById(`end-date-${quoteID}`).value;
-//     const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
-
-//     if (!counterPrice || !startDate || !endDate) {
-//         alert('Please provide all details for the counter proposal.');
-//         return;
-//     }
-
-//     // Send counter proposal to the server
-//     fetch(`http://127.0.0.1:5050/quotes/counter/${quoteID}`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ counterPrice, startDate, endDate, addNote, clientID}),
-//     })
-//         .then(response => {
-//             if (!response.ok) {
-//                 throw new Error(`HTTP error! status: ${response.status}`);
-//             }
-//             return response.json();
-//         })
-//         .then(data => alert(data.message))
-//         .catch(error => console.error('Error:', error));
     
-// }
-
-
-// function rejectRequest(quoteID, clientID) {
-//     const rejectionNote = document.getElementById(`rejection-note-${quoteID}`).value;
-
-//     if (!rejectionNote) {
-//         alert('Please provide a rejection note.');
-//         return;
-//     }
-
-//     console.log(`Rejection Note: ${rejectionNote}`);
-//     console.log(`Quote ID: ${quoteID}`);
-//     console.log(`Client ID: ${clientID}`);
-
-//     fetch(`/quotes/reject/${quoteID}`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ rejectionNote, clientID }),
-//     })
-//         .then((response) => {
-//             if (!response.ok) {
-//                 throw new Error(`HTTP error! status: ${response.status}`);
-//             }
-//             return response.json();
-//         })
-//         .then((data) => {
-//             console.log('Server response:', data);
-//             alert(data.message);
-//         })
-//         .catch((error) => {
-//             console.error('Error:', error);
-//             alert(`An error occurred: ${error.message}`);
-//         });
-// }
-
-//Respond with Counter Proposal
-// Accept a Quote
-function respondWithCounter(quoteID) {
-    const proposedPrice = document.getElementById(`counter-price-${quoteID}`).value;
-    const startDate = document.getElementById(`start-date-${quoteID}`).value;
-    const endDate = document.getElementById(`end-date-${quoteID}`).value;
-    const addNote = document.getElementById(`accept-note-${quoteID}`).value;
-
-    if (!proposedPrice || !startDate || !endDate || !addNote) {
-        alert("Please fill out all fields to accept the quote.");
-        return;
-    }
-
-    // Modify UI directly
-    const quoteDiv = document.getElementById(`quote-${quoteID}`);
-    quoteDiv.innerHTML = `
-        <p style="color: green; font-weight: bold;">Quote Accepted</p>
-        <p><strong>Timeline:</strong> ${startDate} to ${endDate}</p>
-        <p><strong>Proposed Price:</strong> $${proposedPrice}</p>
-        <p><strong>Note:</strong> ${addNote}</p>
-        <hr>
-        <p><strong>Client Name:</strong> John Doe</p>
-        <p><strong>Address:</strong> 123 Main St, City</p>
-        <p><strong>Square Feet:</strong> 500</p>
-        <p><strong>Original Proposed Price:</strong> $1500</p>
-        <p><strong>Original Note:</strong> Need new driveway asphalt.</p>
-        <div>
-            <img src="image1.jpg" alt="Driveway Image 1" style="width: 200px;">
-            <img src="image2.jpg" alt="Driveway Image 2" style="width: 200px;">
-            <img src="image3.jpg" alt="Driveway Image 3" style="width: 200px;">
-            <img src="image4.jpg" alt="Driveway Image 4" style="width: 200px;">
-            <img src="image5.jpg" alt="Driveway Image 5" style="width: 200px;">
-        </div>
-    `;
-}
-
-
-
-
-
-
-
-
-// Reject a Quote
-function rejectRequest(quoteID, clientID) {
-    const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
-
-    if (!addNote) {
-        alert("Please enter a rejection note.");
-        return;
-    }
-
-    fetch("http://localhost:5050/quotes/reject", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientID, quoteID, addNote }),
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
-            }
-            return response.json();
+    // Function to handle accepting a quote
+    function respondWithCounter(quoteID, clientID) {
+        const proposedPrice = document.getElementById(`counter-price-${quoteID}`).value;
+        const startDate = document.getElementById(`start-date-${quoteID}`).value;
+        const endDate = document.getElementById(`end-date-${quoteID}`).value;
+        const addNote = document.getElementById(`accept-note-${quoteID}`).value;
+    
+        if (!proposedPrice || !startDate || !endDate || !addNote) {
+            alert("Please fill out all fields to accept the quote.");
+            return;
+        }
+    
+        fetch("http://localhost:5050/quotes/accept", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientID, quoteID, proposedPrice, startDate, endDate, addNote }),
         })
-        .then((data) => {
-            alert(data.message);
-
-            // Remove the quote from the UI
-            const quoteDiv = document.getElementById(`quote-${quoteID}`);
-            quoteDiv.remove();
+            .then((response) => response.json())
+            .then((data) => {
+                alert(data.message);
+    
+                const quoteDiv = document.getElementById(`quote-${quoteID}`);
+                quoteDiv.innerHTML = `
+                    <div class="quote-accepted-box">
+                        <p style="color: green; font-weight: bold;">Quote Accepted</p>
+                        <p><strong>Timeline:</strong> ${startDate} to ${endDate}</p>
+                        <p><strong>Proposed Price:</strong> $${proposedPrice}</p>
+                        <p><strong>Note:</strong> ${addNote}</p>
+                        <p><strong>Client Name:</strong> ${data.clientID}</p>
+                        <p><strong>Address:</strong> ${data.propertyAddress}</p>
+                        <p><strong>Square Feet:</strong> ${data.drivewaySqft}</p>
+                        <p><strong>Original Proposed Price:</strong> $${data.originalProposedPrice}</p>
+                        <p><strong>Original Note:</strong> ${data.originalNote || "No notes"}</p>
+                    </div>
+                `;
+            })
+            .catch((error) => console.error("Error accepting quote:", error));
+    }
+    
+    // Function to handle rejecting a quote
+    function rejectRequest(quoteID, clientID) {
+        const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
+    
+        if (!addNote) {
+            alert("Please enter a rejection note.");
+            return;
+        }
+    
+        fetch("http://localhost:5050/quotes/reject", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientID, quoteID, addNote }),
         })
-        .catch((error) => {
-            console.error("Error rejecting quote:", error);
-            alert("Failed to reject the quote.");
-        });
-}
-
-
-
-
-
-
-     
-
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                alert(data.message);
+    
+                // Remove the quote from the UI
+                const quoteDiv = document.getElementById(`quote-${quoteID}`);
+                quoteDiv.remove();
+            })
+            .catch((error) => {
+                console.error("Error rejecting quote:", error);
+                alert("Failed to reject the quote.");
+            });
+    }
 
     
 document.getElementById("invoice-form").addEventListener("submit", async (e) => {
@@ -415,6 +303,56 @@ if (row) {
     actionCell.innerHTML = `<span style="color: blue; font-weight: bold;">Create a new invoice for this client.</span>`;
 }
 alert(`Please create a new invoice for Quote ID: ${quoteID} and Client ID: ${clientID}.`);
+}
+
+function loadWorkOrders() {
+    fetch("http://localhost:5050/workorders")
+        .then((response) => response.json())
+        .then(({ workOrders }) => {
+            const workOrderList = document.getElementById("work-order");
+            workOrderList.innerHTML = ""; // Clear the list before rendering
+
+            workOrders.forEach((workOrder) => {
+                const listItem = document.createElement("li");
+
+                listItem.innerHTML = `
+                    <div id="work-order-${workOrder.workOrderID}" class="${workOrders}">
+                        <p><strong>Work Order ID:</strong> ${workOrder.workOrderID}</p>
+                        <p><strong>Client ID:</strong> ${workOrder.clientID}</p>
+                        <p><strong>Date Range:</strong> ${workOrder.dateRange}</p>
+                        <p><strong>Status:</strong> ${workOrder.status}</p>
+                        <p><strong>Date Created:</strong> ${new Date(workOrder.dateCreated).toLocaleString()}</p>
+                        <p><strong>Date Paid:</strong> ${
+                            workOrder.datePaid
+                                ? new Date(workOrder.datePaid).toLocaleString()
+                                : "Not Paid"
+                        }</p>
+                        ${
+                            workOrder.status === "Scheduled"
+                                ? `<button onclick="markWorkOrderComplete(${workOrder.workOrderID})">Complete</button>`
+                                : "<p style='color: green; font-weight: bold;'>Completed</p>"
+                        }
+                    </div>
+                `;
+
+                workOrderList.appendChild(listItem);
+            });
+        })
+        .catch((error) => console.error("Error fetching work orders:", error));
+}
+
+function markWorkOrderComplete(workOrderID) {
+    fetch("http://localhost:5050/workorders/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workOrderID }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            alert(data.message);
+            loadWorkOrders(); // Reload the work orders to update the UI
+        })
+        .catch((error) => console.error("Error completing work order:", error));
 }
 
     
@@ -568,36 +506,60 @@ function respondToQuote(responseID) {
 // document.addEventListener("DOMContentLoaded", fetchWorkOrders);
 
 //revenue function
-function fetchRevenueReport() {
-    const startDate = document.getElementById("start-date").value;
-    const endDate = document.getElementById("end-date").value;
+// function fetchRevenueReport() {
+//     const startDate = document.getElementById("start-date").value;
+//     const endDate = document.getElementById("end-date").value;
 
-    if (!startDate || !endDate) {
-        alert("Please select both start and end dates.");
-        return;
-    }
-    const url = `http://localhost:5050/revenue?startDate=${startDate}&endDate=${endDate}`;
-    console.log("Fetching URL:", url);
-    fetch(url)
-    .then(response => {
-        console.log("Fetch response:", response);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("Fetched data:", data);
-        const revenueResult = document.getElementById("revenue-result");
-        revenueResult.innerHTML = `
-            <h2>Revenue Report</h2>
-            <p><strong>Total Revenue:</strong> $${data.totalRevenue.toFixed(2)}</p>
-            <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
-        `;
-    })
-    .catch(error => {
-        console.error("Error fetching revenue report:", error);
-        alert(`Failed to fetch revenue report: ${error.message}`);
-    });
+//     if (!startDate || !endDate) {
+//         alert("Please select both start and end dates.");
+//         return;
+//     }
 
-}
+//     const isValidDate = (date) => !isNaN(new Date(date).getTime());
+//     if (!isValidDate(startDate) || !isValidDate(endDate)) {
+//         alert("Please enter valid dates.");
+//         return;
+//     }
+
+//     const url = `http://localhost:5050/revenue?startDate=${startDate}&endDate=${endDate}`;
+//     console.log("Fetching URL:", url);
+
+//     const revenueResult = document.getElementById("revenue-result");
+//     if (!revenueResult) {
+//         console.error("Element with ID 'revenue-result' not found.");
+//         return;
+//     }
+
+//     revenueResult.innerHTML = "<p>Loading...</p>";
+
+//     fetch(url)
+//         .then(response => {
+//             console.log("Fetch response:", response);
+//             if (!response.ok) {
+//                 if (response.status === 404) {
+//                     throw new Error("The server endpoint could not be found.");
+//                 } else if (response.status === 500) {
+//                     throw new Error("An error occurred on the server.");
+//                 } else {
+//                     throw new Error(`HTTP error! status: ${response.status}`);
+//                 }
+//             }
+//             return response.json();
+//         })
+//         .then(data => {
+//             console.log("Fetched data:", data);
+
+//             // Update the DOM with the fetched revenue data
+//             revenueResult.innerHTML = `
+//                 <h2>Revenue Report</h2>
+//                 <p><strong>Total Revenue:</strong> $${data.totalRevenue.toFixed(2)}</p>
+//                 <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
+//             `;
+//         })
+//         .catch(error => {
+//             console.error("Error fetching revenue report:", error);
+//             revenueResult.innerHTML = `
+//                 <p style="color: red;">Failed to fetch revenue report: ${error.message}</p>
+//             `;
+//         });
+// }

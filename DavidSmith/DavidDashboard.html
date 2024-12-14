@@ -14,10 +14,11 @@
         <main>
             <div class="toggleTabs">
                 <a class="tabLinks" href="#Home" data-tab="Home">Home</a>
-                <a class="tabLinks" href="#Quotes" data-tab="Quotes">Quotes</a>
+                <a class="tabLinks" href="#ViewQuotes" data-tab="ViewQuotes">Quotes</a>
+                <a class="tabLinks" href="#GenerateInvoice" data-tab="GenerateInvoice">Generate Invoice</a>
+                <a class="tabLinks" href="#invoice-responses" data-tab="invoice-responses">Invoice Responses</a>
                 <a class="tabLinks" href="#WorkOrders" data-tab="WorkOrders">Work Orders</a>
-                <a class="tabLinks" href="#Bills" data-tab="Bills">Bills</a>
-                <a class="tabLinks" href="#ViewQuotes" data-tab="ViewQuotes">View Quotes</a> <!-- New tab for viewing quotes -->
+                <a class="tabLinks" href="#RevenueReport" data-tab="RevenueReport">Revenue Report</a>
             </div>
         
             <!-- Home Tab -->
@@ -39,17 +40,6 @@
                 </div>
             </div>
 
-            
-
-            <!-- Work Orders Tab -->
-            <div id="work-orders">
-                <h1>Manage Work Orders</h1>
-                <p>Check your work orders and their status.</p>
-                <div id="orders-list">
-                    <!-- Work orders will be dynamically added here -->
-                </div>
-            </div>
-            
             
             
             <!-- generating invoices -->
@@ -93,26 +83,15 @@
                 </table>
             </div>
         
-            <!-- Bills Tab -->
-            <div id="Bills" class="DavidContent">
-                <h1>Manage Bills</h1>
-                <p>Check and respond to your bills.</p>
-                <div class="bill-list">
-                    <h3>All Bills</h3>
-                    <ul id="bill-list">
-                        <!-- Dynamically populated by JavaScript -->
-                    </ul>
-                </div>
-            </div>
             
 
             <!-- View Quotes Tab (New) -->
-            <div id="ViewQuotes" class="DavidContent">
-                <h1>All Submitted Quotes</h1>
-                <p>Here are all the quotes submitted to you:</p>
-                <div class="quote-list">
-                    <h3>Quotes</h3>
-                    <ul id="quote-list">
+            <div id="WorkOrders" class="DavidContent">
+                <h1>Work Orders</h1>
+                <p>Here are of of the work orders:</p>
+                <div class="work-order">
+                    <h3>Work Orders</h3>
+                    <ul id="work-order">
                         <!-- Additional quote items will be dynamically generated here -->
                     </ul>
 
