@@ -519,14 +519,35 @@ app.post("/quotes/accept", async (req, res) => {
     }
 
     try {
+        // Update QuoteHistory with accepted status
         const db = userDbService.getUserDbServiceInstance();
         await db.acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote);
-        res.json({ message: "Quote accepted successfully" });
+
+        // Fetch original quote details
+        const originalQuote = await db.getQuoteDetails(quoteID);
+
+        res.json({
+            message: "Quote accepted successfully",
+            clientID: originalQuote.clientID,
+            propertyAddress: originalQuote.propertyAddress,
+            drivewaySqft: originalQuote.drivewaySqft,
+            originalProposedPrice: originalQuote.proposedPrice,
+            originalNote: originalQuote.addNote,
+            image1: originalQuote.image1,
+            image2: originalQuote.image2,
+            image3: originalQuote.image3,
+            image4: originalQuote.image4,
+            image5: originalQuote.image5,
+        });
     } catch (err) {
-        console.error("Error accepting quote:", err.message);
+        console.error("Error in /quotes/accept:", err.message);
         res.status(500).json({ error: "Failed to accept quote" });
     }
 });
+
+
+
+
 
 // Reject a Quote
 app.post("/quotes/reject", async (req, res) => {

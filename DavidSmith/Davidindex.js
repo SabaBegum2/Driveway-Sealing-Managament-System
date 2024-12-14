@@ -60,26 +60,34 @@
                 quotes.forEach((quote) => {
                     const listItem = document.createElement("li");
                     listItem.innerHTML = `
-                    <p><strong>Client Name:</strong> ${quote.clientID}</p>
-                    <p><strong>Address:</strong> ${quote.propertyAddress}</p>
-                    <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
-                    <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
-                    <p><strong>Note:</strong> ${quote.addNote || "No notes"}</p>
-                    <div>
-                        <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
-                        <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
-                    </div>
-                    <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
-                    <input type="date" id="start-date-${quote.quoteID}">
-                    <input type="date" id="end-date-${quote.quoteID}">
-                    <textarea id="accept-note-${quote.quoteID}" placeholder="Enter a Comment"></textarea>
-                    <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
-                    <button onclick="respondWithCounter(${quote.quoteID}, '${quote.clientID}')">Submit Counter Proposal</button>
-                    <button onclick="rejectRequest(${quote.quoteID}, '${quote.clientID}')">Reject Request</button>
-                `;
+                        <div id="quote-${quote.quoteID}">
+                            <p><strong>Client Name:</strong> ${quote.clientID}</p>
+                            <p><strong>Address:</strong> ${quote.propertyAddress}</p>
+                            <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
+                            <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
+                            <p><strong>Note:</strong> ${quote.addNote || "No notes"}</p>
+                            <div>
+                                <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
+                                <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
+                                <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
+                                <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
+                                <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
+                            </div>
+                            <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
+                            <input type="date" id="start-date-${quote.quoteID}">
+                            <input type="date" id="end-date-${quote.quoteID}">
+                            <textarea id="accept-note-${quote.quoteID}" placeholder="Enter Acceptance Note"></textarea>
+                            <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
+                            <div id="quote-buttons-${quote.quoteID}">
+                                <button onclick="respondWithCounter(${quote.quoteID}, '${quote.clientID}')">Accept</button>
+                                <button onclick="rejectRequest(${quote.quoteID}, '${quote.clientID}')">Reject</button>
+                            </div>
+                        </div>
+                    `;
+
+
+
+
 
                     quoteList.appendChild(listItem);
                 });
@@ -211,7 +219,7 @@
 
 //Respond with Counter Proposal
 // Accept a Quote
-function respondWithCounter(quoteID, clientID) {
+function respondWithCounter(quoteID) {
     const proposedPrice = document.getElementById(`counter-price-${quoteID}`).value;
     const startDate = document.getElementById(`start-date-${quoteID}`).value;
     const endDate = document.getElementById(`end-date-${quoteID}`).value;
@@ -222,26 +230,35 @@ function respondWithCounter(quoteID, clientID) {
         return;
     }
 
-    fetch("http://localhost:5050/quotes/accept", { // Corrected URL
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientID, quoteID, proposedPrice, startDate, endDate, addNote }),
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then((data) => {
-            alert(data.message);
-            document.getElementById(`quote-${quoteID}`).style.display = "none"; // Optionally hide the quote
-        })
-        .catch((error) => {
-            console.error("Error accepting quote:", error);
-            alert("Failed to submit the counter proposal.");
-        });
+    // Modify UI directly
+    const quoteDiv = document.getElementById(`quote-${quoteID}`);
+    quoteDiv.innerHTML = `
+        <p style="color: green; font-weight: bold;">Quote Accepted</p>
+        <p><strong>Timeline:</strong> ${startDate} to ${endDate}</p>
+        <p><strong>Proposed Price:</strong> $${proposedPrice}</p>
+        <p><strong>Note:</strong> ${addNote}</p>
+        <hr>
+        <p><strong>Client Name:</strong> John Doe</p>
+        <p><strong>Address:</strong> 123 Main St, City</p>
+        <p><strong>Square Feet:</strong> 500</p>
+        <p><strong>Original Proposed Price:</strong> $1500</p>
+        <p><strong>Original Note:</strong> Need new driveway asphalt.</p>
+        <div>
+            <img src="image1.jpg" alt="Driveway Image 1" style="width: 200px;">
+            <img src="image2.jpg" alt="Driveway Image 2" style="width: 200px;">
+            <img src="image3.jpg" alt="Driveway Image 3" style="width: 200px;">
+            <img src="image4.jpg" alt="Driveway Image 4" style="width: 200px;">
+            <img src="image5.jpg" alt="Driveway Image 5" style="width: 200px;">
+        </div>
+    `;
 }
+
+
+
+
+
+
+
 
 // Reject a Quote
 function rejectRequest(quoteID, clientID) {
@@ -252,7 +269,7 @@ function rejectRequest(quoteID, clientID) {
         return;
     }
 
-    fetch("http://localhost:5050/quotes/reject", { // Corrected URL
+    fetch("http://localhost:5050/quotes/reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientID, quoteID, addNote }),
@@ -265,13 +282,19 @@ function rejectRequest(quoteID, clientID) {
         })
         .then((data) => {
             alert(data.message);
-            document.getElementById(`quote-${quoteID}`).style.display = "none"; // Optionally hide the quote
+
+            // Remove the quote from the UI
+            const quoteDiv = document.getElementById(`quote-${quoteID}`);
+            quoteDiv.remove();
         })
         .catch((error) => {
             console.error("Error rejecting quote:", error);
             alert("Failed to reject the quote.");
         });
 }
+
+
+
 
 
 
@@ -355,7 +378,7 @@ document.addEventListener("DOMContentLoaded", fetchAndRenderResponses);
 
 
 // Call fetchAndRenderResponses on page load
-document.addEventListener("DOMContentLoaded", fetchAndRenderResponses);
+//document.addEventListener("DOMContentLoaded", fetchAndRenderResponses);
 
 
 

@@ -495,24 +495,30 @@ class userDbService {
   }
 
   async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote) {
-   try {
-       const response = await new Promise((resolve, reject) => {
-           const query = `
-               UPDATE QuoteHistory
-               SET status = 'Accepted', proposedPrice = ?, startDate = ?, endDate = ?, addNote = ?, responseDate = NOW()
-               WHERE quoteID = ? AND clientID = ?;
-           `;
-           connection.query(query, [proposedPrice, startDate, endDate, addNote, quoteID, clientID], (err, result) => {
+   return new Promise((resolve, reject) => {
+       const query = `
+           UPDATE QuoteHistory
+           SET status = 'Accepted',
+               proposedPrice = ?,
+               startDate = ?,
+               endDate = ?,
+               addNote = ?,
+               responseDate = NOW()
+           WHERE clientID = ? AND quoteID = ?;
+       `;
+       connection.query(
+           query,
+           [proposedPrice, startDate, endDate, addNote, clientID, quoteID],
+           (err, result) => {
                if (err) reject(err);
                else resolve(result);
-           });
-       });
-       return response;
-   } catch (error) {
-       console.error("Error accepting quote:", error.message);
-       throw error;
-   }
+           }
+       );
+   });
 }
+
+
+
 
 async rejectQuote(clientID, quoteID, addNote) {
    try {
@@ -533,6 +539,46 @@ async rejectQuote(clientID, quoteID, addNote) {
        throw error;
    }
 }
+
+async getQuoteDetails(quoteID) {
+   return new Promise((resolve, reject) => {
+       const query = `
+           SELECT qr.*, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5
+           FROM QuoteRequest qr
+           LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+           WHERE qr.quoteID = ?;
+       `;
+       connection.query(query, [quoteID], (err, results) => {
+           if (err) reject(err);
+           else resolve(results[0]); // Return the first result
+       });
+   });
+}
+
+
+
+
+
+
+async createWorkOrder(clientID, quoteID, dateRange) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO WorkOrder (clientID, quoteID, dateRange, status)
+               VALUES (?, ?, ?, 'Scheduled');
+           `;
+           connection.query(query, [clientID, quoteID, dateRange], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+       return response;
+   } catch (error) {
+       console.error("Error creating work order:", error.message);
+       throw error;
+   }
+}
+
 
 
 
