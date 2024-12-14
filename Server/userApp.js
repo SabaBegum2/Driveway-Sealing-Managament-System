@@ -511,38 +511,42 @@ app.get('/quotes', (req, res) => {
 });
 
 
-app.post('/quotes/reject', async (req, res) => {
-    const { clientID, quoteID, addNote } = req.body;
-
-    if (!clientID || !quoteID || !addNote) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    try {
-        await db.rejectQuote(clientID, quoteID, addNote);
-        res.json({ message: 'Quote rejected successfully' });
-    } catch (err) {
-        console.error('Error rejecting quote:', err.message);
-        res.status(500).json({ error: 'Failed to reject quote' });
-    }
-});
-
-
-app.post('/quotes/accept', async (req, res) => {
+app.post("/quotes/accept", async (req, res) => {
     const { clientID, quoteID, proposedPrice, startDate, endDate, addNote } = req.body;
 
     if (!clientID || !quoteID || !proposedPrice || !startDate || !endDate || !addNote) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
+        const db = userDbService.getUserDbServiceInstance();
         await db.acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote);
-        res.json({ message: 'Quote accepted successfully' });
+        res.json({ message: "Quote accepted successfully" });
     } catch (err) {
-        console.error('Error accepting quote:', err.message);
-        res.status(500).json({ error: 'Failed to accept quote' });
+        console.error("Error accepting quote:", err.message);
+        res.status(500).json({ error: "Failed to accept quote" });
     }
 });
+
+// Reject a Quote
+app.post("/quotes/reject", async (req, res) => {
+    const { clientID, quoteID, addNote } = req.body;
+
+    if (!clientID || !quoteID || !addNote) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        await db.rejectQuote(clientID, quoteID, addNote);
+        res.json({ message: "Quote rejected successfully" });
+    } catch (err) {
+        console.error("Error rejecting quote:", err.message);
+        res.status(500).json({ error: "Failed to reject quote" });
+    }
+});
+
+
 
 app.get("/invoices/generate", async (req, res) => {
     const { workOrderID, clientID, amountDue, discount = 0 } = req.query;

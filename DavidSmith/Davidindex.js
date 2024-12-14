@@ -60,25 +60,27 @@
                 quotes.forEach((quote) => {
                     const listItem = document.createElement("li");
                     listItem.innerHTML = `
-                        <p><strong>Client Name:</strong> ${quote.clientID}</p>
-                        <p><strong>Address:</strong> ${quote.propertyAddress}</p>
-                        <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
-                        <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
-                        <p><strong>Note:</strong> ${quote.addNote || "No notes"}</p>
-                        <div>
-                            <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
-                            <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
-                            <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
-                            <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
-                            <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
-                        </div>
-                        <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
-                        <input type="date" id="start-date-${quote.quoteID}">
-                        <input type="date" id="end-date-${quote.quoteID}">
-                        <textarea id="accept-note-${quote.quoteID}" placeholder="Enter a Comment"></textarea>
-                        <button onclick="respondWithCounter(${quote.quoteID}, '${quote.clientID}')">Submit Counter Proposal</button>
-                        <button onclick="rejectRequest(${quote.quoteID}, '${quote.clientID}')">Reject Request</button>
-                    `;
+                    <p><strong>Client Name:</strong> ${quote.clientID}</p>
+                    <p><strong>Address:</strong> ${quote.propertyAddress}</p>
+                    <p><strong>Square Feet:</strong> ${quote.drivewaySqft}</p>
+                    <p><strong>Proposed Price:</strong> $${quote.proposedPrice}</p>
+                    <p><strong>Note:</strong> ${quote.addNote || "No notes"}</p>
+                    <div>
+                        <img src="${quote.image1}" alt="Driveway Image 1" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image2}" alt="Driveway Image 2" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image3}" alt="Driveway Image 3" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image4}" alt="Driveway Image 4" style="width: 200px; height: 200px; margin-right: 20px;">
+                        <img src="${quote.image5}" alt="Driveway Image 5" style="width: 200px; height: 200px; margin-right: 20px;">
+                    </div>
+                    <input type="number" id="counter-price-${quote.quoteID}" placeholder="Enter Counter Price">
+                    <input type="date" id="start-date-${quote.quoteID}">
+                    <input type="date" id="end-date-${quote.quoteID}">
+                    <textarea id="accept-note-${quote.quoteID}" placeholder="Enter a Comment"></textarea>
+                    <textarea id="rejection-note-${quote.quoteID}" placeholder="Enter Rejection Note"></textarea>
+                    <button onclick="respondWithCounter(${quote.quoteID}, '${quote.clientID}')">Submit Counter Proposal</button>
+                    <button onclick="rejectRequest(${quote.quoteID}, '${quote.clientID}')">Reject Request</button>
+                `;
+
                     quoteList.appendChild(listItem);
                 });
             })
@@ -208,6 +210,7 @@
 // }
 
 //Respond with Counter Proposal
+// Accept a Quote
 function respondWithCounter(quoteID, clientID) {
     const proposedPrice = document.getElementById(`counter-price-${quoteID}`).value;
     const startDate = document.getElementById(`start-date-${quoteID}`).value;
@@ -215,44 +218,61 @@ function respondWithCounter(quoteID, clientID) {
     const addNote = document.getElementById(`accept-note-${quoteID}`).value;
 
     if (!proposedPrice || !startDate || !endDate || !addNote) {
-        alert('Please fill out all fields to accept the quote.');
+        alert("Please fill out all fields to accept the quote.");
         return;
     }
 
-    fetch('/quotes/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    fetch("http://localhost:5050/quotes/accept", { // Corrected URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientID, quoteID, proposedPrice, startDate, endDate, addNote }),
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then((data) => {
             alert(data.message);
-            // Optionally refresh the quotes list
+            document.getElementById(`quote-${quoteID}`).style.display = "none"; // Optionally hide the quote
         })
-        .catch((error) => console.error('Error accepting quote:', error));
+        .catch((error) => {
+            console.error("Error accepting quote:", error);
+            alert("Failed to submit the counter proposal.");
+        });
 }
 
-
+// Reject a Quote
 function rejectRequest(quoteID, clientID) {
     const addNote = document.getElementById(`rejection-note-${quoteID}`).value;
 
     if (!addNote) {
-        alert('Please enter a rejection note.');
+        alert("Please enter a rejection note.");
         return;
     }
 
-    fetch('/quotes/reject', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    fetch("http://localhost:5050/quotes/reject", { // Corrected URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientID, quoteID, addNote }),
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then((data) => {
             alert(data.message);
-            // Optionally refresh the quotes list
+            document.getElementById(`quote-${quoteID}`).style.display = "none"; // Optionally hide the quote
         })
-        .catch((error) => console.error('Error rejecting quote:', error));
+        .catch((error) => {
+            console.error("Error rejecting quote:", error);
+            alert("Failed to reject the quote.");
+        });
 }
+
 
 
      

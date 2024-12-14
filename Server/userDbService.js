@@ -494,46 +494,52 @@ class userDbService {
       }
   }
 
-  //rejecting a quote
-
-  async rejectQuote(clientID, quoteID, addNote) {
+  async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote) {
    try {
        const response = await new Promise((resolve, reject) => {
            const query = `
-               INSERT INTO QuoteHistory (clientID, quoteID, addNote, status)
-               VALUES (?, ?, ?, 'Rejected')
+               UPDATE QuoteHistory
+               SET status = 'Accepted', proposedPrice = ?, startDate = ?, endDate = ?, addNote = ?, responseDate = NOW()
+               WHERE quoteID = ? AND clientID = ?;
            `;
-           connection.query(query, [clientID, quoteID, addNote], (err, result) => {
+           connection.query(query, [proposedPrice, startDate, endDate, addNote, quoteID, clientID], (err, result) => {
                if (err) reject(err);
                else resolve(result);
            });
        });
        return response;
-   } catch (err) {
-       console.error('Error in rejectQuote:', err);
-       throw err;
+   } catch (error) {
+       console.error("Error accepting quote:", error.message);
+       throw error;
    }
 }
 
-//accepting a quote 
-async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote) {
+async rejectQuote(clientID, quoteID, addNote) {
    try {
        const response = await new Promise((resolve, reject) => {
            const query = `
-               INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
-               VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
+               UPDATE QuoteHistory
+               SET status = 'Rejected', addNote = ?, responseDate = NOW()
+               WHERE quoteID = ? AND clientID = ?;
            `;
-           connection.query(query, [clientID, quoteID, proposedPrice, startDate, endDate, addNote], (err, result) => {
+           connection.query(query, [addNote, quoteID, clientID], (err, result) => {
                if (err) reject(err);
                else resolve(result);
            });
        });
        return response;
-   } catch (err) {
-       console.error('Error in acceptQuote:', err);
-       throw err;
+   } catch (error) {
+       console.error("Error rejecting quote:", error.message);
+       throw error;
    }
 }
+
+
+
+
+
+
+
 
 async checkWorkOrder(workOrderID) {
    try {
