@@ -190,30 +190,38 @@
     }
 
     
-document.getElementById("invoice-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const workOrderID = document.getElementById("workOrderID").value;
-    const clientID = document.getElementById("clientID").value;
-    const amountDue = document.getElementById("amountDue").value;
-    const discount = document.getElementById("discount").value || 0;
-
-    try {
-        const response = await fetch(`http://127.0.0.1:5050/invoices/generate?workOrderID=${workOrderID}&clientID=${clientID}&amountDue=${amountDue}&discount=${discount}`, {
-            method: "GET"
-        });
-
-        const data = await response.json();
-        console.log("Response Data:", data);
-        document.getElementById("response-message").innerText = data.message;
-        document.getElementById("response-message").style.color = "green";
-    } catch (error) {
-        console.error("Error Generating Invoice:", error);
-        document.getElementById("response-message").innerText = "An unexpected error occurred.";
-        document.getElementById("response-message").style.color = "red";
-    }
-});
-
+    document.getElementById("invoice-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+    
+        const workOrderID = document.getElementById("workOrderID").value;
+        const clientID = document.getElementById("clientID").value;
+        const amountDue = document.getElementById("amountDue").value;
+        const discount = document.getElementById("discount").value || 0;
+    
+        const xhr = new XMLHttpRequest();
+        const url = `http://127.0.0.1:5050/invoices/generate?workOrderID=${workOrderID}&clientID=${clientID}&amountDue=${amountDue}&discount=${discount}`;
+        
+        xhr.open("GET", url, true);
+    
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    console.log("Response Data:", data);
+                    document.getElementById("response-message").innerText = data.message;
+                    document.getElementById("response-message").style.color = "green";
+                } else {
+                    console.error("Error Generating Invoice:", xhr.statusText);
+                    document.getElementById("response-message").innerText = "An unexpected error occurred.";
+                    document.getElementById("response-message").style.color = "red";
+                }
+            }
+        };
+    
+        xhr.send();
+    });
+    
+    
 function fetchAndRenderResponses() {
     fetch("http://localhost:5050/invoiceresponses")
         .then((response) => response.json())
@@ -224,6 +232,13 @@ function fetchAndRenderResponses() {
             if (data.length > 0) {
                 data.forEach((item) => {
                     const row = document.createElement("tr");
+
+                    // Add class based on the status
+                    if (item.status === "Accepted") {
+                        row.classList.add("row-accepted"); // Add the "Accepted" class
+                    } else if (item.status === "Rejected") {
+                        row.classList.add("row-rejected"); // Add the "Rejected" class
+                    }
 
                     let actionsHTML = "";
                     if (item.status === "Accepted") {
@@ -563,3 +578,37 @@ function respondToQuote(responseID) {
 //             `;
 //         });
 // }
+function fetchRevenueReport() {
+    const startDate = document.getElementById("start-date").value;
+    const endDate = document.getElementById("end-date").value;
+
+    if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+    }
+
+    fetch(`http://localhost:5050/revenueReport?startDate=${startDate}&endDate=${endDate}`)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // Generate a pop-up with the fetched revenue data
+            alert(`
+                Revenue Report:
+                -------------------------------
+                Start Date: ${data.startDate}
+                End Date: ${data.endDate}
+                Total Revenue: $${data.totalRevenue.toFixed(2)}
+            `);
+        })
+        .catch((error) => {
+            console.error("Error fetching revenue report:", error);
+            alert("Failed to generate revenue report. Please try again.");
+        });
+}
+
+
+

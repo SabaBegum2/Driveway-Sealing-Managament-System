@@ -682,6 +682,44 @@ app.post("/workorders/complete", async (req, res) => {
     }
 });
 
+app.get('/revenueReport', async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    const db = userDbService.getUserDbServiceInstance();
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'startDate and endDate are required.' });
+    }
+
+    const query = `
+        SELECT 
+            SUM(qh.proposedPrice) AS totalRevenue,
+            COUNT(wo.workOrderID) AS totalCompletedWorkOrders,
+            GROUP_CONCAT(DISTINCT qh.clientID) AS clientIDs
+        FROM WorkOrder wo
+        JOIN QuoteHistory qh 
+            ON wo.responseID = qh.responseID
+        WHERE wo.status = 'Completed'
+          AND qh.startDate BETWEEN ? AND ?
+          AND qh.endDate BETWEEN ? AND ?
+    `;
+
+    try {
+        const results = await db.query(query, [startDate, endDate, startDate, endDate]);
+        res.json({
+            startDate,
+            endDate,
+            totalRevenue: results[0]?.totalRevenue || 0,
+            totalCompletedWorkOrders: results[0]?.totalCompletedWorkOrders || 0,
+            clientIDs: results[0]?.clientIDs || null
+        });
+    } catch (err) {
+        console.error('Error executing query:', err.message);
+        res.status(500).json({ error: 'Failed to generate revenue report.' });
+    }
+});
+
+
+
 // app.get('/getRevenueReport', async (req, res) => {
 //     console.log('Route /getRevenueReport hit');
 //     let db;
