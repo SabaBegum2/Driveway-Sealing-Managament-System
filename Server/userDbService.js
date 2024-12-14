@@ -535,36 +535,6 @@ async acceptQuote(clientID, quoteID, proposedPrice, startDate, endDate, addNote)
    }
 }
 
-async generateInvoice(workOrderID, clientID, amountDue, discount) {
-   try {
-       const response = await new Promise((resolve, reject) => {
-           const query = `
-               INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-               VALUES (?, ?, ?, NOW())
-           `;
-           const finalAmount = amountDue - discount; // Calculate final amount
-           console.log("Executing Query:", query);
-           console.log("With Values:", [workOrderID, clientID, finalAmount]);
-
-           connection.query(query, [workOrderID, clientID, finalAmount], (err, result) => {
-               if (err) {
-                   console.error("Database Error:", err.message); // Log database error
-                   reject(err);
-               } else {
-                   console.log("Query Successful:", result); // Log successful query
-                   resolve(result);
-               }
-           });
-       });
-       return response;
-   } catch (err) {
-       console.error("Error in generateInvoice:", err.message);
-       throw err;
-   }
-}
-
-
-
 async checkWorkOrder(workOrderID) {
    try {
        const response = await new Promise((resolve, reject) => {
@@ -595,6 +565,66 @@ async checkClient(clientID) {
        throw err;
    }
 }
+
+//david generating invoice for client
+async generateInvoice(workOrderID, clientID, amountDue, discount) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+               VALUES (?, ?, ?, NOW())
+           `;
+           const finalAmount = amountDue - discount; // Calculate final amount
+           console.log("Executing Query:", query);
+           console.log("With Values:", [workOrderID, clientID, finalAmount]);
+
+           connection.query(query, [workOrderID, clientID, finalAmount], (err, result) => {
+               if (err) {
+                   console.error("Database Error:", err.message); // Log database error
+                   reject(err);
+               } else {
+                   console.log("Query Successful:", result); // Log successful query
+                   resolve(result);
+               }
+           });
+       });
+       return response;
+   } catch (err) {
+       console.error("Error in generateInvoice:", err.message);
+       throw err;
+   }
+}
+
+//david seeing all the invoice response 
+async getAllInvoiceResponses() {
+    try {
+      const response = await new Promise((resolve, reject) => {
+          const query = `
+              SELECT 
+                  ir.responseID, 
+                  ir.invoiceID, 
+                  i.clientID, 
+                  i.amountDue, 
+                  ir.responseNote, 
+                  ir.responseDate 
+              FROM InvoiceResponses ir
+              JOIN Invoice i ON ir.invoiceID = i.invoiceID
+          `;
+          connection.query(query, (err, results) => {
+              if (err) reject(err);
+              else resolve(results);
+          });
+      });
+      return response;
+  } catch (err) {
+      console.error("Error in getAllInvoiceResponses:", err.message);
+      throw err;
+  }
+}
+
+
+
+
 
 
 

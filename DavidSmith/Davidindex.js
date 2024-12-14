@@ -284,6 +284,39 @@ document.getElementById("invoice-form").addEventListener("submit", async (e) => 
     }
 });
 
+//fetching invoice response
+fetch("http://localhost:5050/invoiceresponses")
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById("invoice-responses");
+
+        if (data.length > 0) {
+            data.forEach(item => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.responseID}</td>
+                    <td>${item.invoiceID}</td>
+                    <td>${item.clientID || "N/A"}</td>
+                    <td>$${item.amountDue.toFixed(2) || "0.00"}</td>
+                    <td>${item.responseNote || "No Note"}</td>
+                    <td>${new Date(item.responseDate).toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } else {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td colspan="6" style="text-align: center;">No invoice responses found.</td>`;
+            tableBody.appendChild(row);
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching invoice responses:", error);
+    });
+
+
+
+
+
 
 
 //fetching quotes history and bills

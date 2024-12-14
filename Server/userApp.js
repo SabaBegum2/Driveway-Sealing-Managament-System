@@ -503,50 +503,6 @@ app.get('/quotes', (req, res) => {
         });
 });
 
-// app.post('/quotes/reject', (req, res) => {
-//     const { clientID, quoteID, addNote } = req.body;
-
-//     if (!addNote || !quoteID || !clientID) {
-//         return res.status(400).json({ error: 'Missing required fields: addNote, quoteID, clientID' });
-//     }
-
-//     const query = `
-//         INSERT INTO QuoteHistory (clientID, quoteID, addNote, status)
-//         VALUES (?, ?, ?, 'Rejected')
-//     `;
-
-//     connection.query(query, [clientID, quoteID, addNote], (err, result) => {
-//         if (err) {
-//             console.error('Error rejecting quote:', err.message);
-//             return res.status(500).json({ error: 'Failed to reject quote' });
-//         }
-//         res.json({ message: 'Quote rejected successfully' });
-//     });
-// });
-
-// app.post('/quotes/accept', (req, res) => {
-//     const { clientID, quoteID, proposedPrice, startDate, endDate, addNote } = req.body;
-
-//     if (!proposedPrice || !startDate || !endDate || !addNote || !quoteID || !clientID) {
-//         return res.status(400).json({ error: 'Missing required fields' });
-//     }
-
-//     const query = `
-//         INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
-//         VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
-//     `;
-
-//     connection.query(query, [clientID, quoteID, proposedPrice, startDate, endDate, addNote], (err, result) => {
-//         if (err) {
-//             console.error('Error accepting quote:', err.message);
-//             return res.status(500).json({ error: 'Failed to accept quote' });
-//         }
-//         res.json({ message: 'Quote accepted successfully' });
-//     });
-// });
-
-// const userDbService = require('./userDbService');
-// const db = userDbService.getUserDbServiceInstance();
 
 app.post('/quotes/reject', async (req, res) => {
     const { clientID, quoteID, addNote } = req.body;
@@ -611,6 +567,18 @@ app.get("/invoices/generate", async (req, res) => {
         res.status(500).json({ error: "Failed to generate invoice", details: err.message });
     }
 });
+
+app.get("/invoiceresponses", async (req, res) => {
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+        const invoiceResponses = await db.getAllInvoiceResponses();
+        res.json(invoiceResponses);
+    } catch (err) {
+        console.error("Error fetching invoice responses:", err.message);
+        res.status(500).json({ error: "Failed to fetch invoice responses" });
+    }
+});
+
 
 
 
