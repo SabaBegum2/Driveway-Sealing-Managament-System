@@ -622,6 +622,75 @@ async getAllInvoiceResponses() {
   }
 }
 
+//for david to respond to the invoices
+async updateInvoiceResponseStatus(responseID, status, note = null) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = note
+               ? `UPDATE InvoiceResponses SET responseNote = ?, responseDate = NOW() WHERE responseID = ?`
+               : `UPDATE InvoiceResponses SET responseDate = NOW() WHERE responseID = ?`;
+
+           const params = note ? [note, responseID] : [responseID];
+
+           connection.query(query, params, (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+
+       return response;
+   } catch (err) {
+       console.error("Error updating InvoiceResponses:", err.message);
+       throw err;
+   }
+}
+
+
+
+
+async updateQuoteHistoryStatus(quoteID, clientID, status, note) {
+   try {
+       const response = await new Promise((resolve, reject) => {
+           const query = `
+               UPDATE QuoteHistory 
+               SET status = ?, responseDate = NOW(), addNote = ? 
+               WHERE quoteID = ? AND clientID = ?
+           `;
+
+           connection.query(query, [status, note, quoteID, clientID], (err, result) => {
+               if (err) reject(err);
+               else resolve(result);
+           });
+       });
+
+       return response;
+   } catch (err) {
+       console.error("Error updating QuoteHistory:", err.message);
+       throw err;
+   }
+}
+
+
+// async updateInvoiceResponse(responseID, note) {
+//    try {
+//        const response = await new Promise((resolve, reject) => {
+//            const query = `
+//                UPDATE InvoiceResponses 
+//                SET responseNote = ?, responseDate = NOW() 
+//                WHERE responseID = ?
+//            `;
+//            connection.query(query, [note, responseID], (err, result) => {
+//                if (err) reject(err);
+//                else resolve(result);
+//            });
+//        });
+//        return response;
+//    } catch (err) {
+//        console.error("Error in updateInvoiceResponse:", err.message);
+//        throw err;
+//    }
+// }
+
 
 
 

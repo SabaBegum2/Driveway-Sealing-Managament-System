@@ -26,6 +26,13 @@ app.use((req, res, next) => {
     next();
 });
 
+// app.use((req, res, next) => {
+//     res.setHeader("Access-Control-Allow-Origin", "*");
+//     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+//     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+//     next();
+// });
+
 app.use(cors({
     origin: "http://127.0.0.1:5500", // Allow requests from your frontend
     credentials: true, // Include credentials if needed
@@ -568,6 +575,7 @@ app.get("/invoices/generate", async (req, res) => {
     }
 });
 
+//responses from clients on quotes
 app.get("/invoiceresponses", async (req, res) => {
     try {
         const db = userDbService.getUserDbServiceInstance();
@@ -578,6 +586,61 @@ app.get("/invoiceresponses", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch invoice responses" });
     }
 });
+
+//options for david to respond to the invoices
+app.post("/invoiceresponses/respond", async (req, res) => {
+    console.log("Request Body:", req.body);
+
+    const { responseID, action, note, quoteID, clientID } = req.body;
+
+    // Validate required fields
+    if (!responseID || !action || !quoteID || !clientID) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const db = userDbService.getUserDbServiceInstance();
+
+        if (action === "accept") {
+            // Update InvoiceResponses to mark as Accepted
+            await db.updateInvoiceResponseStatus(responseID, "Accepted");
+            
+            // Update QuoteHistory to reflect acceptance
+            await db.updateQuoteHistoryStatus(quoteID, clientID, "Accepted", "Invoice Accepted");
+            
+            return res.json({ message: "Invoice accepted and QuoteHistory updated." });
+        }
+
+        if (action === "reject") {
+            // Note is required for rejection
+            if (!note) {
+                return res.status(400).json({ error: "Note is required for rejection." });
+            }
+
+            // Update InvoiceResponses to mark as Rejected with the note
+            await db.updateInvoiceResponseStatus(responseID, "Rejected", note);
+            
+            // Update QuoteHistory to reflect rejection
+            await db.updateQuoteHistoryStatus(quoteID, clientID, "Rejected", note);
+
+            return res.json({ message: "Invoice rejected and QuoteHistory updated." });
+        }
+
+        if (action === "suggest") {
+            // Simply return a message to create a new invoice
+            return res.json({ message: "Please create a new invoice for the suggested price." });
+        }
+
+        // Invalid action
+        return res.status(400).json({ error: "Invalid action." });
+    } catch (error) {
+        console.error("Error responding to invoice:", error.message);
+        res.status(500).json({ error: "Failed to process invoice response." });
+    }
+});
+
+
+
 
 
 

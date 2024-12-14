@@ -284,36 +284,89 @@ document.getElementById("invoice-form").addEventListener("submit", async (e) => 
     }
 });
 
-//fetching invoice response
 fetch("http://localhost:5050/invoiceresponses")
-    .then(response => response.json())
-    .then(data => {
-        const tableBody = document.getElementById("invoice-responses");
+.then((response) => response.json())
+.then((data) => {
+    const tableBody = document.getElementById("invoice-responses");
 
-        if (data.length > 0) {
-            data.forEach(item => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${item.responseID}</td>
-                    <td>${item.invoiceID}</td>
-                    <td>${item.clientID || "N/A"}</td>
-                    <td>$${item.amountDue.toFixed(2) || "0.00"}</td>
-                    <td>${item.responseNote || "No Note"}</td>
-                    <td>${new Date(item.responseDate).toLocaleString()}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        } else {
+    if (data.length > 0) {
+        data.forEach((item) => {
             const row = document.createElement("tr");
-            row.innerHTML = `<td colspan="6" style="text-align: center;">No invoice responses found.</td>`;
+            row.id = `row-${item.responseID}`; // Unique ID for the row
+            row.innerHTML = `
+                <td>${item.responseID}</td>
+                <td>${item.invoiceID}</td>
+                <td>${item.clientID || "N/A"}</td>
+                <td>$${item.amountDue.toFixed(2)}</td>
+                <td>${item.responseNote || "No Note"}</td>
+                <td>${new Date(item.responseDate).toLocaleString()}</td>
+                <td class="actions">
+                    <textarea id="note-${item.responseID}" placeholder="Add a note (required for reject)"></textarea><br>
+                    <button onclick="respondToInvoice(${item.responseID}, 'accept', ${item.quoteID}, '${item.clientID}')">Accept</button>
+                    <button onclick="respondToInvoice(${item.responseID}, 'reject', ${item.quoteID}, '${item.clientID}')">Reject</button>
+                    <button onclick="editInvoice(${item.responseID}, ${item.quoteID}, '${item.clientID}')">Edit</button>
+                </td>
+            `;
             tableBody.appendChild(row);
+        });
+    } else {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td colspan="7" style="text-align: center;">No invoice responses found.</td>`;
+        tableBody.appendChild(row);
+    }
+})
+.catch((error) => {
+    console.error("Error fetching invoice responses:", error);
+});
+
+function respondToInvoice(responseID, action, quoteID, clientID) {
+const note = document.getElementById(`note-${responseID}`).value;
+
+if (action === "reject" && !note) {
+    alert("Please add a note for rejection.");
+    return;
+}
+
+const body = { responseID, action, note, quoteID, clientID };
+console.log("Sending body:", body);
+
+fetch("http://localhost:5050/invoiceresponses/respond", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+})
+    .then((response) => response.json())
+    .then((data) => {
+        alert(data.message);
+
+        const row = document.getElementById(`row-${responseID}`);
+        if (row) {
+            const actionCell = row.querySelector(".actions");
+            if (action === "accept") {
+                actionCell.innerHTML = `<span style="color: green; font-weight: bold;">Accepted</span>`;
+            } else if (action === "reject") {
+                actionCell.innerHTML = `<span style="color: red; font-weight: bold;">Rejected</span>`;
+            }
         }
     })
-    .catch(error => {
-        console.error("Error fetching invoice responses:", error);
+    .catch((error) => {
+        console.error("Error responding to invoice:", error);
+        alert("Failed to update response. Please try again.");
     });
+}
 
+function editInvoice(responseID, quoteID, clientID) {
+const row = document.getElementById(`row-${responseID}`);
+if (row) {
+    const actionCell = row.querySelector(".actions");
+    actionCell.innerHTML = `<span style="color: blue; font-weight: bold;">Create a new invoice for this client.</span>`;
+}
+alert(`Please create a new invoice for Quote ID: ${quoteID} and Client ID: ${clientID}.`);
+}
 
+    
+    
+    
 
 
 
