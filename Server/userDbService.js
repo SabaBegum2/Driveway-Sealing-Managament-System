@@ -600,16 +600,11 @@ async getAllInvoiceResponses() {
     try {
       const response = await new Promise((resolve, reject) => {
           const query = `
-              SELECT 
-                  ir.responseID, 
-                  ir.invoiceID, 
-                  i.clientID, 
-                  i.amountDue, 
-                  ir.responseNote, 
-                  ir.responseDate 
-              FROM InvoiceResponses ir
-              JOIN Invoice i ON ir.invoiceID = i.invoiceID
-          `;
+             SELECT ir.responseID, ir.invoiceID, ir.responseNote, ir.responseDate, i.clientID, i.amountDue, qh.quoteID, qh.status
+                FROM InvoiceResponses ir
+                JOIN Invoice i ON ir.invoiceID = i.invoiceID
+                JOIN QuoteHistory qh ON i.workOrderID = qh.quoteID
+            `;
           connection.query(query, (err, results) => {
               if (err) reject(err);
               else resolve(results);
@@ -637,23 +632,18 @@ async updateInvoiceResponseStatus(responseID, status, note = null) {
                else resolve(result);
            });
        });
-
        return response;
-   } catch (err) {
-       console.error("Error updating InvoiceResponses:", err.message);
-       throw err;
+   } catch (error) {
+       console.error("Error updating InvoiceResponses:", error.message);
+       throw error;
    }
 }
-
-
-
-
 async updateQuoteHistoryStatus(quoteID, clientID, status, note) {
    try {
        const response = await new Promise((resolve, reject) => {
            const query = `
-               UPDATE QuoteHistory 
-               SET status = ?, responseDate = NOW(), addNote = ? 
+               UPDATE QuoteHistory
+               SET status = ?, responseDate = NOW(), addNote = ?
                WHERE quoteID = ? AND clientID = ?
            `;
 
@@ -662,13 +652,14 @@ async updateQuoteHistoryStatus(quoteID, clientID, status, note) {
                else resolve(result);
            });
        });
-
        return response;
-   } catch (err) {
-       console.error("Error updating QuoteHistory:", err.message);
-       throw err;
+   } catch (error) {
+       console.error("Error updating QuoteHistory:", error.message);
+       throw error;
    }
 }
+
+
 
 
 // async updateInvoiceResponse(responseID, note) {

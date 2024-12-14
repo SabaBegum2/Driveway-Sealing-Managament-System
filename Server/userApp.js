@@ -579,13 +579,14 @@ app.get("/invoices/generate", async (req, res) => {
 app.get("/invoiceresponses", async (req, res) => {
     try {
         const db = userDbService.getUserDbServiceInstance();
-        const invoiceResponses = await db.getAllInvoiceResponses();
-        res.json(invoiceResponses);
-    } catch (err) {
-        console.error("Error fetching invoice responses:", err.message);
+        const responses = await db.getAllInvoiceResponses();
+        res.json(responses);
+    } catch (error) {
+        console.error("Error fetching invoice responses:", error.message);
         res.status(500).json({ error: "Failed to fetch invoice responses" });
     }
 });
+
 
 //options for david to respond to the invoices
 app.post("/invoiceresponses/respond", async (req, res) => {
@@ -593,7 +594,6 @@ app.post("/invoiceresponses/respond", async (req, res) => {
 
     const { responseID, action, note, quoteID, clientID } = req.body;
 
-    // Validate required fields
     if (!responseID || !action || !quoteID || !clientID) {
         return res.status(400).json({ error: "Missing required fields" });
     }
@@ -602,42 +602,39 @@ app.post("/invoiceresponses/respond", async (req, res) => {
         const db = userDbService.getUserDbServiceInstance();
 
         if (action === "accept") {
-            // Update InvoiceResponses to mark as Accepted
+            // Update InvoiceResponses
             await db.updateInvoiceResponseStatus(responseID, "Accepted");
-            
-            // Update QuoteHistory to reflect acceptance
+            // Update QuoteHistory
             await db.updateQuoteHistoryStatus(quoteID, clientID, "Accepted", "Invoice Accepted");
-            
+
             return res.json({ message: "Invoice accepted and QuoteHistory updated." });
         }
 
         if (action === "reject") {
-            // Note is required for rejection
             if (!note) {
                 return res.status(400).json({ error: "Note is required for rejection." });
             }
-
-            // Update InvoiceResponses to mark as Rejected with the note
+            // Update InvoiceResponses
             await db.updateInvoiceResponseStatus(responseID, "Rejected", note);
-            
-            // Update QuoteHistory to reflect rejection
+            // Update QuoteHistory
             await db.updateQuoteHistoryStatus(quoteID, clientID, "Rejected", note);
 
             return res.json({ message: "Invoice rejected and QuoteHistory updated." });
         }
 
         if (action === "suggest") {
-            // Simply return a message to create a new invoice
             return res.json({ message: "Please create a new invoice for the suggested price." });
         }
 
-        // Invalid action
         return res.status(400).json({ error: "Invalid action." });
     } catch (error) {
         console.error("Error responding to invoice:", error.message);
         res.status(500).json({ error: "Failed to process invoice response." });
     }
 });
+
+
+
 
 
 
