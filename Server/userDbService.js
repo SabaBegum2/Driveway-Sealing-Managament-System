@@ -62,6 +62,8 @@ class userDbService {
 //   }
   
 
+/* ----------------------- CLIENT'S DASHBOARD ----------------------- */
+
    async getAllClientData(clientID) {
       try {
          // use await to call an asynchronous function
@@ -253,6 +255,7 @@ class userDbService {
       }
    }
   
+
 // GET WORK ORDER HISTORY FOR CLIENT
    async getWorkOrderHistory(clientID) {
       try {
@@ -282,67 +285,8 @@ class userDbService {
       }
    }
 
-// GET INVOICE HISTORY FOR CLIENT
-   async getInvoiceHistory(clientID) {
-      try {
 
-         // Updates invoice status to 'Overdue' if datePaid is null and dateCreated is more than 7 days ago
-         const update = await new Promise((resolve, reject) => {
-            const query = `UPDATE Invoice SET status = 'Overdue' WHERE datePaid IS NULL AND DATEDIFF(CURDATE(), dateCreated) > 7;`;
-            connection.query(query, (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-
-         // Get invoice history for a client
-         const response = await new Promise((resolve, reject) => {
-            const query = `SELECT 
-            I.clientID,
-            I.status,
-            CASE 
-               WHEN I.status = 'DUE' AND (
-                  IR.responseID IS NULL OR IR.responseID = (
-                     SELECT MAX(responseID)
-                     FROM InvoiceResponses
-                     WHERE invoiceID = I.invoiceID
-                  )
-               )
-               THEN 1
-               ELSE 0
-            END AS isMostRecentPaid,
-            I.invoiceID,
-            IR.responseID,
-            I.workOrderID,
-            I.amountDue,
-            QR.propertyAddress,
-            I.dateCreated,
-            IR.responseNote,
-            I.datePaid,
-            IR.responseDate
-            FROM Invoice I
-            LEFT JOIN InvoiceResponses IR ON I.invoiceID = IR.invoiceID
-            LEFT JOIN 
-                  WorkOrder WO ON I.workOrderID = WO.workOrderID
-            LEFT JOIN 
-                  QuoteRequest QR ON WO.quoteID = QR.quoteID
-            WHERE 
-                  I.clientID LIKE ?;`;
-
-            connection.query(query, [clientID], (err, results) => {
-               if (err) reject(new Error(err.message));
-               else resolve(results);
-            });
-         });
-         console.log("Invoice results from dbservice: ", response); // for debugging to see the result of select
-         return response;
-      } catch (error) {
-            console.error('Invoice History query error:', error);
-      }
-   
-   }
-
-
+   // GET QUOTE RESPONSES FOR CLIENT
    async insertQuoteResponse(responseID, proposedPrice, startDate, endDate, addNote) {
       const newStartDate = new Date(startDate);
       const newEndDate = new Date(endDate);
@@ -391,14 +335,170 @@ class userDbService {
             throw error;
       }
    }
-  
-   // Once accepted, phpmyadmin will trigger the update to populate to workOrder
-   acceptQuoteResonse(invoiceID) {
+
+   
+   async acceptQuoteResponse(responseID) {
       console.log(`Accepting quote response with responseID: ${responseID}`);
       try {
-         const query = `UPDATE QuoteHistory SET status = 'Accepted' WHERE invoiceID = ?;`;
+          // Fetch the existing data for the given responseID
+          const selection = await new Promise((resolve, reject) => {
+              const query = "SELECT * FROM QuoteHistory WHERE responseID = ?;";
+              connection.query(query, [responseID], (err, results) => {
+                  if (err) {
+                      reject(new Error(err.message));
+                  } else if (results.length === 0) {
+                      reject(new Error(`No response found with responseID: ${responseID}`));
+                  } else {
+                      resolve(results[0]); // Resolve with the first result
+                  }
+              });
+          });
+  
+          // Extract necessary data from the result
+          const { startDate, endDate } = selection;
+          console.log(`Fetched startDate: ${startDate}, endDate: ${endDate}`);
+  
+          // Update the status and keep the existing startDate and endDate
+          const updateResponse = await new Promise((resolve, reject) => {
+              const query = `
+                  UPDATE QuoteHistory
+                  SET 
+                      status = 'Accepted',
+                      startDate = ?,
+                      endDate = ?
+                  WHERE 
+                      responseID = ?;
+              `;
+              connection.query(query, [startDate, endDate, responseID], (err, results) => {
+                  if (err) {
+                      reject(new Error(err.message));
+                  } else {
+                      resolve(results);
+                  }
+              });
+          });
+  
+          console.log("Quote successfully updated:", updateResponse);
+          return updateResponse;
+      } catch (error) {
+          console.error("Error accepting quote response:", error);
+          throw error;
+      }
+  }
+  
+
+
+// GET INVOICE HISTORY FOR CLIENT
+async getInvoiceHistory(clientID) {
+   try {
+
+      // Updates invoice status to 'Overdue' if datePaid is null and dateCreated is more than 7 days ago
+      const update = await new Promise((resolve, reject) => {
+         const query = `UPDATE Invoice SET status = 'Overdue' WHERE datePaid IS NULL AND DATEDIFF(CURDATE(), dateCreated) > 7;`;
+         connection.query(query, (err, results) => {
+            if (err) reject(new Error(err.message));
+            else resolve(results);
+         });
+      });
+
+      // Get invoice history for a client
+      const response = await new Promise((resolve, reject) => {
+         const query = `SELECT 
+         I.status,
+          I.invoiceID,
+          I.workOrderID,
+          I.clientID,
+          0 AS responseID, -- Define the initial invoice with responseID = 0
+          I.amountDue,
+          I.discount,
+          I.dateCreated,
+          I.datePaid,
+          'INITIAL INVOICE' AS responseNote, -- Custom note for the initial invoice
+          I.dateCreated AS responseDate, -- Use the invoice creation date for the initial entry
+          QR.propertyAddress, -- Include propertyAddress from QuoteRequest
+          CASE 
+               WHEN (I.status = 'DUE' OR I.status = 'OVERDUE') AND NOT EXISTS (
+                  SELECT 1 
+                  FROM InvoiceResponses IR2 
+                  WHERE IR2.invoiceID = I.invoiceID
+               )
+               THEN 1
+               ELSE 0
+            END AS isMostRecentPaid -- For the initial invoice rows
+            FROM 
+               Invoice I
+            LEFT JOIN 
+               WorkOrder WO ON I.workOrderID = WO.workOrderID
+            LEFT JOIN 
+               QuoteHistory QH ON WO.responseID = QH.responseID
+            LEFT JOIN 
+               QuoteRequest QR ON QH.quoteID = QR.quoteID
+            WHERE 
+               I.clientID = ?
+            
+            UNION ALL
+            
+            SELECT 
+               I.status,
+               I.invoiceID,
+               I.workOrderID,
+               I.clientID,
+               IR.responseID,
+               I.amountDue,
+               I.discount,
+               I.dateCreated,
+               I.datePaid,
+               IR.responseNote,
+               IR.responseDate,
+               QR.propertyAddress, -- Include propertyAddress from QuoteRequest
+               CASE 
+                  WHEN (I.status = 'DUE' OR I.status = 'OVERDUE') AND IR.responseID = (
+                     SELECT MAX(IR2.responseID)
+                     FROM InvoiceResponses IR2
+                     WHERE IR2.invoiceID = I.invoiceID
+                  )
+                  THEN 1
+                  ELSE 0
+               END AS isMostRecentPaid -- For response rows
+            FROM 
+               Invoice I
+            LEFT JOIN 
+               InvoiceResponses IR ON I.invoiceID = IR.invoiceID
+            LEFT JOIN 
+               WorkOrder WO ON I.workOrderID = WO.workOrderID
+            LEFT JOIN 
+               QuoteHistory QH ON WO.responseID = QH.responseID
+            LEFT JOIN 
+               QuoteRequest QR ON QH.quoteID = QR.quoteID
+            WHERE 
+               I.clientID = ?
+               AND EXISTS (   -- stops printing duplicates
+                   SELECT 1 FROM InvoiceResponses IR2 WHERE IR2.invoiceID = I.invoiceID
+               )
+            ORDER BY 
+            invoiceID ASC, responseID ASC;`;
+
+         connection.query(query, [clientID, clientID], (err, results) => {
+            if (err) reject(new Error(err.message));
+            else resolve(results);
+         });
+      });
+      console.log("Invoice results from dbservice: ", response); // for debugging to see the result of select
+      return response;
+   } catch (error) {
+         console.error('Invoice History query error:', error);
+   }
+}
+
+
+   // GET CANCELLED ORDER BY CLIENT
+   // Once cancelled, phpmyadmin will update the status to 'CANCELLED'
+   cancelWorkOrder(workOrderID) {
+      console.log(`Accepting quote response with responseID: ${workOrderID}`);
+      try {
+         const query = `UPDATE WorkOrder SET status = 'CANCELLED' WHERE workOrderID = ?;`;
          const response = new Promise((resolve, reject) => {
-            connection.query(query, [invoiceID], (err, results) => {
+            connection.query(query, [workOrderID], (err, results) => {
                if (err) reject(new Error(err.message));
                else resolve(results);
             });
@@ -411,20 +511,18 @@ class userDbService {
    }
 
 
-   async insertInvoiceResponse(invoiceID, amountDue, responseNote) {
-      const keepStatus = 'Pending';
-      //let clientID;
-      //let quoteID;
+
+   // GET CLIENT'S INVOICE RESPONSES
+   async insertInvoiceResponse(invoiceID, clientID, responseNote) {
+
       console.log(`Inserting response for responseID: ${invoiceID}`);
       try {
 
-         const query = `INSERT INTO InvoiceResponses (invoiceID, amountDue, responseNote)
-            VALUES (?, ?, ?);
-         `;
+         const query = `INSERT INTO InvoiceResponses (invoiceID, clientID, responseNote) VALUES (?, ?, ?);`;
          const response = await new Promise((resolve, reject) => {
             connection.query(
                query,
-               [invoiceID, amountDue, responseNote],
+               [invoiceID, clientID, responseNote],
                (err, results) => {
                      if (err) reject(new Error(err.message));
                      else resolve(results);
@@ -438,26 +536,25 @@ class userDbService {
       }
    }
   
-
+   // GET ACCEPTED INVOICE BY CLIENT
    // Once accepted, phpmyadmin will trigger the update to populate to workOrder
-   acceptInvoiceResonse(responseID) {
-      console.log(`Accepting quote response with responseID: ${responseID}`);
+   async acceptInvoiceResponse(invoiceID) {
+      const datePaid = new Date();
+      console.log(`Accepting invoice response with invoiceID: ${invoiceID}`);
       try {
-         const query = `UPDATE QuoteHistory SET status = 'Accepted' WHERE responseID = ?;`;
-         const response = new Promise((resolve, reject) => {
-            connection.query(query, [responseID], (err, results) => {
+         const query = `UPDATE Invoice SET status = 'PAID', datePaid = ? WHERE invoiceID = ?;`;
+         const response = await new Promise((resolve, reject) => {
+            connection.query(query, [datePaid, invoiceID], (err, results) => {
                if (err) reject(new Error(err.message));
                else resolve(results);
             });
          });
          return response;
       } catch (error) {
-         console.error("Error accepting quote response:", error);
+         console.error("Error accepting invoice response:", error);
          throw error;
       }
    }
-
-
 
    async searchByClientID(clientID) {
       try {
@@ -476,7 +573,7 @@ class userDbService {
    }
 
 
-   //david
+/* ----------------------- DAVID's DASHBOARD ----------------------- */
    async getAllQuotes() {
       try {
           const response = await new Promise((resolve, reject) => {

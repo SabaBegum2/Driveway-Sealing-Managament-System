@@ -90,29 +90,30 @@ CREATE TABLE WorkOrder (
 
 
 
--- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATE INVOICE & INVOICE RESPONSE: ------------------
-CREATE TRIGGER `afterWorkOrderCompleted` AFTER UPDATE ON `WorkOrder`
- FOR EACH ROW BEGIN
-    IF NEW.status = 'Completed' THEN
-        -- Insert into Invoice
-        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
-        VALUES (NEW.workOrderID, NEW.clientID, 
-                COALESCE(
-                    (SELECT qh.proposedPrice 
-                     FROM QuoteHistory qh
-                     WHERE qh.responseID = NEW.responseID), 
-                    0), -- Default to 0 if no match is found
-                NOW());
+-- ---------------- 2. INSERT TRIGGER FOR WORKORDER TO CREATE INVOICE: ------------------
+DELIMITER //
 
-        -- Insert into InvoiceResponses
-        INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate)
-        VALUES (
-            LAST_INSERT_ID(),            -- Use the last auto-incremented invoiceID
-            '',  -- Default response note
-            NOW()                        -- Current timestamp for responseDate
-        );
+CREATE TRIGGER afterWorkOrderCompleted
+AFTER UPDATE ON WorkOrder
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'Completed' THEN
+        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+        SELECT 
+            NEW.workOrderID, 
+            NEW.clientID, 
+            qh.proposedPrice,  -- Price from QuoteHistory
+            NOW()
+        FROM 
+            QuoteHistory qh
+        WHERE 
+            qh.responseID = NEW.responseID;
     END IF;
-END
+END;
+//
+
+DELIMITER ;
+
 
 -- ------------------------------------------------------------------------------------------------------------
 
@@ -124,6 +125,7 @@ CREATE TABLE Invoice (
     amountDue DECIMAL(10, 2),
     dateCreated DATETIME DEFAULT current_timestamp(),
     datePaid DATETIME DEFAULT NULL,
+    discount DECIMAL(10,2),
     FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
@@ -134,12 +136,8 @@ CREATE TABLE InvoiceResponses (
     responseNote VARCHAR(500),
     responseDate DATETIME DEFAULT CURRENT_DATETIME,
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
+    FOREIGN KEY (clientID) REFERENCES ClientDB(clientID);
 );
-
--- Adding amount due to responses so it can be adjusted.
-ALTER TABLE Invoice ADD COLUMN amountDue DECIMAL(10, 2);
-
-
 
 
 -- For Demonstration: Insert Value Tuples
@@ -312,17 +310,6 @@ FROM QuoteHistory qh
 WHERE qh.clientID LIKE ?;
 
 
--- Show unpaid invoices:
-SELECT i.invoiceID, i.clientID, i.amountDue, i.dateCreated
-FROM Invoice i
-WHERE i.datePaid IS NULL;
-
-
--- List all invoice responses for a specific invoice:
-SELECT ir.responseID, ir.responseNote, ir.responseDate
-FROM InvoiceResponses ir
-WHERE ir.invoiceID = 1;
-
 SELECT 
     QH.responseID,
     QH.clientID,
@@ -339,6 +326,7 @@ FROM QuoteHistory QH
 JOIN QuoteRequest QR
 ON QH.quoteID = QR.quoteID
 WHERE QR.clientID LIKE ?;
+
 
 SELECT 
     qr.quoteID,
@@ -358,6 +346,99 @@ SELECT
 FROM QuoteRequest qr
 LEFT JOIN ClientDB c ON qr.clientID = c.clientID
 LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID;
+
+-- Invoice Page
+SELECT 
+    i.invoiceID,
+    i.workOrderID,
+    i.clientID,
+    i.amountDue,
+    i.discount,
+    i.dateCreated,
+    i.datePaid,
+    i.status,
+    ir.responseNote,
+    ir.responseDate
+FROM Invoice i
+LEFT JOIN InvoiceResponses ir ON i.invoiceID = ir.invoiceID
+WHERE i.clientID = ?
+ORDER BY ir.responseDate IS NULL, ir.responseDate;
+
+
+
+
+
+SELECT 
+	I.status,
+    I.invoiceID,
+    I.clientID,
+    0 AS responseID, -- Define the initial invoice with responseID = 0
+    I.amountDue,
+    I.discount,
+    I.dateCreated AS invoiceDate,
+    I.datePaid,
+    'INITIAL INVOICE' AS responseNote, -- Custom note for the initial invoice
+    I.dateCreated AS responseDate, -- Use the invoice creation date for the initial entry
+    QR.propertyAddress, -- Include propertyAddress from QuoteRequest
+    CASE 
+       WHEN (I.status = 'DUE' OR I.status = 'OVERDUE') AND NOT EXISTS (
+           SELECT 1 
+           FROM InvoiceResponses IR2 
+           WHERE IR2.invoiceID = I.invoiceID
+       )
+       THEN 1
+       ELSE 0
+    END AS isMostRecentPaid -- For the initial invoice rows
+FROM 
+    Invoice I
+LEFT JOIN 
+    WorkOrder WO ON I.workOrderID = WO.workOrderID
+LEFT JOIN 
+    QuoteHistory QH ON WO.responseID = QH.responseID
+LEFT JOIN 
+    QuoteRequest QR ON QH.quoteID = QR.quoteID
+WHERE 
+    I.clientID = 'DaisyDuck'
+
+UNION ALL
+
+SELECT 
+	I.status,
+    I.invoiceID,
+    I.clientID,
+    IR.responseID,
+    I.amountDue,
+    I.discount,
+    I.dateCreated AS invoiceDate,
+    I.datePaid,
+    IR.responseNote,
+    IR.responseDate,
+    QR.propertyAddress, -- Include propertyAddress from QuoteRequest
+    CASE 
+       WHEN (I.status = 'DUE' OR I.status = 'OVERDUE') AND IR.responseID = (
+           SELECT MAX(IR2.responseID)
+           FROM InvoiceResponses IR2
+           WHERE IR2.invoiceID = I.invoiceID
+       )
+       THEN 1
+       ELSE 0
+    END AS isMostRecentPaid -- For response rows
+FROM 
+    Invoice I
+LEFT JOIN 
+    InvoiceResponses IR ON I.invoiceID = IR.invoiceID
+LEFT JOIN 
+    WorkOrder WO ON I.workOrderID = WO.workOrderID
+LEFT JOIN 
+    QuoteHistory QH ON WO.responseID = QH.responseID
+LEFT JOIN 
+    QuoteRequest QR ON QH.quoteID = QR.quoteID
+WHERE 
+    I.clientID = 'DaisyDuck'
+
+ORDER BY 
+    invoiceID ASC, responseID ASC;
+
 
 
 

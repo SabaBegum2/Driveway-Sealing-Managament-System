@@ -204,7 +204,7 @@ app.get('/Client/QuoteHistory/:clientID', async (request, response) => {
 });
 
 
-/* QUOTE RESPONSE */
+/* GET CLIENT QUOTE RESPONSE */
 app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) => {
     const { responseID } = request.params;
     const { proposedPrice, startDate, endDate, addNote } = request.body;
@@ -222,7 +222,7 @@ app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) 
 });
 
 
-/* QUOTE ACCEPTED */
+/* GET CLIENT ACCEPT FOR QUOTE */
 app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => {
     const { responseID } = request.params;
 
@@ -230,8 +230,8 @@ app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => 
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const result = await db.acceptQuoteResonse(responseID);
-        response.json({ success: true, message: "Quote accepted successfully." });
+        const result = await db.acceptQuoteResponse(responseID);
+        response.json({ success: true, message: "Invoice successfully paid." });
     } catch (err) {
         console.error(err);
         response.status(500).json({ error: "Failed to accept quote." });
@@ -255,6 +255,24 @@ app.get('/Client/WorkOrderHistory/:clientID', async (request, response) => {
 });
 
 
+/* GET CLIENT CANCELLATION FOR ORDER */
+app.put('/Client/WorkOrderHistory/Cancel/:workOrderID', async (request, response) => {
+    const { workOrderID } = request.params;
+
+    console.log(`Accepting quote with workOrderID: ${workOrderID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.cancelWorkOrder(workOrderID);
+        response.json({ success: true, message: "Order successfully cancelled." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to cancel order." });
+    }
+});
+
+
+// GET CLIENT INVOICE HISTORY
 app.get('/Client/Invoices/:clientID', async (request, response) => {
     const { clientID } = request.params;
     const db = userDbService.getUserDbServiceInstance();
@@ -269,40 +287,41 @@ app.get('/Client/Invoices/:clientID', async (request, response) => {
 });
 
 
-/* INVOICE RESPONSE */
+/* GET CLIENT INVOICE RESPONSE */
 app.post('/Client/Invoices/Response/:invoiceID', async (request, response) => {
     const { invoiceID } = request.params;
-    const { responseID, amountDue, responseNote } = request.body;
+    const { clientID, responseNote } = request.body;
 
     console.log(`Inserting new response for: ${invoiceID}`);
     // console.log(`response ID: ${responseID}`);
-    console.log(`Amount Due: ${amountDue}`);
-    console.log(`Response Note: ${responseNote}`);
+    // console.log(`Amount Due: ${amountDue}`);
+    // console.log(`Response Note: ${responseNote}`);
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
+        const result = await db.insertInvoiceResponse(invoiceID, clientID, responseNote);
+        // const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
         response.json({ success: true, message: "Response inserted successfully." });
     } catch (err) {
         console.error(err);
-        response.status(500).json({ error: "Failed to insert quote response." });
+        response.status(500).json({ error: "Failed to insert invoice response." });
     }
 });
 
 
-/* INVOICE ACCEPTED AND PAID */
+/* INVOICE ACCEPTED AND PAID BY CLIENT */
 app.put('/Client/Invoices/Accept/:invoiceID', async (request, response) => {
     const { invoiceID } = request.params;
 
-    console.log(`Accepting quote with responseID: ${invoiceID}`);
+    console.log(`Accepting invoice with responseID: ${invoiceID}`);
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const result = await db.acceptInvoiceResonse(invoiceID);
-        response.json({ success: true, message: "Quote accepted successfully." });
+        const result = await db.acceptInvoiceResponse(invoiceID);
+        response.json({ success: true, message: "Invoice accepted successfully." });
     } catch (err) {
         console.error(err);
-        response.status(500).json({ error: "Failed to accept quote." });
+        response.status(500).json({ error: "Failed to accept invoice." });
     }
 });
 
