@@ -642,80 +642,297 @@ app.get('/revenueReport', async (req, res) => {
 
 
 
-// app.get('/getRevenueReport', async (req, res) => {
-//     console.log('Route /getRevenueReport hit');
-//     let db;
 
-//     try {
-//         db = userDbService.getUserDbServiceInstance();
-//         console.log('Database service initialized');
-//     } catch (error) {
-//         console.error('Failed to initialize database service:', error.message);
-//         return res.status(500).json({ error: 'Database service initialization failed' });
-//     }
+/////////////////////// David Queries ////////////////////////////
 
-//     const { startDate, endDate } = req.query;
-//     console.log('Query parameters:', { startDate, endDate });
+// Endpoint: Big Clients
+app.get('/big-clients', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        SELECT 
+            clientID, 
+            COUNT(workOrderID) AS completedOrders
+        FROM 
+            WorkOrder
+        WHERE 
+            status = 'Completed'
+        GROUP BY 
+            clientID
+        HAVING 
+            COUNT(workOrderID) = (
+                SELECT MAX(orderCount)
+                FROM (
+                    SELECT COUNT(workOrderID) AS orderCount
+                    FROM WorkOrder
+                    WHERE status = 'Completed'
+                    GROUP BY clientID
+                ) AS subquery
+            );
+    `;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Database query failed' });
+        } else {
+            res.json(results);
+        }
+    });
+});
 
-//     if (!startDate || !endDate) {
-//         console.log('Invalid query parameters');
-//         return res.status(400).json({ error: "Start date and end date are required." });
-//     }
+// Endpoint: Difficult clients
+app.get('/difficult-clients', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        WITH PendingCounts AS (
+            SELECT 
+                qh.clientID,
+                qh.quoteID,
+                COUNT(*) AS pendingCount
+            FROM QuoteHistory qh
+            WHERE qh.status = 'Pending'
+            GROUP BY qh.clientID, qh.quoteID
+        ),
+        ClientsWithThreeOrMoreRequests AS (
+            SELECT 
+                pc.clientID,
+                GROUP_CONCAT(pc.quoteID) AS quoteIDs -- Collect the quoteIDs for the client
+            FROM PendingCounts pc
+            WHERE pc.pendingCount = 2 -- Exactly 2 'Pending' statuses per quoteID
+            GROUP BY pc.clientID
+            HAVING COUNT(pc.quoteID) >= 3 -- Check for 3 or more quoteIDs with this pattern
+        )
+        SELECT DISTINCT 
+            c.clientID,
+            c.firstName,
+            c.lastName,
+            c.email,
+            ct.quoteIDs
+        FROM ClientsWithThreeOrMoreRequests ct
+        JOIN ClientDB c ON c.clientID = ct.clientID;
+    `;
 
-//     const query = `
-//         SELECT COALESCE(SUM(I.amountDue), 0) AS totalRevenue
-//         FROM Invoice I
-//         INNER JOIN WorkOrder W ON I.workOrderID = W.workOrderID
-//         WHERE W.status = 'Completed'
-//           AND I.datePaid IS NOT NULL
-//           AND I.datePaid BETWEEN ? AND ?;
-//     `;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Database query failed:', err.sqlMessage || err.message);
+            res.status(500).json({
+                error: 'Database query failed',
+                details: err.sqlMessage || err.message,
+            });
+            return;
+        }
+        res.json(results);
+    });
+});
 
-//     try {
-//         console.log('Executing query:', query);
-//         const results = await db.execute(query, [startDate, endDate]);
-//         console.log('Query results:', results);
-//         res.json({ totalRevenue: results[0]?.totalRevenue || 0 });
-//     } catch (error) {
-//         console.error('Database query failed:', error.message);
-//         res.status(500).json({ error: "Database query failed: " + error.message });
-//     }
-// });
+// Endpoint: This Month Quotes
+app.get('/this-month-quotes', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        SELECT 
+            qh.responseID,
+            qh.quoteID,
+            qh.clientID,
+            qh.proposedPrice,
+            qh.startDate,
+            qh.endDate,
+            qh.addNote,
+            qh.status,
+            qh.responseDate
+        FROM 
+            QuoteHistory qh
+        WHERE 
+            qh.status = 'Accepted'
+            AND MONTH(qh.responseDate) = MONTH(CURDATE())
+            AND YEAR(qh.responseDate) = YEAR(CURDATE());
+    `;
 
-// app.get('/getRevenueReport', async (req, res) => {
-//     console.log('Route /getRevenueReport hit');
-//     const db = UserDbService.getUserDbServiceInstance();
-//     const { startDate, endDate } = req.query;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Database query failed' });
+            return;
+        }
+        res.json(results);
+    });
+});
 
-//     console.log('Query parameters:', { startDate, endDate });
+// Endpoint: Prospective Clients
+app.get('/prospective-clients', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        SELECT 
+            c.clientID, 
+            c.firstName, 
+            c.lastName, 
+            c.email, 
+            c.registerDate
+        FROM 
+            ClientDB c
+        WHERE 
+            NOT EXISTS (
+                SELECT 1
+                FROM QuoteRequest q
+                WHERE c.clientID = q.clientID
+            );
+    `;
 
-//     if (!startDate || !endDate) {
-//         console.log('Invalid query parameters');
-//         return res.status(400).json({ error: "Start date and end date are required." });
-//     }
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Database query failed' });
+            return;
+        }
+        res.json(results);
+    });
+});
 
-//     const query = `
-//         SELECT COALESCE(SUM(I.amountDue), 0) AS totalRevenue
-//         FROM Invoice I
-//         INNER JOIN WorkOrder W ON I.workOrderID = W.workOrderID
-//         WHERE W.status = 'Completed'
-//           AND I.datePaid IS NOT NULL
-//           AND I.datePaid BETWEEN ? AND ?;
-//     `;
+// Endpoint: Largest Driveway
+app.get('/largest-driveway', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        WITH MaxDriveway AS (
+            SELECT MAX(q.drivewaySqft) AS maxSqft
+            FROM WorkOrder w
+            JOIN QuoteRequest q ON w.quoteID = q.quoteID
+        )
+        SELECT 
+            w.clientID, 
+            w.workOrderID, 
+            w.quoteID, 
+            q.propertyAddress, 
+            q.drivewaySqft, 
+            w.dateRange
+        FROM 
+            WorkOrder w
+        JOIN 
+            QuoteRequest q ON w.quoteID = q.quoteID
+        JOIN 
+            MaxDriveway m ON q.drivewaySqft = m.maxSqft;
+    `;
 
-//     try {
-//         console.log('Executing query:', query);
-//         const results = await db.execute(query, [startDate, endDate]);
-//         console.log('Query results:', results);
-//         res.json({ totalRevenue: results[0].totalRevenue });
-//     } catch (error) {
-//         console.error('Database query failed:', error.message);
-//         res.status(500).json({ error: "Database query failed: " + error.message });
-//     }
-// });
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Database query failed' });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Endpoint: Overdue Bills
+app.get('/overdue-bills', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+
+    const selectQuery = `
+        SELECT DISTINCT 
+            c.clientID, 
+            c.firstName, 
+            c.lastName, 
+            c.email,
+            i.invoiceID,
+            i.dateCreated,
+            i.datePaid,
+            i.amountDue
+        FROM 
+            ClientDB c
+        JOIN 
+            Invoice i ON c.clientID = i.clientID
+        WHERE 
+            i.datePaid IS NULL 
+            AND i.dateCreated IS NOT NULL
+            AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
+    `;
+
+    db.query(selectQuery, (err, results) => {
+        if (err) {
+            console.error('Database query failed:', err.sqlMessage || err.message);
+            res.status(500).json({
+                error: 'Failed to load overdue bills',
+                details: err.sqlMessage || err.message,
+            });
+            return;
+        }
+        res.json(results);
+    });
+});
 
 
-/////////////////////// David Dashboard ////////////////////////////
+
+
+
+// Endpoint: Bad Clients
+app.get('/bad-clients', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        SELECT DISTINCT 
+            c.clientID, 
+            c.firstName, 
+            c.lastName, 
+            c.email,
+            i.invoiceID,
+            i.dateCreated
+        FROM 
+            ClientDB c
+        JOIN 
+            Invoice i ON c.clientID = i.clientID
+        WHERE 
+            i.datePaid IS NULL 
+            AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Database query failed:', err.sqlMessage || err.message);
+            res.status(500).json({
+                error: 'Database query failed',
+                details: err.sqlMessage || err.message,
+            });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+
+
+// Endpoint: Good Clients
+app.get('/good-clients', (req, res) => {
+    const db = userDbService.getUserDbServiceInstance();
+    const query = `
+        SELECT DISTINCT 
+            c.clientID, 
+            c.firstName, 
+            c.lastName, 
+            c.email, 
+            i.invoiceID, 
+            i.dateCreated, 
+            i.datePaid
+        FROM 
+            ClientDB c
+        JOIN 
+            Invoice i ON c.clientID = i.clientID
+        WHERE 
+            i.datePaid IS NOT NULL 
+            AND TIMESTAMPDIFF(HOUR, i.dateCreated, i.datePaid) <= 24;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Database query failed' });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+
+
+
+
+
+
 
 
 

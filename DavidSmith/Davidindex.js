@@ -1,51 +1,5 @@
-// document.addEventListener("DOMContentLoaded", () => {
-//     // Fetch and display work orders
-//     //works*****
-//     async function fetchWorkOrders() {
-//         try {
-//             console.log("Fetching work orders..."); // Debugging
 
-//             const response = await fetch("http://localhost:5050/workorders");
-//             if (!response.ok) {
-//                 throw new Error(`Error fetching work orders: ${response.statusText}`);
-//             }
-
-//             const workOrders = await response.json();
-//             console.log("Work Orders Fetched:", workOrders); // Debugging
-
-//             const ordersList = document.getElementById("orders-list");
-//             if (!ordersList) {
-//                 console.error("The element #orders-list does not exist in the DOM.");
-//                 return;
-//             }
-
-//             // Clear existing content
-//             ordersList.innerHTML = "";
-
-//             // Populate work orders
-//             workOrders.forEach((order) => {
-//                 const orderDiv = document.createElement("div");
-//                 orderDiv.classList.add("work-order");
-
-//                 orderDiv.innerHTML = `
-//                 <p><strong>Order ID:</strong> #${order.workOrderID}</p>
-//                 <p><strong>Client ID:</strong> ${order.clientID}</p>
-//                 <p><strong>Date:</strong> ${order.dateRange}</p>
-//                 <p><strong>Status:</strong> ${order.status}</p>
-//             `;
-
-
-//                 ordersList.appendChild(orderDiv);
-//             });
-
-//             console.log("Work orders rendered successfully."); // Debugging
-//         } catch (error) {
-//             console.error("Error fetching work orders:", error);
-//         }
-//     }
-
-    
-    ////////works 
+  ////////works 
     // Fetch and display quotes
     document.addEventListener("DOMContentLoaded", () => {
         // Load quotes once the DOM is fully loaded
@@ -370,214 +324,13 @@ function markWorkOrderComplete(workOrderID) {
         .catch((error) => console.error("Error completing work order:", error));
 }
 
-    
-    
-    
-
-
-
-
-
-//fetching quotes history and bills
-// async function fetchQuoteHistory() {
-//     try {
-//         const response = await fetch("http://localhost:5050/quotehistory");
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-//         const quoteHistory = await response.json();
-
-//         const billList = document.getElementById("bill-list");
-//         if (!billList) {
-//             console.error("The element #bill-list does not exist in the DOM.");
-//             return;
-//         }
-
-//         // Clear existing content
-//         billList.innerHTML = "";
-
-//         // Populate the list
-//         quoteHistory.forEach((quote) => {
-//             const listItem = document.createElement("li");
-
-//             listItem.innerHTML = `
-//                 <p><strong>Quote ID:</strong> #${quote.quoteID}</p>
-//                 <p><strong>Status:</strong> ${quote.status}</p>
-//                 <p><strong>Proposed Price:</strong> $${quote.proposedPrice.toFixed(2)}</p>
-//                 <p><strong>Start Date:</strong> ${quote.startDate}</p>
-//                 <p><strong>End Date:</strong> ${quote.endDate}</p>
-//                 <p><strong>Additional Note:</strong> ${quote.addNote || "N/A"}</p>
-//                 <p><strong>Response Date:</strong> ${quote.responseDATE}</p>
-//                 ${
-//                     quote.status === "Pending"
-//                         ? `<button class="respond-bill-btn" onclick="respondToQuote(${quote.responseID})">Respond</button>`
-//                         : ""
-//                 }
-//             `;
-
-//             billList.appendChild(listItem);
-//         });
-//     } catch (error) {
-//         console.error("Error fetching quote history:", error);
-//     }
-// }
-
-
 // Function to handle response
 function respondToQuote(responseID) {
     alert(`Responding to Quote with Response ID: ${responseID}`);
     // Add logic for responding to quotes
 }
 
-// Fetch and display the data on page load
-//document.addEventListener("DOMContentLoaded", fetchQuoteHistory);
 
-
-// async function fetchWorkOrders() {
-//     try {
-//         const response = await fetch("http://localhost:5050/workorders");
-//         if (!response.ok) {
-//             throw new Error(`Error fetching work orders: ${response.statusText}`);
-//         }
-
-//         const workOrders = await response.json();
-
-//         const ordersList = document.getElementById("orders-list");
-//         if (!ordersList) {
-//             console.error("The element #orders-list does not exist in the DOM.");
-//             return;
-//         }
-
-//         // Clear existing content
-//         ordersList.innerHTML = "";
-
-//         // Populate work orders with buttons conditionally
-//         workOrders.forEach((order) => {
-//             const orderDiv = document.createElement("div");
-//             orderDiv.classList.add("work-order");
-//             orderDiv.setAttribute("id", `work-order-${order.workOrderID}`); // Add unique ID
-
-//             // Add status-specific buttons or disable options
-//             let buttonsHTML = "";
-//             if (order.status === "Scheduled") {
-//                 buttonsHTML = `
-//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Completed')">Completed</button>
-//                     <button onclick="updateWorkOrderStatus(${order.workOrderID}, 'Cancelled')">Cancelled</button>
-//                 `;
-//             } else {
-//                 buttonsHTML = `<p>No further actions available. Status is <strong>${order.status}</strong>.</p>`;
-//             }
-
-//             orderDiv.innerHTML = `
-//                 <p><strong>Order ID:</strong> #${order.workOrderID}</p>
-//                 <p><strong>Client ID:</strong> ${order.clientID}</p>
-//                 <p><strong>Date:</strong> ${order.dateRange}</p>
-//                 <p><strong>Status:</strong> <span id="status-${order.workOrderID}">${order.status}</span></p>
-//                 <div id="buttons-${order.workOrderID}">
-//                     ${buttonsHTML}
-//                 </div>
-//             `;
-
-//             ordersList.appendChild(orderDiv);
-//         });
-//     } catch (error) {
-//         console.error("Error fetching work orders:", error);
-//     }
-// }
-
-// async function updateWorkOrderStatus(workOrderID, newStatus) {
-//     try {
-//         const response = await fetch(`http://localhost:5050/workorders/${workOrderID}`, {
-//             method: "PUT",
-//             headers: {
-//                 "Content-Type": "application/json",
-//             },
-//             body: JSON.stringify({ status: newStatus }),
-//         });
-
-//         if (!response.ok) {
-//             const errorResponse = await response.json();
-//             console.error("Error response from server:", errorResponse);
-//             throw new Error(`Error updating work order status: ${errorResponse.error}`);
-//         }
-
-//         // Update the DOM
-//         const statusElement = document.getElementById(`status-${workOrderID}`);
-//         const buttonsContainer = document.getElementById(`buttons-${workOrderID}`);
-
-//         // Update status text
-//         statusElement.textContent = newStatus;
-
-//         // Replace buttons with a message
-//         buttonsContainer.innerHTML = `<p>No further actions available. Status is <strong>${newStatus}</strong>.</p>`;
-
-//         alert(`Work order #${workOrderID} status updated to ${newStatus}`);
-//     } catch (error) {
-//         console.error("Error updating work order status:", error);
-//         alert("Failed to update work order status.");
-//     }
-// }
-
-// document.addEventListener("DOMContentLoaded", fetchWorkOrders);
-
-//revenue function
-// function fetchRevenueReport() {
-//     const startDate = document.getElementById("start-date").value;
-//     const endDate = document.getElementById("end-date").value;
-
-//     if (!startDate || !endDate) {
-//         alert("Please select both start and end dates.");
-//         return;
-//     }
-
-//     const isValidDate = (date) => !isNaN(new Date(date).getTime());
-//     if (!isValidDate(startDate) || !isValidDate(endDate)) {
-//         alert("Please enter valid dates.");
-//         return;
-//     }
-
-//     const url = `http://localhost:5050/revenue?startDate=${startDate}&endDate=${endDate}`;
-//     console.log("Fetching URL:", url);
-
-//     const revenueResult = document.getElementById("revenue-result");
-//     if (!revenueResult) {
-//         console.error("Element with ID 'revenue-result' not found.");
-//         return;
-//     }
-
-//     revenueResult.innerHTML = "<p>Loading...</p>";
-
-//     fetch(url)
-//         .then(response => {
-//             console.log("Fetch response:", response);
-//             if (!response.ok) {
-//                 if (response.status === 404) {
-//                     throw new Error("The server endpoint could not be found.");
-//                 } else if (response.status === 500) {
-//                     throw new Error("An error occurred on the server.");
-//                 } else {
-//                     throw new Error(`HTTP error! status: ${response.status}`);
-//                 }
-//             }
-//             return response.json();
-//         })
-//         .then(data => {
-//             console.log("Fetched data:", data);
-
-//             // Update the DOM with the fetched revenue data
-//             revenueResult.innerHTML = `
-//                 <h2>Revenue Report</h2>
-//                 <p><strong>Total Revenue:</strong> $${data.totalRevenue.toFixed(2)}</p>
-//                 <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
-//             `;
-//         })
-//         .catch(error => {
-//             console.error("Error fetching revenue report:", error);
-//             revenueResult.innerHTML = `
-//                 <p style="color: red;">Failed to fetch revenue report: ${error.message}</p>
-//             `;
-//         });
-// }
 function fetchRevenueReport() {
     const startDate = document.getElementById("start-date").value;
     const endDate = document.getElementById("end-date").value;
@@ -612,3 +365,398 @@ function fetchRevenueReport() {
 
 
 
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAllQueryResults(); // Call the function to fetch all query results
+});
+
+function fetchAllQueryResults() {
+    const ordersDiv = document.getElementById('Orders-details');
+    ordersDiv.innerHTML = ''; // Clear existing content
+
+    // Fetch and display Big Clients
+    fetch('http://localhost:5050/big-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Big Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No big clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(order => {
+                    content += `<li><strong>Client ID:</strong> ${order.clientID} - <strong>Completed Orders:</strong> ${order.completedOrders}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching big clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading big clients.</p>';
+        });
+
+    // Fetch and display Difficult Clients
+    fetch('http://localhost:5050/difficult-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Difficult Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No difficult clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching difficult clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading difficult clients.</p>';
+        });
+
+    // Fetch and display This Month's Quotes
+    fetch('http://localhost:5050/this-month-quotes')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>This Month’s Quotes</h2>';
+            if (data.length === 0) {
+                content += '<p>No quotes found for this month.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(quote => {
+                    content += `<li><strong>Quote ID:</strong> ${quote.quoteID} - <strong>Proposed Price:</strong> $${quote.proposedPrice}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching this month’s quotes:', error);
+            ordersDiv.innerHTML += '<p>Error loading this month’s quotes.</p>';
+        });
+
+    // Fetch and display Prospective Clients
+    fetch('http://localhost:5050/prospective-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Prospective Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No prospective clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID} - <strong>Name:</strong> ${client.firstName} ${client.lastName}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching prospective clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading prospective clients.</p>';
+        });
+
+    // Fetch and display Largest Driveway
+    fetch('http://localhost:5050/largest-driveway')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Largest Driveway</h2>';
+            if (data.length === 0) {
+                content += '<p>No largest driveway found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(driveway => {
+                    content += `<li><strong>Address:</strong> ${driveway.propertyAddress} - <strong>Size:</strong> ${driveway.drivewaySqft} sqft</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching largest driveway:', error);
+            ordersDiv.innerHTML += '<p>Error loading largest driveway.</p>';
+        });
+
+    // Fetch and display Overdue Bills
+    fetch('http://localhost:5050/overdue-bills')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Overdue Bills</h2>';
+            if (data.length === 0) {
+                content += '<p>No overdue bills found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(bill => {
+                    content += `<li><strong>Invoice ID:</strong> ${bill.invoiceID} - <strong>Amount Due:</strong> $${bill.amountDue} - <strong>Date Created:</strong> ${bill.dateCreated}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching overdue bills:', error);
+            ordersDiv.innerHTML += '<p>Error loading overdue bills.</p>';
+        });
+
+    // Fetch and display Bad Clients
+    fetch('http://localhost:5050/bad-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Bad Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No bad clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID} - <strong>Name:</strong> ${client.firstName} ${client.lastName}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching bad clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading bad clients.</p>';
+        });
+
+    // Fetch and display Good Clients
+    fetch('http://localhost:5050/good-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Good Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No good clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID} - <strong>Name:</strong> ${client.firstName} ${client.lastName}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching good clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading good clients.</p>';
+        });
+        
+}
+// Function to handle response
+function respondToQuote(responseID) {
+    alert(`Responding to Quote with Response ID: ${responseID}`);
+    // Add logic for responding to quotes
+}
+
+
+function fetchRevenueReport() {
+    const startDate = document.getElementById("start-date").value;
+    const endDate = document.getElementById("end-date").value;
+
+    if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+    }
+
+    fetch(`http://localhost:5050/revenueReport?startDate=${startDate}&endDate=${endDate}`)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // Generate a pop-up with the fetched revenue data
+            alert(`
+                Revenue Report:
+                -------------------------------
+                Start Date: ${data.startDate}
+                End Date: ${data.endDate}
+                Total Revenue: $${data.totalRevenue.toFixed(2)}
+            `);
+        })
+        .catch((error) => {
+            console.error("Error fetching revenue report:", error);
+            alert("Failed to generate revenue report. Please try again.");
+        });
+}
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAllQueryResults(); // Call the function to fetch all query results
+});
+
+function fetchAllQueryResults() {
+    const ordersDiv = document.getElementById('Orders-details');
+    ordersDiv.innerHTML = ''; // Clear existing content
+
+    // Fetch and display Big Clients
+    fetch('http://localhost:5050/big-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Big Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No big clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(order => {
+                    content += `<li><strong>Client ID:</strong> ${order.clientID} - <strong>Completed Orders:</strong> ${order.completedOrders}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching big clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading big clients.</p>';
+        });
+
+    // Fetch and display Difficult Clients
+    fetch('http://localhost:5050/difficult-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Difficult Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No difficult clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching difficult clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading difficult clients.</p>';
+        });
+
+    // Fetch and display This Month's Quotes
+    fetch('http://localhost:5050/this-month-quotes')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>This Month’s Quotes</h2>';
+            if (data.length === 0) {
+                content += '<p>No quotes found for this month.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(quote => {
+                    content += `<li><strong>Quote ID:</strong> ${quote.quoteID} - <strong>Proposed Price:</strong> $${quote.proposedPrice}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching this month’s quotes:', error);
+            ordersDiv.innerHTML += '<p>Error loading this month’s quotes.</p>';
+        });
+
+    // Fetch and display Prospective Clients
+    fetch('http://localhost:5050/prospective-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Prospective Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No prospective clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID} - <strong>Name:</strong> ${client.firstName} ${client.lastName}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching prospective clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading prospective clients.</p>';
+        });
+
+    // Fetch and display Largest Driveway
+    fetch('http://localhost:5050/largest-driveway')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Largest Driveway</h2>';
+            if (data.length === 0) {
+                content += '<p>No largest driveway found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(driveway => {
+                    content += `<li><strong>Address:</strong> ${driveway.propertyAddress} - <strong>Size:</strong> ${driveway.drivewaySqft} sqft</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching largest driveway:', error);
+            ordersDiv.innerHTML += '<p>Error loading largest driveway.</p>';
+        });
+
+    // Fetch and display Overdue Bills
+    fetch('http://localhost:5050/overdue-bills')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Overdue Bills</h2>';
+            if (data.length === 0) {
+                content += '<p>No overdue bills found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(bill => {
+                    content += `<li><strong>Invoice ID:</strong> ${bill.invoiceID} - <strong>Amount Due:</strong> $${bill.amountDue} - <strong>Date Created:</strong> ${bill.dateCreated}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching overdue bills:', error);
+            ordersDiv.innerHTML += '<p>Error loading overdue bills.</p>';
+        });
+
+    // Fetch and display Bad Clients
+    fetch('http://localhost:5050/bad-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Bad Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No bad clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID} - <strong>Name:</strong> ${client.firstName} ${client.lastName}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching bad clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading bad clients.</p>';
+        });
+
+    // Fetch and display Good Clients
+    fetch('http://localhost:5050/good-clients')
+        .then(response => response.json())
+        .then(data => {
+            let content = '<h2>Good Clients</h2>';
+            if (data.length === 0) {
+                content += '<p>No good clients found.</p>';
+            } else {
+                content += '<ul>';
+                data.forEach(client => {
+                    content += `<li><strong>Client ID:</strong> ${client.clientID} - <strong>Name:</strong> ${client.firstName} ${client.lastName}</li>`;
+                });
+                content += '</ul>';
+            }
+            ordersDiv.innerHTML += content;
+        })
+        .catch(error => {
+            console.error('Error fetching good clients:', error);
+            ordersDiv.innerHTML += '<p>Error loading good clients.</p>';
+        });
+        
+}

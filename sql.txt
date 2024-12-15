@@ -426,6 +426,16 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
        SET status = ?, responseDate = NOW(), addNote = ?
        WHERE quoteID = ? AND clientID = ?
 
+// Get all work Orders
+        SELECT wo.workOrderID, wo.clientID, wo.quoteID, wo.responseID, wo.dateRange, wo.status,
+                inv.dateCreated, inv.datePaid
+        FROM WorkOrder wo
+        LEFT JOIN Invoice inv ON wo.workOrderID = inv.workOrderID;
+
+// Update work order
+    UPDATE WorkOrder
+    SET status = 'Completed'
+    WHERE workOrderID = ?;
 
 
 -----------------------  SPECIFIC QUERIES   --------------------------

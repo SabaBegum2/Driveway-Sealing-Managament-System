@@ -865,7 +865,6 @@ async completeWorkOrder(workOrderID) {
    });
 }
 
-
  
 }
 
