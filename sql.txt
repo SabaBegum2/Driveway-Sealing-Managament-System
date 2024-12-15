@@ -341,6 +341,80 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
+// David's dashboard
+  SELECT 
+      QR.quoteID,
+      QR.clientID,
+      QR.propertyAddress,
+      QR.drivewaySqft,
+      QR.proposedPrice,
+      QR.addNote,
+      QRI.image1,
+      QRI.image2,
+      QRI.image3,
+      QRI.image4,
+      QRI.image5
+  FROM 
+      QuoteRequest QR
+  LEFT JOIN 
+      QuoteRequestImage QRI
+  ON 
+      QR.quoteID = QRI.quoteID;
+
+// Accept Quote
+	INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status)
+	VALUES (?, ?, ?, ?, ?, ?, 'Accepted')
+
+// Get accepted quotes
+       SELECT qr.quoteID, qr.clientID, qr.propertyAddress, qr.drivewaySqft, qr.proposedPrice AS originalProposedPrice,
+	      qh.startDate, qh.endDate, qh.addNote, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5
+       FROM QuoteHistory qh
+       JOIN QuoteRequest qr ON qh.quoteID = qr.quoteID
+       LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+       WHERE qh.status = 'Accepted'
+
+// Reject Quote
+       UPDATE QuoteHistory
+       SET status = 'Rejected', addNote = ?, responseDate = NOW()
+       WHERE quoteID = ? AND clientID = ?;
+
+// Get Quote Details
+	SELECT qr.*, qri.image1, qri.image2, qri.image3, qri.image4, qri.image5
+	FROM QuoteRequest qr
+	LEFT JOIN QuoteRequestImage qri ON qr.quoteID = qri.quoteID
+	WHERE qr.quoteID = ?;
+
+// Create Work order
+       INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
+       VALUES (?, ?, ?, ?)
+
+// Check work order 
+	SELECT 1 FROM WorkOrder WHERE workOrderID = ? LIMIT 1
+
+// Check Client
+	SELECT 1 FROM ClientDB WHERE clientID = ? LIMIT 1
+
+// Generate invoice
+       INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+       VALUES (?, ?, ?, NOW())
+
+// Get all invoice responses
+     SELECT ir.responseID, ir.invoiceID, ir.responseNote, ir.responseDate, i.clientID, i.amountDue, qh.quoteID, qh.status
+	FROM InvoiceResponses ir
+	JOIN Invoice i ON ir.invoiceID = i.invoiceID
+	JOIN QuoteHistory qh ON i.workOrderID = qh.quoteID
+
+//for david to respond to the invoices
+	note ? `UPDATE InvoiceResponses SET responseNote = ?, responseDate = NOW() WHERE responseID = ?` : `UPDATE InvoiceResponses SET responseDate = NOW() WHERE responseID = ?`
+
+// Update quote history status
+       UPDATE QuoteHistory
+       SET status = ?, responseDate = NOW(), addNote = ?
+       WHERE quoteID = ? AND clientID = ?
+
+
+
+-----------------------  SPECIFIC QUERIES   --------------------------
 -- big clients 
 
 SELECT c.clientID, c.firstName, c.lastName, COUNT(wo.workOrderID) AS completed_orders
@@ -424,6 +498,8 @@ FROM ClientDB c
 JOIN Invoice i ON c.clientID = i.clientID
 WHERE i.datePaid IS NOT NULL
   AND TIMESTAMPDIFF(HOUR, i.dateCreated, i.datePaid) <= 24;
+
+
 
 
 
