@@ -1,0 +1,103 @@
+Entities:
+
+ClientDB:
+  - clientID (PK)
+  - email (Unique, Not Null)
+  - password (Not Null)
+  - firstName (Not Null)
+  - lastName (Not Null)
+  - phoneNumber
+  - creditCardNum
+  - creditCardCVV
+  - creditCardExp
+  - homeAddress (Not Null)
+  - registerDate
+  - loginTime
+  - activeStatus (Default: "offline")
+
+QuoteRequest:
+  - quoteID (PK)
+  - clientID (FK to ClientDB.clientID)
+  - propertyAddress (Not Null)
+  - drivewaySqft
+  - proposedPrice (Not Null)
+  - addNote
+
+QuoteRequestImage:
+  - quoteID (FK to QuoteRequest.quoteID)
+  - image1 (Not Null)
+  - image2 (Not Null)
+  - image3 (Not Null)
+  - image4 (Not Null)
+  - image5 (Not Null)
+
+QuoteHistory:
+  - responseID (PK)
+  - clientID (FK to QuoteRequest.clientID)
+  - quoteID (FK to QuoteRequest.quoteID)
+  - proposedPrice
+  - startDate
+  - endDate
+  - addNote
+  - responseDate
+  - status (Default: "Pending")
+
+WorkOrder:
+  - workOrderID (PK)
+  - clientID (FK to ClientDB.clientID)
+  - quoteID (FK to QuoteRequest.quoteID)
+  - responseID (FK to QuoteHistory.responseID)
+  - dateRange
+  - status (Default: "Scheduled")
+
+Invoice:
+  - invoiceID (PK)
+  - workOrderID (FK to WorkOrder.workOrderID)
+  - clientID (FK to ClientDB.clientID)
+  - amountDue
+  - dateCreated
+  - datePaid
+
+InvoiceResponses:
+  - responseID (PK)
+  - invoiceID (FK to Invoice.invoiceID)
+  - responseNote
+  - responseDate
+
+RevenueReport:
+  - reportID (PK)
+  - startDate (Not Null)
+  - endDate (Not Null)
+  - totalRevenue
+  - totalInvoices
+  - totalWorkOrders
+
+Relationships:
+
+1. ClientDB to QuoteRequest: One-to-Many (Use thick line for constraint) - Includes "Submits"
+   - Assumption: Each client can submit multiple quote requests for different properties or projects, but each quote is tied to one client.
+   - Justification: This supports clients managing multiple driveway projects, reflecting a real-world use case.
+
+2. QuoteRequest to QuoteRequestImage: One-to-One (Use arrow to represent) - Includes "Contains"
+   - Assumption: Each quote request must include exactly five images, ensuring comprehensive property documentation.
+   - Justification: The five-image requirement standardizes the data submission process and ensures adequate visual details for property assessment.
+
+3. QuoteRequest to QuoteHistory: One-to-Many (Use thick line for constraint) - Includes "Has History"
+   - Assumption: A single quote may have multiple negotiation responses recorded as part of the negotiation history.
+   - Justification: This facilitates a structured negotiation process and ensures traceability for both parties.
+
+4. QuoteHistory to WorkOrder: One-to-One (Use arrow to represent) - Includes "Generates"
+   - Assumption: Once a negotiation is finalized, a work order is generated from the corresponding quote history response.
+   - Justification: Finalized quotes form binding contracts, leading directly to work orders, which organize scheduling and task details.
+
+5. WorkOrder to Invoice: One-to-One (Use arrow to represent) - Includes "Produces"
+   - Assumption: Each work order corresponds to one invoice, ensuring a one-to-one relationship between completed work and billing.
+   - Justification: This ensures clear financial tracking, linking specific services to their corresponding bills.
+
+6. Invoice to InvoiceResponses: One-to-Many (Use thick line for constraint) - Includes "Records"
+   - Assumption: An invoice can have multiple responses to accommodate negotiation or dispute resolution.
+   - Justification: This supports back-and-forth billing discussions, ensuring a record of all disputes and resolutions.
+
+7. WorkOrder to RevenueReport: Many-to-One (Use thick line for constraint) - Includes "Summarizes"
+   - Assumption: Revenue reports aggregate data from multiple work orders within a specified time frame.
+   - Justification: This enables David Smith to evaluate financial performance over defined periods for strategic planning.
