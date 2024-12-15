@@ -204,7 +204,7 @@ app.get('/Client/QuoteHistory/:clientID', async (request, response) => {
 });
 
 
-/* QUOTE RESPONSE */
+/* GET CLIENT QUOTE RESPONSE */
 app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) => {
     const { responseID } = request.params;
     const { proposedPrice, startDate, endDate, addNote } = request.body;
@@ -222,7 +222,7 @@ app.post('/Client/QuoteHistory/Response/:responseID', async (request, response) 
 });
 
 
-/* QUOTE ACCEPTED */
+/* GET CLIENT ACCEPT FOR QUOTE */
 app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => {
     const { responseID } = request.params;
 
@@ -230,8 +230,8 @@ app.put('/Client/QuoteHistory/Accept/:responseID', async (request, response) => 
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const result = await db.acceptQuoteResonse(responseID);
-        response.json({ success: true, message: "Quote accepted successfully." });
+        const result = await db.acceptQuoteResponse(responseID);
+        response.json({ success: true, message: "Invoice successfully paid." });
     } catch (err) {
         console.error(err);
         response.status(500).json({ error: "Failed to accept quote." });
@@ -255,6 +255,24 @@ app.get('/Client/WorkOrderHistory/:clientID', async (request, response) => {
 });
 
 
+/* GET CLIENT CANCELLATION FOR ORDER */
+app.put('/Client/WorkOrderHistory/Cancel/:workOrderID', async (request, response) => {
+    const { workOrderID } = request.params;
+
+    console.log(`Accepting quote with workOrderID: ${workOrderID}`);
+    const db = userDbService.getUserDbServiceInstance();
+
+    try {
+        const result = await db.cancelWorkOrder(workOrderID);
+        response.json({ success: true, message: "Order successfully cancelled." });
+    } catch (err) {
+        console.error(err);
+        response.status(500).json({ error: "Failed to cancel order." });
+    }
+});
+
+
+// GET CLIENT INVOICE HISTORY
 app.get('/Client/Invoices/:clientID', async (request, response) => {
     const { clientID } = request.params;
     const db = userDbService.getUserDbServiceInstance();
@@ -269,40 +287,38 @@ app.get('/Client/Invoices/:clientID', async (request, response) => {
 });
 
 
-/* INVOICE RESPONSE */
+/* GET CLIENT INVOICE RESPONSE */
 app.post('/Client/Invoices/Response/:invoiceID', async (request, response) => {
     const { invoiceID } = request.params;
-    const { responseID, amountDue, responseNote } = request.body;
+    const { clientID, responseNote } = request.body;
 
     console.log(`Inserting new response for: ${invoiceID}`);
-    // console.log(`response ID: ${responseID}`);
-    console.log(`Amount Due: ${amountDue}`);
-    console.log(`Response Note: ${responseNote}`);
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
+        const result = await db.insertInvoiceResponse(invoiceID, clientID, responseNote);
+        // const result = await db.insertInvoiceResponse(invoiceID, amountDue, responseNote);
         response.json({ success: true, message: "Response inserted successfully." });
     } catch (err) {
         console.error(err);
-        response.status(500).json({ error: "Failed to insert quote response." });
+        response.status(500).json({ error: "Failed to insert invoice response." });
     }
 });
 
 
-/* INVOICE ACCEPTED AND PAID */
+/* INVOICE ACCEPTED AND PAID BY CLIENT */
 app.put('/Client/Invoices/Accept/:invoiceID', async (request, response) => {
     const { invoiceID } = request.params;
 
-    console.log(`Accepting quote with responseID: ${invoiceID}`);
+    console.log(`Accepting invoice with responseID: ${invoiceID}`);
     const db = userDbService.getUserDbServiceInstance();
 
     try {
-        const result = await db.acceptInvoiceResonse(invoiceID);
-        response.json({ success: true, message: "Quote accepted successfully." });
+        const result = await db.acceptInvoiceResponse(invoiceID);
+        response.json({ success: true, message: "Invoice accepted successfully." });
     } catch (err) {
         console.error(err);
-        response.status(500).json({ error: "Failed to accept quote." });
+        response.status(500).json({ error: "Failed to accept invoice." });
     }
 });
 
@@ -340,8 +356,6 @@ app.get('/searchLastName/:lastName', (request, response) => {
 
     let result;
     if (lastName === "all") {
-        // Return empty array if last name is not provided
-        //result = Promise.resolve([]);
         result = db.getAllData()
     } else {
         // Proceed with searching by last name
@@ -394,103 +408,12 @@ app.get('/searchClientID/:clientID', (request, response) => {
     .catch(err => console.log('Error: ', err));
 });
 
-/*
-app.get('/search/salary/:min/:max', (request, response) => {
-    const { min, max } = request.params;
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchBySalary(min, max);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-*/
-
-/*
-// Search ClientDB by age range
-app.get('/search/age/:min/:max', (request, response) => {
-    const { min, max } = request.params;
-    
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchByAge(min, max);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-*/
-
-// Search ClientDB registered after specific user
-app.get('/search/regAfter/:clientID', (request, response) => {
-    const { clientID } = request.params;
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchAfterRegDate(clientID);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-
-// Search ClientDB registered same day as specific user
-app.get('/search/regSameDay/:clientID', (request, response) => {
-    const { clientID } = request.params;
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchSameDayRegDate(clientID);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-
-
-// Search ClientDB who never signed in
-app.get('/search/neverSignedIn', (request, response) => {
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchNeverSignedIn();
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-
-// Search ClientDB who registered today
-app.get('/search/regToday', (request, response) => {
-
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchRegToday();
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
 
 
 
-// Route for searching ClientDB registered today
-app.get('/search/RegisteredToday', async (request, response) => {
-    try {
-        const db = userDbService.getUserDbServiceInstance();
-        const result = await db.searchByRegisteredToday();
-        //response.json({ data: data });
-        response.json({ data: result });
-    } catch (err) {
-        console.error(err);
-        response.status(500).json({ error: "An error occurred while searching ClientDB." });
-    }
-});
-
-/////////////////////// David Dashboard ////////////////////////////
+/* -------------------------------------------------------- */
+/* ------------------- David's Dashboard ------------------ */
+/* -------------------------------------------------------- */
 
 //works
 app.get('/quotes', (req, res) => {
@@ -539,7 +462,6 @@ app.post("/quotes/accept", async (req, res) => {
         res.status(500).json({ error: "Failed to accept quote and create WorkOrder." });
     }
 });
-
 
 
 
