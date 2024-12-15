@@ -126,17 +126,31 @@ CREATE TABLE InvoiceResponses (
 
 -- For Demonstration: Insert Value Tuples
 
-INSERT INTO ClientDB (clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress, registerDate, loginTime, activeStatus) VALUES
-    ("C001", "john.doe@example.com", "password123", "John", "Doe", "1234567890", "4111111111111111", "123", "12/25", "123 Main St, Anytown, USA", "2024-11-27 08:00:00", "2024-11-27 08:30:00", "online"),
-    ("C002", "jane.smith@example.com", "securePass1", "Jane", "Smith", "0987654321", "5500000000000004", "456", "07/26", "456 Elm St, Othertown, USA", "2024-11-26 09:00:00", "2024-11-27 10:00:00", "offline");
+INSERT INTO ClientDB (clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress) VALUES
+    ("C001", "john.doe@example.com", "password123", "John", "Doe", "1234567890", "4111111111111111", "123", "12/25", "123 Main St, Anytown, USA"),
+    ("C002", "jane.smith@example.com", "securePass1", "Jane", "Smith", "0987654321", "5500000000000004", "456", "07/26", "456 Elm St, Othertown, USA");
+
+INSERT INTO ClientDB (clientID, email, password, firstName, lastName, phoneNumber, creditCardNum, creditCardCVV, creditCardExp, homeAddress)
+VALUES ('Freddy123', 'Freddy123@example.com', 'securePass123', 'Fred', 'Dimmer', '1234567890', '1234567812345678', '123', '12/26', '123 Main St, Anytown, USA 48222');
+
 
 INSERT INTO QuoteRequest (clientID, propertyAddress, drivewaySqft, proposedPrice, addNote) VALUES
     ("C001", "123 Main St, Anytown, USA", 1200, 250.00, "Please prioritize this job as soon as possible."),
     ("C002", "456 Elm St, Othertown, USA", 800, 200.00, "Driveway has some cracks; please inspect closely.");
 
+
+-- (Didn't include images because this is just to validate query for difficult client)
+INSERT INTO QuoteRequest (clientID, propertyAddress, drivewaySqft, proposedPrice, addNote)
+VALUES 
+    ('Freddy123', '456 Oak Lane, Anytown, USA', 1200, 500.00, 'Request for cleaning and sealing'),
+    ('Freddy123', '789 Pine Street, Anytown, USA', 900, 400.00, 'Request for repair and resealing'),
+    ('Freddy123', '101 Maple Avenue, Anytown, USA', 1500, 700.00, 'Request for new installation');
+
+
 INSERT INTO QuoteRequestImage (quoteID, image1, image2, image3, image4, image5) VALUES
     (1, "images/driveway1.jpg", "images/driveway2.jpg", "images/driveway3.jpg", "images/driveway4.jpg", "images/driveway5.jpg"),
     (2, "images/drivewayA.jpg", "images/drivewayB.jpg", "images/drivewayC.jpg", "images/drivewayD.jpg", "images/drivewayE.jpg");
+
 
 INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, startDate, endDate, addNote, status) VALUES
     ("C001", 1, 275.00, "2024-12-01", "2024-12-03", "Initial counter proposal from David Smith.", "Pending"),
@@ -157,7 +171,7 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
--------			For Both's database		 -------------
+--------------------			For Both's database		 -------------
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -172,7 +186,7 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
--------			For Client's database		 -------------
+----------------			For Client's database		 -------------
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
@@ -415,88 +429,150 @@ INSERT INTO InvoiceResponses (invoiceID, responseNote, responseDate) VALUES
 
 
 -----------------------  SPECIFIC QUERIES   --------------------------
--- big clients 
 
-SELECT c.clientID, c.firstName, c.lastName, COUNT(wo.workOrderID) AS completed_orders
+1. [Big Clients]
+SELECT 
+    clientID, 
+    COUNT(workOrderID) AS completedOrders
+FROM 
+    WorkOrder
+WHERE 
+    status = 'Completed'
+GROUP BY 
+    clientID
+HAVING 
+    COUNT(workOrderID) = (
+        SELECT MAX(orderCount)
+        FROM (
+            SELECT COUNT(workOrderID) AS orderCount
+            FROM WorkOrder
+            WHERE status = 'Completed'
+            GROUP BY clientID
+        ) AS subquery
+    );
+
+
+2. [Difficult Clients]
+WITH PendingCounts AS (
+    SELECT 
+        qh.clientID,
+        qh.quoteID,
+        COUNT(*) AS pendingCount
+    FROM QuoteHistory qh
+    WHERE qh.status = 'Pending'
+    GROUP BY qh.clientID, qh.quoteID
+),
+ClientsWithThreeOrMoreRequests AS (
+    SELECT 
+        pc.clientID,
+        GROUP_CONCAT(pc.quoteID) AS quoteIDs -- Collect the quoteIDs for the client
+    FROM PendingCounts pc
+    WHERE pc.pendingCount = 2 -- Exactly 2 'Pending' statuses per quoteID
+    GROUP BY pc.clientID
+    HAVING COUNT(pc.quoteID) >= 3 -- Check for 3 or more quoteIDs with this pattern
+)
+SELECT DISTINCT 
+    c.clientID,
+    c.firstName,
+    c.lastName,
+    c.email,
+    ct.quoteIDs
+FROM ClientsWithThreeOrMoreRequests ct
+JOIN ClientDB c ON c.clientID = ct.clientID;
+
+
+
+3. [This month quotes]
+SELECT qh.responseID,
+       qh.quoteID,
+       qh.clientID,
+       qh.proposedPrice,
+       qh.startDate,
+       qh.endDate,
+       qh.addNote,
+       qh.status,
+       qh.responseDate
+FROM QuoteHistory qh
+WHERE qh.status = 'Accepted'
+  AND MONTH(qh.responseDATE) = MONTH(CURDATE())
+  AND YEAR(qh.responseDATE) = YEAR(CURDATE());
+
+
+
+4. [Prospective clients]
+SELECT c.clientID, 
+       c.firstName, 
+       c.lastName, 
+       c.email, 
+       c.registerDate
 FROM ClientDB c
-JOIN WorkOrder wo ON c.clientID = wo.clientID
-WHERE wo.status = 'Completed'
-GROUP BY c.clientID
-HAVING completed_orders = (
-    SELECT MAX(order_count)
-    FROM (
-        SELECT COUNT(wo2.workOrderID) AS order_count
-        FROM WorkOrder wo2
-        WHERE wo2.status = 'Completed'
-        GROUP BY wo2.clientID
-    ) AS subquery
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM QuoteRequest q
+    WHERE c.clientID = q.clientID
 );
 
 
--- difficult clients
+5. [Largest driveway]
+WITH MaxDriveway AS (
+    SELECT MAX(q.drivewaySqft) AS maxSqft
+    FROM WorkOrder w
+    JOIN QuoteRequest q ON w.quoteID = q.quoteID
+)
+SELECT w.clientID, 
+       w.workOrderID, 
+       w.quoteID, 
+       q.propertyAddress, 
+       q.drivewaySqft, 
+       w.dateRange
+FROM WorkOrder w
+JOIN QuoteRequest q ON w.quoteID = q.quoteID
+JOIN MaxDriveway m ON q.drivewaySqft = m.maxSqft;
 
-SELECT c.clientID, c.firstName, c.lastName
+
+
+6. [Overdue bills]
+UPDATE Invoice SET status = 'Overdue' 
+WHERE datePaid IS NULL AND DATEDIFF(CURDATE(), dateCreated) > 7;
+
+SELECT DISTINCT c.clientID, 
+                c.firstName, 
+                c.lastName, 
+                c.email,
+                i.invoiceID,
+                i.status
 FROM ClientDB c
-JOIN QuoteRequest qr ON c.clientID = qr.clientID
-LEFT JOIN QuoteHistory qh ON qr.quoteID = qh.quoteID
-WHERE qh.responseID IS NULL
-GROUP BY c.clientID
-HAVING COUNT(qr.quoteID) = 3;
+JOIN Invoice i ON c.clientID = i.clientID
+WHERE i.status = 'OVERDUE';
 
 
--- this months Quotes
 
-SELECT qh.responseID, qh.proposedPrice, qh.startDate, qh.endDate
-FROM QuoteHistory qh
-WHERE qh.status = 'Accepted'
-  AND MONTH(qh.responseDATE) = 12
-  AND YEAR(qh.responseDATE) = 2024;
-
-
--- prospective clients
-
-SELECT c.clientID, c.firstName, c.lastName
+7. [Bad clients]
+SELECT DISTINCT c.clientID, 
+                c.firstName, 
+                c.lastName, 
+                c.email,
+                i.invoiceID,
+                i.dateCreated,
+                i.status
 FROM ClientDB c
-LEFT JOIN QuoteRequest qr ON c.clientID = qr.clientID
-WHERE qr.quoteID IS NULL;
-
-
--- largest driveway
-
-SELECT qr.propertyAddress, qr.drivewaySqft
-FROM QuoteRequest qr
-JOIN WorkOrder wo ON qr.quoteID = wo.quoteID
-WHERE wo.status = 'Completed'
-  AND qr.drivewaySqft = (
-    SELECT MAX(drivewaySqft)
-    FROM QuoteRequest qr2
-    JOIN WorkOrder wo2 ON qr2.quoteID = wo2.quoteID
-    WHERE wo2.status = 'Completed'
-  );
-
-
--- overdue bills
-
-SELECT i.invoiceID, i.clientID, i.amountDue, i.dateCreated
-FROM Invoice i
-WHERE i.datePaid IS NULL
+JOIN Invoice i ON c.clientID = i.clientID
+WHERE i.datePaid IS NULL 
   AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
 
 
--- bad clients 
 
-SELECT DISTINCT c.clientID, c.firstName, c.lastName
+8. [Good clients]
+SELECT DISTINCT c.clientID, 
+                c.firstName, 
+                c.lastName, 
+                c.email, 
+                i.invoiceID, 
+                i.dateCreated, 
+                i.datePaid
 FROM ClientDB c
 JOIN Invoice i ON c.clientID = i.clientID
-WHERE i.datePaid IS NULL
-  AND DATEDIFF(CURDATE(), i.dateCreated) > 7;
-
--- good clients 
-
-SELECT DISTINCT c.clientID, c.firstName, c.lastName
-FROM ClientDB c
-JOIN Invoice i ON c.clientID = i.clientID
-WHERE i.datePaid IS NOT NULL
+WHERE i.datePaid IS NOT NULL 
   AND TIMESTAMPDIFF(HOUR, i.dateCreated, i.datePaid) <= 24;
 
 

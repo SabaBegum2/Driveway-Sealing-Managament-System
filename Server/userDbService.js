@@ -711,12 +711,6 @@ async createWorkOrder(clientID, quoteID, responseID, dateRange) {
 
 
 
-
-
-
-
-
-
 async checkWorkOrder(workOrderID) {
    try {
        const response = await new Promise((resolve, reject) => {
@@ -872,29 +866,7 @@ async completeWorkOrder(workOrderID) {
 }
 
 
-// async updateInvoiceResponse(responseID, note) {
-//    try {
-//        const response = await new Promise((resolve, reject) => {
-//            const query = `
-//                UPDATE InvoiceResponses 
-//                SET responseNote = ?, responseDate = NOW() 
-//                WHERE responseID = ?
-//            `;
-//            connection.query(query, [note, responseID], (err, result) => {
-//                if (err) reject(err);
-//                else resolve(result);
-//            });
-//        });
-//        return response;
-//    } catch (err) {
-//        console.error("Error in updateInvoiceResponse:", err.message);
-//        throw err;
-//    }
-// }
-
-
-
-   
+ 
 }
 
 module.exports = userDbService;
