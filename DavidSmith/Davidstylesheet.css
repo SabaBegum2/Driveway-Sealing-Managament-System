@@ -397,6 +397,36 @@ table tbody tr:nth-child(even) {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for a raised effect */
 }
 
+/* Styling for Accepted Rows */
+.table-row.accepted {
+    background-color: #e6ffe6; /* Light green background */
+    color: #2d7a2d; /* Dark green text */
+}
+
+/* Styling for Rejected Rows */
+.table-row.rejected {
+    background-color: #ffe6e6; /* Light red background */
+    color: #d9534f; /* Dark red text */
+}
+
+/* Optional: Hover Effect for Rows */
+.table-row:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow on hover */
+    cursor: pointer;
+}
+
+/* Accepted Rows */
+.row-accepted {
+    background-color: #e6ffe6; /* Light green background */
+    color: #2d7a2d; /* Dark green text */
+}
+
+/* Rejected Rows */
+.row-rejected {
+    background-color: #ffe6e6; /* Light red background */
+    color: #d9534f; /* Dark red text */
+}
+
 
 
 

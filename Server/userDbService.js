@@ -45,21 +45,17 @@ class userDbService {
       return instance ? instance : new userDbService();
    }
 
-//    execute(sql, params = []) {
-//       if (!this.pool) {
-//           console.error('Database connection pool not initialized.');
-//           throw new Error('Database connection pool not initialized.');
-//       }
-
-//       return new Promise((resolve, reject) => {
-//           this.pool.query(sql, params, (error, results) => {
-//               if (error) {
-//                   return reject(error);
-//               }
-//               resolve(results);
-//           });
-//       });
-//   }
+   query(sql, params) {
+      return new Promise((resolve, reject) => {
+          connection.query(sql, params, (err, results) => {
+              if (err) {
+                  reject(err);
+              } else {
+                  resolve(results);
+              }
+          });
+      });
+  }
   
 
 /* ----------------------- CLIENT'S DASHBOARD ----------------------- */

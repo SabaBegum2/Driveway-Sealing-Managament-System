@@ -82,9 +82,19 @@ CREATE TABLE QuoteRequestImage (
 );
 
 
--- clientID is already stored in the QuoteRequest table and 
--- can be retrieved through quoteID using a JOIN method to 
--- reduce the amount of data one table needs to hold.
+CREATE TRIGGER `addToQuoteHistory` AFTER INSERT ON `QuoteRequest`
+ FOR EACH ROW BEGIN
+    -- Insert into QuoteHistory only if the quoteID is not already there
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM QuoteHistory 
+        WHERE quoteID = NEW.quoteID
+    ) THEN
+        INSERT INTO QuoteHistory (clientID, quoteID, proposedPrice, addNote, status)
+        VALUES (NEW.clientID, NEW.quoteID, NEW.proposedPrice, NEW.addNote, 'Pending');
+    END IF;
+END
+
 
 CREATE TABLE QuoteHistory (
     responseID INT AUTO_INCREMENT,
@@ -102,6 +112,16 @@ CREATE TABLE QuoteHistory (
 );
 
 
+CREATE TRIGGER `createWorkOrder` AFTER UPDATE ON `QuoteHistory`
+FOR EACH ROW
+  BEGIN
+    IF NEW.status = 'Accepted' THEN
+      INSERT INTO WorkOrder( clientID, quoteID, responseID, dateRange)
+VALUES(NEW.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate));
+    END IF;
+END
+
+
 CREATE TABLE WorkOrder (
     workOrderID INT PRIMARY KEY AUTO_INCREMENT,
     clientID VARCHAR(20),
@@ -115,22 +135,16 @@ CREATE TABLE WorkOrder (
 );
 
 
-DELIMITER //
-
-CREATE TRIGGER createWorkOrder
-AFTER UPDATE ON QuoteHistory
-FOR EACH ROW
-BEGIN
-    IF NEW.status = 'Accepted' THEN
-        INSERT INTO WorkOrder (clientID, quoteID, responseID, dateRange)
-        SELECT qr.clientID, NEW.quoteID, NEW.responseID, CONCAT(NEW.startDate, ' to ', NEW.endDate)
-        FROM QuoteRequest qr
-        WHERE qr.quoteID = NEW.quoteID;
+-- Optional if only testing Client end: --
+CREATE TRIGGER `afterOrderCompleted` AFTER UPDATE ON `WorkOrder`
+ FOR EACH ROW BEGIN
+    IF NEW.status = 'Completed' THEN
+        INSERT INTO Invoice (workOrderID, clientID, amountDue, dateCreated)
+        SELECT NEW.workOrderID, NEW.clientID, qh.proposedPrice, NOW()
+        FROM QuoteHistory qh
+        WHERE qh.responseID = NEW.responseID;
     END IF;
-END;
-//
-
-DELIMITER ;
+END
 
 
 CREATE TABLE Invoice (
@@ -140,6 +154,8 @@ CREATE TABLE Invoice (
     amountDue DECIMAL(10, 2),
     dateCreated DATETIME,
     datePaid DATETIME DEFAULT NULL,
+    status enum('DUE','OVERDUE','PAID','ADJUSTED') DEFAULT 'DUE',
+    discount decimal(10,2) DEFAULT 0.00
     FOREIGN KEY (workOrderID) REFERENCES WorkOrder(workOrderID),
     FOREIGN KEY (clientID) REFERENCES ClientDB(clientID)
 );
@@ -147,8 +163,9 @@ CREATE TABLE Invoice (
 CREATE TABLE InvoiceResponses (
     responseID INT PRIMARY KEY AUTO_INCREMENT,
     invoiceID INT NOT NULL,
+    clientID varchar(20) DEFAULT NULL,
     responseNote VARCHAR(500),
-    responseDate DATE DEFAULT CURRENT_DATE,
+    responseDate DATETIME DEFAULT current_timestamp(),
     FOREIGN KEY (invoiceID) REFERENCES Invoice(invoiceID)
 );
 ```
@@ -162,9 +179,9 @@ CREATE TABLE InvoiceResponses (
 5. Revenue Report: Generate reports for revenue over a specified period.
 
 ### Dashboard for Clients
-1. View Quotes: Access quote details and response status.
-2. Request Modifications: Negotiate on received quotes with counter-offers.
-3. Order Tracking: View details of accepted orders.
+1. View Quotes: Access quote details and quote status.
+2. Request Modifications: Negotiate on received quotes with counter-offers and different date ranges.
+3. Order Tracking: View details of accepted orders and cancel orders.
 4. Bill Payment: Pay bills or dispute them with comments.
 
 ### Additional Functionalities
@@ -218,9 +235,9 @@ npm start
 2. Log in as David Smith or as a client.
 3. Use the dashboard to manage quotes, orders, and billing.
    
-## Screenshots
-Include relevant screenshots of the interface here.
-
-## Project Demonstration
-Work in Progress.
+## Contributions
+Made by Saba and Violet:
+Saba primarily worked on David's dashboard and queries.
+Violet primarily worked on the Client's dashboard and queries.
+The diagram was created and discussed together, as well as the structure of the dashboards. We both took our own creative approach on how to display the queries per section, but made suggestions and references from each other and the other's code when we were stuck. Communication was constant and we would communicate before large merges occurred. We also created different text sheets to track changes as well as track them in the github repo. If something like a table structure change had to occur, we communicated why and made note of it. There are a couple minor differences in our code using SQL triggers, but those triggers are optional if you're using the client dashboard. Otherwise, the changes get pushed on David's side as he completes orders, etc. 
 
