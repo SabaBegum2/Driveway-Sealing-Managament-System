@@ -293,9 +293,6 @@ app.post('/Client/Invoices/Response/:invoiceID', async (request, response) => {
     const { clientID, responseNote } = request.body;
 
     console.log(`Inserting new response for: ${invoiceID}`);
-    // console.log(`response ID: ${responseID}`);
-    // console.log(`Amount Due: ${amountDue}`);
-    // console.log(`Response Note: ${responseNote}`);
     const db = userDbService.getUserDbServiceInstance();
 
     try {
@@ -359,8 +356,6 @@ app.get('/searchLastName/:lastName', (request, response) => {
 
     let result;
     if (lastName === "all") {
-        // Return empty array if last name is not provided
-        //result = Promise.resolve([]);
         result = db.getAllData()
     } else {
         // Proceed with searching by last name
@@ -413,103 +408,12 @@ app.get('/searchClientID/:clientID', (request, response) => {
     .catch(err => console.log('Error: ', err));
 });
 
-/*
-app.get('/search/salary/:min/:max', (request, response) => {
-    const { min, max } = request.params;
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchBySalary(min, max);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-*/
-
-/*
-// Search ClientDB by age range
-app.get('/search/age/:min/:max', (request, response) => {
-    const { min, max } = request.params;
-    
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchByAge(min, max);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-*/
-
-// Search ClientDB registered after specific user
-app.get('/search/regAfter/:clientID', (request, response) => {
-    const { clientID } = request.params;
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchAfterRegDate(clientID);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-
-// Search ClientDB registered same day as specific user
-app.get('/search/regSameDay/:clientID', (request, response) => {
-    const { clientID } = request.params;
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchSameDayRegDate(clientID);
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-
-
-// Search ClientDB who never signed in
-app.get('/search/neverSignedIn', (request, response) => {
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchNeverSignedIn();
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
-
-// Search ClientDB who registered today
-app.get('/search/regToday', (request, response) => {
-
-
-    const db = userDbService.getUserDbServiceInstance();
-
-    const result = db.searchRegToday();
-
-    result
-        .then(data => response.json({ data: data }))
-        .catch(err => console.log(err));
-});
 
 
 
-// Route for searching ClientDB registered today
-app.get('/search/RegisteredToday', async (request, response) => {
-    try {
-        const db = userDbService.getUserDbServiceInstance();
-        const result = await db.searchByRegisteredToday();
-        //response.json({ data: data });
-        response.json({ data: result });
-    } catch (err) {
-        console.error(err);
-        response.status(500).json({ error: "An error occurred while searching ClientDB." });
-    }
-});
-
-/////////////////////// David Dashboard ////////////////////////////
+/* -------------------------------------------------------- */
+/* ------------------- David's Dashboard ------------------ */
+/* -------------------------------------------------------- */
 
 //works
 app.get('/quotes', (req, res) => {
@@ -558,7 +462,6 @@ app.post("/quotes/accept", async (req, res) => {
         res.status(500).json({ error: "Failed to accept quote and create WorkOrder." });
     }
 });
-
 
 
 

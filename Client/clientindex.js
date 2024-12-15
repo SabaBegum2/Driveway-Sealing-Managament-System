@@ -109,25 +109,6 @@ logoutBtn.onclick = function () {
 /* ------------ CLIENT PAGE FUNCTIONS ------------ */
 /* ----------------------------------------------- */
 
-// function setupClientPage() {
-//     console.log('Setting up ClientPage');
-//     // Hide and show tabs dynamically
-//     setupTabNavigation();
-//     // Handle initial page load
-//     const tabName = window.location.hash.replace('#', '') || 'Home';
-//     // Show the initial tab
-//     showTab(tabName);
-//     // Call the corresponding tab function on page load
-//     callTabHandler(tabName);
-//     // Listen for back/forward navigation
-//     window.addEventListener('popstate', function (event) {
-//         const stateTab = event.state ? event.state.tab : 'Home';
-//         showTab(stateTab);
-//     });
-//     defineTabActions();
-// }
-
-
 function setClientDashboard(event) {
     //event.preventDefault();
     //event.stopEventPropagation();
@@ -224,6 +205,9 @@ function submitNewQuoteRequest(event) {
         .catch((error) => console.error("Error:", error));
 }
 
+/* ----------------------------------------------- */
+/* ------------ QUOTE PAGE FUNCTIONS ------------ */
+/* ----------------------------------------------- */
 
 /* ------------------- QUOTE RESPONSE-------------------- */
 function quoteResponse() {
@@ -335,7 +319,9 @@ function quoteAccept() {
     };
 }
 
-
+/* --------------------------------------------------- */
+/* ------------ WORK ORDER PAGE FUNCTIONS ------------ */
+/* --------------------------------------------------- */
 
 /* ------------------- ORDER CANCEL-------------------- */
 function orderCancellation() {
@@ -371,7 +357,9 @@ function orderCancellation() {
     };
 }
 
-
+/* ------------------------------------------------ */
+/* ------------ INVOICE PAGE FUNCTIONS ------------ */
+/* ------------------------------------------------ */
 
 /* ------------------- INVOICE RESPONSE-------------------- */
 function invoiceResponse() {
@@ -470,6 +458,11 @@ function invoiceAccept() {
 }
 
 
+
+
+/* ----------------------------------------------- */
+/* ------------ HTML TABLE FUNCTIONS ------------ */
+/* ----------------------------------------------- */
 
 
 function loadClientHTMLTable(data) {
@@ -603,49 +596,6 @@ function loadWorkOrderHistoryTable(data) {
 
     table.innerHTML = tableHtml;
 }
-
-
-
-// // For each function that loads the client data into a table
-// function loadWorkOrderHistoryTable(data){
-//     const clientID = data[0]?.clientID || activeClient;
-//     console.log("clientindex.js: loadWorkOrderHistory called for ", clientID);
-
-//     const table = document.querySelector('table tbody');
-//     let caption = document.querySelector('#workOrderHistoryTable caption'); // Locate the caption
-
-//     if (!data || data.length === 0) {
-//         table.innerHTML = "<tr><td colspan='12'>No data available</td></tr>";
-//         return;
-//     }
-
-//     // Set the table caption to the clientID from the first record or active client variable
-//     if (caption) {
-//         caption.textContent = `Work Order History for ` + clientID;
-//     } 
-//     else {
-//         const newCaption = document.createElement('caption');
-//         newCaption.textContent = `Work Order History for ` + clientID;
-//         document.querySelector('table').prepend(newCaption);
-//     }
-
-//     let tableHtml = "";
-//     data.forEach(function ({ workOrderID, quoteID, clientID, propertyAddress, dateRange, price, status }){
-//         tableHtml += "<tr>";
-//         tableHtml +=`<td>${isMostRecentOrder ? `<input type="radio" name="selectedOrder" value="${workOrderID}" />` : ""}</td>`;
-//         tableHtml +=`<td>${workOrderID}</td>`;
-//         tableHtml +=`<td>${quoteID}</td>`;
-//         tableHtml +=`<td>${clientID}</td>`;
-//         tableHtml +=`<td>${propertyAddress}</td>`;
-//         tableHtml +=`<td>${dateRange}</td>`;
-//         tableHtml +=`<td>$${price}</td>`;
-//         tableHtml +=`<td>${status}</td>`;
-//         tableHtml += "</tr>";
-//     });
-
-//     table.innerHTML = tableHtml;
-// }
-
 
 
 loadInvoiceTable = function(data){
