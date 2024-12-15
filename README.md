@@ -218,9 +218,9 @@ npm start
 2. Log in as David Smith or as a client.
 3. Use the dashboard to manage quotes, orders, and billing.
    
-## Screenshots
-Include relevant screenshots of the interface here.
-
-## Project Demonstration
-Work in Progress.
+## Contributions
+Made by Saba and Violet:
+Saba primarily worked on David's dashboard and queries.
+Violet primarily worked on the Client's dashboard and queries.
+The diagram was created and discussed together, as well as the structure of the dashboards. We both took our own creative approach on how to display the queries per section, but made suggestions and references from each other and the other's code when we were stuck. Communication was constant and we would communicate before large merges occurred. We also created different text sheets to track changes as well as track them in the github repo. If something like a table structure change had to occur, we communicated why and made note of it. There are a couple minor differences in our code using SQL triggers, but those triggers are optional if you're using the client dashboard. Otherwise, the changes get pushed on David's side as he completes orders, etc. 
 
